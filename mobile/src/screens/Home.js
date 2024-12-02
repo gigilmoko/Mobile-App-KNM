@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { View, StyleSheet, Text, TouchableOpacity, FlatList, TextInput, Image, Dimensions } from "react-native";
+import { View, Text, TouchableOpacity, FlatList, TextInput, Image, Dimensions, StyleSheet } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 import { useIsFocused, useNavigation } from "@react-navigation/native";
 import Icon from "react-native-vector-icons/Ionicons"; 
 import ProductCard from "../components/ProductCard";
-import { getAllProducts, getProductsByCategory } from "../redux/actions/productActions";
+import { getAllProducts, getProductsByCategory, searchProducts } from "../redux/actions/productActions"; 
 import { loadUser } from "../redux/actions/userActions";
 import { useSetCategories } from "../../utils/hooks";
 import Footer from "../components/Layout/Footer";
@@ -58,6 +58,18 @@ const Home = ({ navigation }) => {
         return () => clearTimeout(timeOutId);
     }, [dispatch, category, isFocused]);
 
+    // Search effect
+    useEffect(() => {
+        console.log("Searching for:", searchQuery); 
+    
+        const timeOutId = setTimeout(() => {
+            dispatch(searchProducts(searchQuery)); 
+        }, 200);
+    
+        return () => {
+            clearTimeout(timeOutId);
+        };
+    }, [dispatch, searchQuery, category, isFocused]); 
     const handleCategoryClick = (categoryId) => {
         setSelectedCategory(categoryId);
         setCategory(categoryId === null ? "" : categoryId);
@@ -164,15 +176,6 @@ const Home = ({ navigation }) => {
 
     useSetCategories(setCategories, isFocused);
 
-    useEffect(() => {
-        const timeOutId = setTimeout(() => {
-            dispatch(getAllProducts(searchQuery, category, ""));
-        }, 200);
-        return () => {
-            clearTimeout(timeOutId);
-        };
-    }, [dispatch, searchQuery, category, isFocused]);
-
     const renderProductItem = ({ item, index }) => (
         <ProductCard
             stock={item.stock}
@@ -214,10 +217,10 @@ const Home = ({ navigation }) => {
                         style={styles.searchInput}
                         placeholder="Search products..."
                         value={searchQuery}
-                        onChangeText={(text) => setSearchQuery(text)}
+                        onChangeText={(text) => setSearchQuery(text)} // Update search query
                     />
                 </View>
-
+                {isCategoryFetched ? (
                 <FlatList
                     data={products}
                     renderItem={renderProductItem}
@@ -262,30 +265,23 @@ const Home = ({ navigation }) => {
                                     }
                                 />
                             </View>
-                            <View style={styles.productsHeader}>
-                                <Text style={styles.productsHeaderText}>Products</Text>
-                            </View>
                         </>
                     }
                 />
+            ) : (
+                // Optionally, you can show a loading spinner or some message if no category is selected or products are being fetched
+                <Text>Loading products...</Text>
+            )}
             </View>
-
-            <TouchableOpacity
-                onPress={() => navigate.navigate("wishlist")}
-                style={styles.floatingWishlistButton}
-            >
-                <Icon name="heart-outline" size={20} color="#fff" />
-            </TouchableOpacity>
 
             {/* Footer */}
-            <View style={styles.footer}>
-                <Footer activeRoute={"home"} />
-            </View>
+            <Footer />
         </View>
     );
 };
 
 export default Home;
+
 
 const styles = StyleSheet.create({
     container: {

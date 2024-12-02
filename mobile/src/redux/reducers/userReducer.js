@@ -3,6 +3,7 @@ import { createReducer } from "@reduxjs/toolkit";
 const initialState = {
     users: [],
     user: {},
+    userDetails: {}, // Store user details here
     loading: false,
     error: null,
     isAuthenticated: false,
@@ -41,94 +42,50 @@ export const userReducer = createReducer(initialState, (builder) => {
             state.user = action.payload; 
             state.message = "Login successful";
             console.log("User logged in successfully, state:", state);
-            // state.message = null;
         })
         
         .addCase("loadUserSuccess", (state, action) => {
             state.loading = false;
-            state.isAuthenticated = true; // Ensure user is authenticated on load success
+            state.isAuthenticated = true; 
             state.user = action.payload;
-            // console.log("User loaded successfully, state:", state);r
-        })
-        .addCase("logoutSuccess", (state) => {
-            state.loading = false;
-            state.isAuthenticated = false; // Ensure this is false on logout success
-            state.user = {}; // Reset user data on logout
-            console.log("User logged out successfully, state:", state);
-        })
-        .addCase("registerSuccess", (state, action) => {
-            state.loading = false;
-            state.isAuthenticated = true;
-            state.user = action.payload; 
-            state.message = "Registration successful";
-        })
-        .addCase("verifyTokenSuccess", (state, action) => {
-            state.loading = false;
-            state.isAuthenticated = true;
-            state.user = action.payload;
-            console.log("Token verified successfully, state:", state);
-        })
-        .addCase("getAllUsersSuccess", (state, action) => {
-            state.loading = false;
-            state.users = action.payload; 
-        })
-        .addCase("deleteUserSuccess", (state) => {
-            state.loading = false; 
         })
         
-        // Failure cases
-        .addCase("loginFail", (state, action) => {
-            console.log("Login Fail Action Dispatched", action);
+        .addCase("getUserProfileSuccess", (state, action) => {
             state.loading = false;
-            state.isAuthenticated = false; // Ensure user is not authenticated on login fail
+            state.user = action.payload;  
+        })
+        
+        .addCase("logoutSuccess", (state) => {
+            state.loading = false;
+            state.isAuthenticated = false;
+            state.user = {}; 
+            state.message = "Logout successful";
+        })
+        
+        // New user details success
+        .addCase("USER_DETAILS_SUCCESS", (state, action) => {
+            state.loading = false;
+            state.userDetails = action.payload; // Store fetched user details
+        })
+        
+        // Fail cases
+        .addCase("loginFail", (state, action) => {
+            state.loading = false;
+            state.isAuthenticated = false;
             state.error = action.payload;
         })
-        .addCase("loadUserFail", (state, action) => {
+        .addCase("getUserProfileFail", (state, action) => {
             state.loading = false;
-            // Consider keeping isAuthenticated as true, if already authenticated
-            state.error = action.payload; // Allow retry on loading user data
+            state.error = action.payload;
         })
         .addCase("logoutFail", (state, action) => {
             state.loading = false;
-            // Maintain isAuthenticated as true here, since logout failed
             state.error = action.payload;
         })
-        .addCase("registerFail", (state, action) => {
-            state.loading = false;
-            state.isAuthenticated = false; 
-            state.error = action.payload;
-        })
-        .addCase("verifyTokenFail", (state, action) => {
-            state.loading = false;
-            state.isAuthenticated = false; 
-            state.error = action.payload;
-        })
-        .addCase("getAllUsersFail", (state, action) => {
-            state.loading = false;
-            state.error = action.payload;
-        })
-        .addCase("deleteUserFail", (state) => {
-            state.loading = false; 
-        })
-
-        // Clear errors and messages
-        .addCase("clearError", (state) => {
-            state.error = null;
-        })
-        .addCase("clearMessage", (state) => {
-            state.message = null;
-        })
-        .addCase("resetUser", (state) => {
-            state.user = {}; // Reset user object
-        })
-        // .addCase(USER_AVATAR_SUCCESS, (state, action) => {
-        //     state.loading = false;
-        //     state.user.avatar = action.payload.avatar; // Update the user's avatar in state
-        //     state.message = "Avatar updated successfully"; // Optional: set a success message
-        // })
-        // .addCase(USER_AVATAR_FAIL, (state, action) => {
-        //     state.loading = false;
-        //     state.error = action.payload; // Capture the error message
-        // });
         
+        // New user details fail
+        .addCase("USER_DETAILS_FAIL", (state, action) => {
+            state.loading = false;
+            state.error = action.payload; // Store the error if fetching user details fails
+        });
 });

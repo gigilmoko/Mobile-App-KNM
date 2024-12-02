@@ -1,8 +1,8 @@
-import { server } from "../store"
-import axios from "axios"
+import { server } from "../store";
+import axios from "axios";
 import { userReducer } from "../reducers/userReducer";
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import Toast from 'react-native-toast-message'; // Make sure to import Toas
+import Toast from 'react-native-toast-message'; // Make sure to import Toast
 
 // export const USER_AVATAR_SUCCESS = "USER_AVATAR_SUCCESS";
 // export const USER_AVATAR_FAIL = "USER_AVATAR_FAIL";
@@ -59,7 +59,6 @@ export const login = (email, password) => async (dispatch) => {
         });
     }
 };
-
 
 export const loadUser = () => async (dispatch) => {
     try {
@@ -175,7 +174,6 @@ export const updateAvatar = (imageUrl) => async (dispatch, getState) => {
     }
 };
 
-
 export const updatePassword = (userId, oldPassword, newPassword) => async () => {
     try {
         console.log("Dispatching updatePassword action");
@@ -196,8 +194,6 @@ export const updatePassword = (userId, oldPassword, newPassword) => async () => 
         throw new Error(error.response?.data?.message || error.message); // Throw an error to be caught in submitHandler
     }
 };
-
-
 
 export const updateProfile = (userData) => async (dispatch, getState) => {
     try {
@@ -222,18 +218,31 @@ export const updateProfile = (userData) => async (dispatch, getState) => {
     }
 };
 
+export const getUserDetails = (id) => async (dispatch) => {
+    console.log("touched userDetails: ")
+    try {
 
+        const { data } = await axios.get(`${server}/get-user/${id}`)
+        console.log("data: ", data)
 
-
-
-
-
-
-
-
-
-
-
-
-
+        if (data.success) {
+            dispatch({
+                type: 'USER_DETAILS_SUCCESS',
+                payload: data.user, 
+            });
+        } else {
+            console.log("Fail")
+            dispatch({
+                type: 'USER_DETAILS_FAIL',
+                payload: data.message,
+            });
+        }
+    } catch (error) {
+        console.log("Fail User")
+        dispatch({
+            type: 'USER_DETAILS_FAIL',
+            payload: error.message,
+        });
+    }
+};
 

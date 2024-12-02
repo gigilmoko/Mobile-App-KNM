@@ -1,3 +1,4 @@
+// Redux state structure
 import { createReducer } from "@reduxjs/toolkit";
 
 export const orderReducer = createReducer(
@@ -7,6 +8,7 @@ export const orderReducer = createReducer(
         loading: false,
         error: null,
         message: null, // Stores success messages
+        adminOrders: [], // List of orders for admin
     },
     (builder) => {
         builder
@@ -43,6 +45,17 @@ export const orderReducer = createReducer(
             .addCase("getOrderDetailsFail", (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
+            })
+            .addCase("getAdminOrdersRequest", (state) => {
+                state.loading = true;
+            })
+            .addCase("getAdminOrdersSuccess", (state, action) => {
+                state.loading = false;
+                state.adminOrders = action.payload; // Store the list of orders
+            })
+            .addCase("getAdminOrdersFail", (state, action) => {
+                state.loading = false;
+                state.error = action.payload; // Store the error message
             })
             .addCase("clearError", (state) => {
                 state.error = null;

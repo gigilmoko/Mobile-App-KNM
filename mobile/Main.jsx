@@ -35,7 +35,12 @@ import NotificationScreen from "./src/screens/Notification/Notification";
 import EventInfo from "./src/screens/Calendar/EventInfo";
 import EventList from "./src/screens/Calendar/EventList";
 import Feedback from "./src/screens/User/Feedback";
-
+import Dashboard from "./src/screens/Admin/Dashboard";
+import AdminCategory from "./src/screens/Admin/Category/AdminCategory";
+import AdminEvents from "./src/screens/Admin/Events/AdminEvents";
+import AdminOrders from "./src/screens/Admin/Order/AdminOrders";
+import AdminProducts from "./src/screens/Admin/Product/AdminProducts";
+import AdminOrdersDetails from "./src/screens/Admin/Order/AdminOrdersDetails";
 
 const Stack = createNativeStackNavigator();
 const Drawer = createDrawerNavigator();
@@ -145,6 +150,13 @@ const HomeStack = () => {
                 <Stack.Screen name="myaccount" component={MyAccount} />
                 <Stack.Screen name="changepassword" component={ChangePassword} />
                 <Stack.Screen name="updateprofile" component={UpdateProfile} />
+                {/* Admin */}
+                <Stack.Screen name="dashboard" component={Dashboard} />
+                <Stack.Screen name="adminproducts" component={AdminProducts} />
+                <Stack.Screen name="admincategory" component={AdminCategory} />
+                <Stack.Screen name="adminorders" component={AdminOrders} />
+                <Stack.Screen name="adminordersdetails" component={AdminOrdersDetails} />
+                <Stack.Screen name="adminevents" component={AdminEvents} />
             </Stack.Group>
         </Stack.Navigator>
     );

@@ -69,15 +69,19 @@ const ProductDetails = ({ route: { params } }) => {
   useEffect(() => {
     dispatch(getProductDetails(params.id));
   }, [dispatch, params.id, isFocused]);
-
+  
   useEffect(() => {
+    if (product) {
+      console.log("Fetched Product Details:", product); // Log the fetched product data
+    }
     if (error) {
       Toast.show({
         type: "error",
         text1: error,
       });
     }
-  }, [error]);
+  }, [product, error]);
+  
 
   const incrementQty = () => {
     if (stock <= quantity) {
@@ -154,16 +158,16 @@ const ProductDetails = ({ route: { params } }) => {
     );
   }
 
-  if (error || !product) {
-    return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <Text style={{ color: "red" }}>Failed to load product details</Text>
-        <Button mode="contained" onPress={() => dispatch(getProductDetails(params.id))}>
-          Retry
-        </Button>
-      </View>
-    );
-  }
+  // if (error || !product) {
+  //   return (
+  //     <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+  //       <Text style={{ color: "red" }}>Failed to load product details</Text>
+  //       <Button mode="contained" onPress={() => dispatch(getProductDetails(params.id))}>
+  //         Retry
+  //       </Button>
+  //     </View>
+  //   );
+  // }
 
   return (
     <ScrollView style={{ ...defaultStyle, padding: 0 }} nestedScrollEnabled>

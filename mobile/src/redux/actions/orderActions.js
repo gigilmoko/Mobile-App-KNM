@@ -83,7 +83,7 @@ export const processOrder = (id, status) => async (dispatch) => {
         });
 
         const { data } = await axios.put(
-            `${server}/order/single/${id}`,
+            `${server}/orders/update/${id}`,
 
             {status},
             {
@@ -111,11 +111,12 @@ export const getOrderDetails = (id) => async (dispatch) => {
 
         // Axios request
 
-        const { data } = await axios.get(`${server}/order/single/${id}`,
-        
+        const { data } = await axios.get(`${server}/orders/single/${id}`,
+       
         {
             withCredentials: true
         })
+        console.log("Action Fetched Order: ", JSON.stringify(data, null, 2));
 
         dispatch({
             type: "getOrderDetailsSuccess",
@@ -123,7 +124,7 @@ export const getOrderDetails = (id) => async (dispatch) => {
         })
 
     } catch (error) {
-        
+        console.log("Action Error");
         dispatch({
             type: "getOrderDetailsFail",
             payload: error.response.data.message
@@ -131,3 +132,40 @@ export const getOrderDetails = (id) => async (dispatch) => {
     }
 
 }
+
+export const getAdminOrders = () => async (dispatch) => {
+    try {
+        // console.log("Dispatching getAdminOrdersRequest...");
+
+        dispatch({
+            type: "getAdminOrdersRequest",
+        });
+
+        // console.log("Sending API request to fetch admin orders...");
+        const { data } = await axios.get(`${server}/orders/list`, {
+            withCredentials: true,
+        });
+
+        // console.log("API response received:", data);
+
+        dispatch({
+            type: "getAdminOrdersSuccess",
+            payload: data.orders,
+        });
+
+        // console.log("Dispatching getAdminOrdersSuccess with payload:", data.orders);
+    } catch (error) {
+        console.error("Error fetching admin orders:", error);
+
+        dispatch({
+            type: "getAdminOrdersFail",
+            payload: error.response?.data?.message || "Failed to fetch admin orders",
+        });
+
+        console.error(
+            "Dispatching getAdminOrdersFail with payload:",
+            error.response?.data?.message || "Failed to fetch admin orders"
+        );
+    }
+};
+

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Dimensions  } from "react-native";
 import Footer from "../../components/Layout/Footer";
 import { useDispatch, useSelector } from "react-redux";
 import { Ionicons } from "@expo/vector-icons";
@@ -12,6 +12,8 @@ import Header from "../../components/Layout/Header";
 import * as ImagePicker from "expo-image-picker";
 import axios from "axios";
 import Toast from "react-native-toast-message"; // Import Toast
+
+const { height } = Dimensions.get("window"); // Get the screen height
 
 const MyAccount = ({ navigation, route }) => {
     const { user } = useSelector((state) => state.user);
@@ -95,16 +97,18 @@ const MyAccount = ({ navigation, route }) => {
     };
 
     return (
-        <>
-            <View className="flex-1" style={{ backgroundColor: "#ffb703" }}>
-                <Header back={true} />
+        
 
-                {/* Encapsulated User Profile and Options */}
+        <>
+        <View className="flex-1" style={{ backgroundColor: "#ffb703" }}>
+            <Header back={true} />
+    
+            <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
                 <View style={styles.boxContainer}>
                     <View style={styles.UserContainer}>
                         <View style={styles.screenNameContainer}>
-                        <Text style={styles.screenNameText}>My Account</Text>
-                    </View>
+                            <Text style={styles.screenNameText}>My Account</Text>
+                        </View>
                         <View style={styles.avatarContainer}>
                             <Avatar.Image
                                 source={{ uri: avatar.toString() }}
@@ -133,12 +137,24 @@ const MyAccount = ({ navigation, route }) => {
                     </View>
     
                     <View style={styles.OptionsContainer}>
-                        <OptionList
-                            text={"My Orders"}
-                            Icon={Ionicons}
-                            iconName={"bag-check"}
-                            onPress={() => navigation.navigate("myorders")}
-                        />
+                        {/* Conditionally Render "My Orders" or "Manage Orders" */}
+                        {user?.role === "admin" ? (
+                            <OptionList
+                                text={"Dashboard"}
+                                Icon={Ionicons}
+                                iconName={"grid-outline"} // Icon for a dashboard-like appearance
+                                onPress={() => navigation.navigate("dashboard")}
+                            />
+                        ) : (
+                            <OptionList
+                                text={"My Orders"}
+                                Icon={Ionicons}
+                                iconName={"bag-check"}
+                                onPress={() => navigation.navigate("myorders")}
+                            />
+                        )}
+
+    
                         <OptionList
                             text={"Change Password"}
                             Icon={Ionicons}
@@ -165,10 +181,14 @@ const MyAccount = ({ navigation, route }) => {
                     </Button>
                 </View>
                 {/* End of Box */}
-            </View>
     
-            <Footer activeRoute={"home"} />
-        </>
+                <View style={styles.footer}>
+                    <Footer activeRoute={"home"} />
+                </View>
+            </ScrollView>
+        </View>
+    </>
+    
     );
     
 };
@@ -218,6 +238,7 @@ const styles = StyleSheet.create({
         fontSize: 20,
         fontWeight: 'bold',
         marginBottom: 5,
+        marginTop: -10,
     },
     secondaryText: {
         fontSize: 16,
@@ -238,8 +259,16 @@ const styles = StyleSheet.create({
     },
     logoutButton: {
         backgroundColor: "#bc430b",
-        marginTop: 20,
+        // marginTop: 10,
         borderRadius: 5,
+    },
+    footer: {
+        position: "absolute",
+        // bottom: -0.01 * height, // 10% of the screen height
+        bottom: 0,
+        width: "100%",
+        paddingTop: 0,
+       
     },
 });
 
