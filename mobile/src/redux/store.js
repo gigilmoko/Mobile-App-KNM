@@ -8,6 +8,7 @@ import { notificationReducer } from "./reducers/notificationReducer";
 import calendarReducer from "./reducers/calendarReducers";
 import feedbackReducer from "./reducers/feedbackReducers";
 import userInterestReducers from "./reducers/userInterestReducers"
+import { categoryReducer } from "./reducers/categoryReducers";
 
 export const store = configureStore({
     reducer: {
@@ -19,7 +20,8 @@ export const store = configureStore({
         notifications: notificationReducer,
         calendar: calendarReducer,
         feedback: feedbackReducer,
-        userInterested: userInterestReducers,  // Ensure this key matches
+        userInterested: userInterestReducers, 
+        category: categoryReducer // Ensure this key matches
     },
 });
 

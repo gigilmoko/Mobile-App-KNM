@@ -6,12 +6,13 @@ export const getAllProducts = (keyword = "", category = "") => async (dispatch) 
         dispatch({ type: "ALL_PRODUCTS_REQUEST" });
 
         const { data } = await axios.get(`${server}/product/all?keyword=${keyword}&category=${category}`);
-
+        console.log("product data:", data)
         dispatch({
             type: "ALL_PRODUCTS_SUCCESS",
             payload: data.products,
         });
     } catch (error) {
+        console.log("product data failed")
         dispatch({
             type: "ALL_PRODUCTS_FAIL",
             payload: error.response.data.message,
@@ -36,7 +37,6 @@ export const getProductsByCategory = (categoryId) => async (dispatch) => {
         });
     }
 };
-
 
 export const getProductDetails = (id) => async (dispatch) => {
     try {
@@ -69,7 +69,6 @@ export const getProductDetails = (id) => async (dispatch) => {
     }
 };
 
-
 export const searchProducts = (keyword) => async (dispatch) => {
     try {
         dispatch({ type: "searchProductsRequest" });
@@ -91,5 +90,42 @@ export const searchProducts = (keyword) => async (dispatch) => {
         });
     }
 };
+
+export const updateProduct = (productData) => async (dispatch) => {
+    try {
+      dispatch({ type: "UPDATE_PRODUCT_REQUEST" });
+  
+      const { data } = await axios.put(`${server}/product/update/${productData.id}`, productData);
+  
+      dispatch({
+        type: "UPDATE_PRODUCT_SUCCESS",
+        payload: data.product,
+      });
+    } catch (error) {
+      dispatch({
+        type: "UPDATE_PRODUCT_FAIL",
+        payload: error.response?.data?.message || error.message,
+      });
+    }
+  };
+  
+  // New Product
+  export const newProduct = (productData) => async (dispatch) => {
+    try {
+      dispatch({ type: "NEW_PRODUCT_REQUEST" });
+  
+      const { data } = await axios.post(`${server}/product/new`, productData);
+  
+      dispatch({
+        type: "NEW_PRODUCT_SUCCESS",
+        payload: data.product,
+      });
+    } catch (error) {
+      dispatch({
+        type: "NEW_PRODUCT_FAIL",
+        payload: error.response?.data?.message || error.message,
+      });
+    }
+  };
 
 

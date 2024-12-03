@@ -1,67 +1,66 @@
 const initialState = {
-    products: [], // For all products
-    product: {},  // For a single product's details
-    searchedProducts: [], // For searched products
+    categories: [], // For all categories
+    category: {},   // For a single category's details
     loading: false,
     error: null,
-    success: false, // To handle success of new or updated product
+    success: false, // To handle success of new or updated category
 };
 
-export const productReducer = (state = initialState, action) => {
+export const categoryReducer = (state = initialState, action) => {
     switch (action.type) {
-        // Handling All Products
-        case "ALL_PRODUCTS_REQUEST":
+        // Handling All Categories
+        case "ALL_CATEGORIES_REQUEST":
             return {
                 ...state,
                 loading: true,
             };
-        case "ALL_PRODUCTS_SUCCESS":
+        case "ALL_CATEGORIES_SUCCESS":
             return {
                 ...state,
                 loading: false,
-                products: action.payload,
+                categories: action.payload,
             };
-        case "ALL_PRODUCTS_FAIL":
+        case "ALL_CATEGORIES_FAIL":
             return {
                 ...state,
                 loading: false,
                 error: action.payload,
             };
 
-        // Handling Product Details
-        case "getProductDetailsRequest":
+        // Handling Single Category
+        case "GET_CATEGORY_REQUEST":
             return {
                 ...state,
                 loading: true,
             };
-        case "getProductDetailsSuccess":
+        case "GET_CATEGORY_SUCCESS":
             return {
                 ...state,
                 loading: false,
-                product: action.payload, // Storing single product details
+                category: action.payload, // Storing single category details
             };
-        case "getProductDetailsFail":
+        case "GET_CATEGORY_FAIL":
             return {
                 ...state,
                 loading: false,
                 error: action.payload,
             };
 
-        // Handling Update Product
-        case "UPDATE_PRODUCT_REQUEST":
+        // Handling Update Category
+        case "UPDATE_CATEGORY_REQUEST":
             return {
                 ...state,
                 loading: true,
                 success: false,
             };
-        case "UPDATE_PRODUCT_SUCCESS":
+        case "UPDATE_CATEGORY_SUCCESS":
             return {
                 ...state,
                 loading: false,
-                product: action.payload, // Updated product data
+                category: action.payload, // Updated category data
                 success: true,
             };
-        case "UPDATE_PRODUCT_FAIL":
+        case "UPDATE_CATEGORY_FAIL":
             return {
                 ...state,
                 loading: false,
@@ -69,21 +68,21 @@ export const productReducer = (state = initialState, action) => {
                 success: false,
             };
 
-        // Handling New Product
-        case "NEW_PRODUCT_REQUEST":
+        // Handling New Category
+        case "NEW_CATEGORY_REQUEST":
             return {
                 ...state,
                 loading: true,
                 success: false,
             };
-        case "NEW_PRODUCT_SUCCESS":
+        case "NEW_CATEGORY_SUCCESS":
             return {
                 ...state,
                 loading: false,
-                products: [...state.products, action.payload], // Adding the new product to the list
+                categories: [...state.categories, action.payload], // Adding the new category to the list
                 success: true,
             };
-        case "NEW_PRODUCT_FAIL":
+        case "NEW_CATEGORY_FAIL":
             return {
                 ...state,
                 loading: false,
@@ -91,24 +90,25 @@ export const productReducer = (state = initialState, action) => {
                 success: false,
             };
 
-        // Handling Searched Products
-        case "SEARCH_PRODUCTS_REQUEST":
+        // Handling Delete Category
+        case "DELETE_CATEGORY_REQUEST":
             return {
                 ...state,
                 loading: true,
             };
-        case "SEARCH_PRODUCTS_SUCCESS":
+        case "DELETE_CATEGORY_SUCCESS":
             return {
                 ...state,
                 loading: false,
-                searchedProducts: action.payload, // Storing searched products
+                categories: state.categories.filter(
+                    (category) => category._id !== action.payload
+                ),
             };
-        case "SEARCH_PRODUCTS_FAIL":
+        case "DELETE_CATEGORY_FAIL":
             return {
                 ...state,
                 loading: false,
                 error: action.payload,
-                searchedProducts: [], // Clear searched products on failure
             };
 
         default:
