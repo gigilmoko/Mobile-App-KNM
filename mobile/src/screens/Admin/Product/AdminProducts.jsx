@@ -33,7 +33,7 @@ const AdminProducts = () => {
           <Text className="text-lg">Loading...</Text>
         </View>
       ) : (
-        <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+        <ScrollView contentContainerStyle={{ flexGrow: 1, paddingBottom: 50}}>
           <View className="bg-white rounded-t-3xl pt-0 mt-5 h-full px-4 shadow-lg">
             <View className="items-center">
               <Text className="text-xl font-bold mt-3 mb-1">Products</Text>
@@ -64,11 +64,12 @@ const AdminProducts = () => {
             </View>
           </View>
 
-          <View className="absolute bottom-0 w-full pt-0">
-            <Footer activeRoute={"home"} />
-          </View>
+         
         </ScrollView>
       )}
+       <View className="absolute bottom-0 w-full pt-0">
+            <Footer activeRoute={"home"} />
+          </View>
     </View>
   );
 };
