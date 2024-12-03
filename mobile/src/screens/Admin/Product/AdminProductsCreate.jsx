@@ -31,23 +31,26 @@ const AdminProductsCreate = () => {
       });
       return;
     }
-
+  
+    // Remove duplicate image URIs by creating a Set, which automatically removes duplicates
+    const uniqueImages = [...new Set(images)];
+  
     // Prepare form data for image uploads
-    const formData = new FormData();
-    images.forEach((imageUri, index) => {
-      formData.append("file", {
-        uri: imageUri,
-        type: mime.getType(imageUri),
-        name: imageUri.split("/").pop(),
-      });
-    });
-    formData.append("upload_preset", "ml_default");
-
     try {
       setIsUpdating(true);
-      const responses = await Promise.all(
-        images.map(imageUri =>
-          axios.post(
+  
+      // Upload images only once for each unique image URI
+      const uploadResponses = await Promise.all(
+        uniqueImages.map(async (imageUri) => {
+          const formData = new FormData();
+          formData.append("file", {
+            uri: imageUri,
+            type: mime.getType(imageUri),
+            name: imageUri.split("/").pop(),
+          });
+          formData.append("upload_preset", "ml_default");
+  
+          const response = await axios.post(
             'https://api.cloudinary.com/v1_1/dglawxazg/image/upload',
             formData,
             {
@@ -55,28 +58,27 @@ const AdminProductsCreate = () => {
                 'Content-Type': 'multipart/form-data',
               },
             }
-          )
-        )
+          );
+          return {
+            public_id: response.data.public_id,
+            url: response.data.secure_url,
+          };
+        })
       );
-
-      // Extract image URLs and public_ids from responses
-      const imageData = responses.map(response => ({
-        public_id: response.data.public_id,
-        url: response.data.secure_url,
-      }));
-
+  
+      // Prepare the product data with image URLs
       const productData = {
         name: productName,
         description,
         price,
         stock,
         category,
-        images: imageData,
+        images: uploadResponses, // Images are now an array of objects with URLs and public_ids
       };
-
+  
       console.log("Data sent to newProduct action:", productData);
       dispatch(newProduct(productData));
-
+  
       setIsUpdating(false);
       Toast.show({
         type: "success",
@@ -91,6 +93,8 @@ const AdminProductsCreate = () => {
       });
     }
   };
+  
+  
 
   useEffect(() => {
     dispatch(getAllCategories());

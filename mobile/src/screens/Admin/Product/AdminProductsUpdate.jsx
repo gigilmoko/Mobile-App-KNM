@@ -1,10 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, ScrollView, ActivityIndicator, TextInput, Image, Button } from "react-native";
+import { View, Text, ScrollView, ActivityIndicator, TextInput, Image, Button, TouchableOpacity } from "react-native";
 import Footer from "../../../components/Layout/Footer";
 import Header from "../../../components/Layout/Header";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { useDispatch, useSelector } from "react-redux";
-import { getProductDetails, updateProduct } from "../../../redux/actions/productActions"; // Assuming the updateProduct action exists
+import { getProductDetails, updateProduct } from "../../../redux/actions/productActions"; 
+import * as ImagePicker from 'expo-image-picker'; // Updated image picker library
+import axios from 'axios'; // Axios for HTTP requests
+import Toast from 'react-native-toast-message'; // For notifications
+import Icon from 'react-native-vector-icons/AntDesign'; // Importing icon library
 
 const AdminProductsUpdate = () => {
   const dispatch = useDispatch();
@@ -23,8 +27,11 @@ const AdminProductsUpdate = () => {
     price: "",
     stock: "",
     description: "",
-    images: [],
+    category: "",
+    images: [], // Store image URIs
   });
+
+  const [isUpdating, setIsUpdating] = useState(false);
 
   useEffect(() => {
     if (productId) {
@@ -41,12 +48,12 @@ const AdminProductsUpdate = () => {
         price: product.price || "",
         stock: product.stock || "",
         description: product.description || "",
-        images: product.images || [],
+        category: product.category || "",
+        images: product.images.map(img => img.url) || [], // Initial images from the product
       });
     }
   }, [product]);
 
-  // Handle input changes
   const handleInputChange = (field, value) => {
     setUpdatedProduct((prevState) => ({
       ...prevState,
@@ -54,50 +61,145 @@ const AdminProductsUpdate = () => {
     }));
   };
 
-  // Handle product update
-  const handleUpdate = () => {
-    // Dispatch the update product action
-    dispatch(updateProduct(updatedProduct));
-    if (success) {
-      // Navigate to another page or show a success message
-      navigation.goBack();
+  const handleUpdate = async () => {
+    if (!updatedProduct.name || !updatedProduct.price || !updatedProduct.stock || !updatedProduct.category || updatedProduct.images.length === 0) {
+      Toast.show({
+        type: "error",
+        text1: "All fields are required!",
+      });
+      return;
     }
+  
+    try {
+      setIsUpdating(true);
+  
+      // Remove duplicate image URIs
+      const uniqueImages = [...new Set(updatedProduct.images)];
+  
+      // Prepare form data for image uploads
+      const uploadResponses = await Promise.all(
+        uniqueImages.map(async (imageUri) => {
+          const formData = new FormData();
+          formData.append("file", {
+            uri: imageUri,
+            type: 'image/jpeg',
+            name: imageUri.split("/").pop(),
+          });
+          formData.append("upload_preset", "ml_default");
+  
+          const response = await axios.post(
+            'https://api.cloudinary.com/v1_1/dglawxazg/image/upload', 
+            formData,
+            { headers: { 'Content-Type': 'multipart/form-data' } }
+          );
+  
+          return {
+            public_id: response.data.public_id,
+            url: response.data.secure_url,
+          };
+        })
+      );
+  
+      const productData = {
+        ...updatedProduct,
+        images: uploadResponses, // Add uploaded images with URLs and public_ids
+        id: productId, // Add the productId here
+      };
+  
+      dispatch(updateProduct(productData));
+  
+      setIsUpdating(false);
+      Toast.show({
+        type: "success",
+        text1: "Product Updated Successfully!",
+      });
+      navigation.goBack();
+    } catch (error) {
+      console.error("Failed to upload images or update product", error);
+      setIsUpdating(false);
+      Toast.show({
+        type: "error",
+        text1: "Failed to update product. Please try again.",
+      });
+    }
+  };
+
+  // Function to pick images and update the local state
+  const openImagePicker = async () => {
+    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permissionResult.granted) {
+      return alert("Permission to access gallery is required");
+    }
+
+    const data = await ImagePicker.launchImageLibraryAsync({
+      allowsMultipleSelection: true,
+      selectionLimit: 5,
+    });
+
+    if (data.assets) {
+      const imageUris = data.assets.map(asset => asset.uri);
+      setUpdatedProduct((prevState) => ({
+        ...prevState,
+        images: [...prevState.images, ...imageUris], // Add selected images
+      }));
+    }
+  };
+
+  // Function to remove an image from the list
+  const removeImage = (imageUri) => {
+    setUpdatedProduct((prevState) => ({
+      ...prevState,
+      images: prevState.images.filter((uri) => uri !== imageUri), // Filter out the image to remove
+    }));
   };
 
   return (
     <View className="flex-1 bg-yellow-400">
       <Header back={true} />
-
       {loading ? (
         <View className="flex-1 justify-center items-center">
           <ActivityIndicator size="large" color="#0000ff" />
           <Text className="text-lg">Loading product details...</Text>
         </View>
       ) : (
-        <ScrollView contentContainerStyle={{ flexGrow: 1, paddingBottom: 70}}>
+        <ScrollView contentContainerStyle={{ flexGrow: 1, paddingBottom: 50 }}>
           <View className="bg-white rounded-t-3xl pt-0 mt-5 h-full px-4 shadow-lg">
             <View className="items-center">
-              <Text className="text-xl font-bold mt-3 mb-1">Product Update</Text>
+              <Text className="text-2xl font-bold mt-3 mb-4">Update Product</Text>
             </View>
 
             {/* Displaying product images */}
             <View className="mt-5">
               <Text className="text-lg font-bold">Product Images:</Text>
               <ScrollView horizontal>
-                {updatedProduct.images.map((image, index) => (
-                  <Image
-                    key={index}
-                    source={{ uri: image.url }}
-                    style={{ width: 100, height: 100, marginRight: 10 }}
-                  />
+                {updatedProduct.images.map((imageUri, index) => (
+                  <View key={index} className="relative">
+                    <Image
+                      source={{ uri: imageUri }}
+                      style={{ width: 100, height: 100, marginRight: 10 }}
+                    />
+                    <TouchableOpacity
+                      onPress={() => removeImage(imageUri)}
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        right: 0,
+                        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                        padding: 5,
+                        borderRadius: 50,
+                      }}
+                    >
+                      <Icon name="close" size={20} color="white" />
+                    </TouchableOpacity>
+                  </View>
                 ))}
               </ScrollView>
+              <Button title="Pick Images" onPress={openImagePicker} />
             </View>
 
             {/* Input fields for updating product details */}
             <View className="mt-5">
               <Text className="text-lg font-bold">Product Name</Text>
-             
               <TextInput
                 value={updatedProduct.name}
                 onChangeText={(text) => handleInputChange("name", text)}
@@ -112,7 +214,7 @@ const AdminProductsUpdate = () => {
                 placeholder="Price"
                 keyboardType="numeric"
                 className="border-b-2 border-gray-300 p-2 text-lg mt-4"
-                />
+              />
 
               <Text className="text-lg font-bold mt-4">Stock</Text>
               <TextInput
@@ -121,7 +223,7 @@ const AdminProductsUpdate = () => {
                 placeholder="Stock"
                 keyboardType="numeric"
                 className="border-b-2 border-gray-300 p-2 text-lg mt-4"
-                />
+              />
 
               <Text className="text-lg font-bold mt-4">Description</Text>
               <TextInput
@@ -135,7 +237,7 @@ const AdminProductsUpdate = () => {
 
             {/* Update Button */}
             <View className="mt-5">
-              <Button title="Update Product" onPress={handleUpdate} />
+              <Button title={isUpdating ? "Updating..." : "Update Product"} onPress={handleUpdate} disabled={isUpdating} />
             </View>
           </View>
 

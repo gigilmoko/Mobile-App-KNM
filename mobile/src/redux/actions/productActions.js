@@ -92,10 +92,12 @@ export const searchProducts = (keyword) => async (dispatch) => {
 };
 
 export const updateProduct = (productData) => async (dispatch) => {
+    console.log("update touched");
     try {
       dispatch({ type: "UPDATE_PRODUCT_REQUEST" });
   
       const { data } = await axios.put(`${server}/product/update/${productData.id}`, productData);
+      console.log("update product: ", data);
   
       dispatch({
         type: "UPDATE_PRODUCT_SUCCESS",
@@ -108,6 +110,7 @@ export const updateProduct = (productData) => async (dispatch) => {
       });
     }
   };
+  
   
   // New Product
   export const newProduct = (productData) => async (dispatch) => {
