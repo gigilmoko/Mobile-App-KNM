@@ -111,21 +111,29 @@ export const updateProduct = (productData) => async (dispatch) => {
   
   // New Product
   export const newProduct = (productData) => async (dispatch) => {
+    console.log("Data sent to newProduct action:", productData);
     try {
       dispatch({ type: "NEW_PRODUCT_REQUEST" });
   
       const { data } = await axios.post(`${server}/product/new`, productData);
+      console.log("API response data:", data); // Log API response
   
-      dispatch({
-        type: "NEW_PRODUCT_SUCCESS",
-        payload: data.product,
-      });
+      if (data && data.product) {
+        dispatch({
+          type: "NEW_PRODUCT_SUCCESS",
+          payload: data.product, // Ensure this is the correct structure
+        });
+      } else {
+        console.error("API response does not contain product data:", data);
+      }
     } catch (error) {
+      console.error("Error in API call:", error); // Log error details
       dispatch({
         type: "NEW_PRODUCT_FAIL",
         payload: error.response?.data?.message || error.message,
       });
     }
   };
+  
 
 

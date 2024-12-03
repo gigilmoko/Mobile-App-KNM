@@ -1,82 +1,74 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Dimensions } from "react-native";
+import { View, Text, TouchableOpacity, ScrollView, TextInput } from "react-native";
 import Footer from "../../../components/Layout/Footer";
 import Header from "../../../components/Layout/Header";
-import { useDispatch, useSelector } from "react-redux";
 import Toast from "react-native-toast-message"; // Import Toast
-
-
+import { useDispatch } from "react-redux";
+import { createCategory } from "../../../redux/actions/categoryActions";
 
 const AdminCategoryCreate = () => {
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const dispatch = useDispatch();
+
+  const handleCreateCategory = () => {
+    if (!name || !description) {
+      Toast.show({
+        type: "error",
+        text1: "Validation Error",
+        text2: "Name and Description are required."
+      });
+      return;
+    }
+
+    const categoryData = { name, description }; 
+    dispatch(createCategory(categoryData));
+    console.log(categoryData)
+  };
+
   return (
-    <View className="flex-1" style={{ backgroundColor: "#ffb703" }}>
-    <Header back={true} />
+    <View className="flex-1 bg-yellow-500">
+      <Header back={true} />
 
-    <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-        <View style={styles.boxContainer}>
-            <View style={styles.boxboxContainer}>
-                <Text style={styles.headerText}>
-                    Events
-                </Text>
-            </View>
+      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+        <View className="bg-white rounded-t-[50px] mt-5 h-full px-4 shadow-lg">
+          <View className="items-center">
+            <Text className="text-xl font-bold mt-4 mb-2">Create Category</Text>
+          </View>
 
-           
+          <View className="mt-5">
+            <Text className="text-base font-semibold mb-1">Category Name</Text>
+            <TextInput
+              className="w-full border border-gray-300 rounded-md p-2 mb-4"
+              placeholder="Enter category name"
+              value={name}
+              onChangeText={setName}
+            />
 
-           
+            <Text className="text-base font-semibold mb-1">Description</Text>
+            <TextInput
+              className="w-full border border-gray-300 rounded-md p-2 mb-4"
+              placeholder="Enter category description"
+              value={description}
+              onChangeText={setDescription}
+              multiline
+            />
+
+            <TouchableOpacity
+              className="bg-yellow-500 rounded-md p-3 mt-4"
+              onPress={handleCreateCategory}
+            >
+              <Text className="text-white text-center font-bold">Create Category</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-   
 
-        <View style={styles.footer}>
-            <Footer activeRoute={"home"} />
+        <View className="absolute bottom-0 w-full">
+          <Footer activeRoute={"home"} />
         </View>
-    </ScrollView>
-</View>
-  )
-}
+      </ScrollView>
+    </View>
+  );
+};
 
-export default AdminCategoryCreate
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#fff',
-    },
-    screenNameContainer: {
-        marginTop: 20,
-        padding: 16,
-        alignItems: 'center',
-    },
-    screenNameText: {
-        fontSize: 24,
-        fontWeight: 'bold',
-    },
-    boxContainer: {
-        backgroundColor: '#fff',
-        borderTopLeftRadius: 50,
-        borderTopRightRadius: 50,
-        paddingTop: 0,
-        marginTop: 20,
-        height: '100%',
-        paddingHorizontal: 16,
-        elevation: 5, // For shadow (Android)
-        shadowColor: "#000", // For shadow (iOS)
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 4,
-    },
-    boxboxContainer: {
-        alignItems: 'center',
-    },
-    headerText: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        marginBottom: 5,
-        marginTop: 10,
-    },
-    footer: {
-        position: "absolute",
-        bottom: 0,
-        width: "100%",
-        paddingTop: 0,
-    },
-});
+export default AdminCategoryCreate;

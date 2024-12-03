@@ -76,11 +76,13 @@ export const categoryReducer = (state = initialState, action) => {
                 success: false,
             };
         case "NEW_CATEGORY_SUCCESS":
+            
             return {
                 ...state,
                 loading: false,
                 categories: [...state.categories, action.payload], // Adding the new category to the list
                 success: true,
+                
             };
         case "NEW_CATEGORY_FAIL":
             return {
