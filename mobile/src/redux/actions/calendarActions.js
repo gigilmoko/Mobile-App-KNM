@@ -3,7 +3,6 @@ import { server } from "../store";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Toast from 'react-native-toast-message';
 
-
 export const fetchEvent = (eventId) => async (dispatch) => {
     dispatch({ type: 'FETCH_EVENT_REQUEST' });
 
@@ -27,9 +26,6 @@ export const fetchEvent = (eventId) => async (dispatch) => {
         });
     }
 };
-
-
-
 
 // Action to fetch events before the current day
 export const fetchEventsBeforeCurrentDay = () => async (dispatch) => {
@@ -57,7 +53,6 @@ export const fetchEventsBeforeCurrentDay = () => async (dispatch) => {
     }
 };
 
-
 // Action to fetch events after the current day
 export const fetchEventsAfterCurrentDay = () => async (dispatch) => {
     dispatch({ type: 'FETCH_EVENTS_AFTER_REQUEST' });
@@ -80,6 +75,27 @@ export const fetchEventsAfterCurrentDay = () => async (dispatch) => {
         dispatch({
             type: 'FETCH_EVENTS_AFTER_FAILURE',
             payload: 'Failed to fetch events after current day',  // Error message
+        });
+    }
+};
+
+export const getAllEvents = () => async (dispatch) => {
+    try {
+        dispatch({ type: "ALL_EVENTS_REQUEST" });
+
+
+        const { data } = await axios.get(`${server}/calendar/events`);
+        // console.log("events data: ",data)
+
+        dispatch({
+            type: "ALL_EVENTS_SUCCESS",
+            payload: data.data,
+        });
+    } catch (error) {
+        console.error("Error fetching events:", error);
+        dispatch({
+            type: "ALL_EVENTS_FAIL",
+            payload: error.response ? error.response.data.message : error.message,
         });
     }
 };
