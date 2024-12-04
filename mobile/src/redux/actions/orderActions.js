@@ -77,6 +77,7 @@ export const placeOrder = (
 
 
 export const processOrder = (id, status) => async (dispatch) => {
+    console.log("processorder touched")
     try {
         dispatch({
             type: "processOrderRequest",
@@ -90,6 +91,7 @@ export const processOrder = (id, status) => async (dispatch) => {
                 withCredentials: true,
             }
         );
+        console.log("process order", data)
         dispatch({
             type: "processOrderSuccess",
             payload: data.message,

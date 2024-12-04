@@ -42,6 +42,7 @@ export const getProductsByCategory = (categoryId) => async (dispatch) => {
 };
 
 export const getProductDetails = (id) => async (dispatch) => {
+    console.log("getProducts touched")
     try {
         console.log("Fetching product details for ID:", id);  // Log the product ID
        
@@ -146,4 +147,6 @@ export const updateProduct = (productData) => async (dispatch) => {
       });
     }
   };
+
+
  

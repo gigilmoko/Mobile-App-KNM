@@ -1,13 +1,5 @@
 import React, { useEffect, useState } from "react";
-import {
-  View,
-  Text,
-  Dimensions,
-  StyleSheet,
-  Image,
-  TouchableOpacity,
-  ScrollView,
-} from "react-native";
+import { View, Text, Dimensions, StyleSheet, Image, TouchableOpacity, ScrollView } from "react-native";
 import { defaultStyle, colors } from "../styles/styles";
 import Header from "../components/Layout/Header";
 import { Avatar, Button } from "react-native-paper";
@@ -15,6 +7,7 @@ import Toast from "react-native-toast-message";
 import { useDispatch, useSelector } from "react-redux";
 import { useIsFocused, useNavigation } from "@react-navigation/native";
 import { getProductDetails } from "../redux/actions/productActions";
+import { fetchProductFeedbacks } from "../redux/actions/productFeedbackActions";
 
 const QuantityControl = React.memo(({ quantity, incrementQty, decrementQty }) => (
   <View
@@ -59,6 +52,7 @@ const ProductDetails = ({ route: { params } }) => {
   const isFocused = useIsFocused();
 
   const { isLoading, product, error } = useSelector((state) => state.product);
+  const { feedbacks, feedbackLoading } = useSelector((state) => state.feedbacks);  // Use feedbacks here
   const { user } = useSelector((state) => state.user);
 
   const [quantity, setQuantity] = useState(1);
@@ -68,8 +62,9 @@ const ProductDetails = ({ route: { params } }) => {
 
   useEffect(() => {
     dispatch(getProductDetails(params.id));
+    dispatch(fetchProductFeedbacks(params.id)); // Fetch feedback
   }, [dispatch, params.id, isFocused]);
-  
+
   useEffect(() => {
     if (product) {
       console.log("Fetched Product Details:", product); // Log the fetched product data
@@ -81,7 +76,6 @@ const ProductDetails = ({ route: { params } }) => {
       });
     }
   }, [product, error]);
-  
 
   const incrementQty = () => {
     if (stock <= quantity) {
@@ -150,24 +144,13 @@ const ProductDetails = ({ route: { params } }) => {
     });
   };
 
-  if (isLoading) {
+  if (isLoading || feedbackLoading) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <Text>Loading...</Text>
       </View>
     );
   }
-
-  // if (error || !product) {
-  //   return (
-  //     <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-  //       <Text style={{ color: "red" }}>Failed to load product details</Text>
-  //       <Button mode="contained" onPress={() => dispatch(getProductDetails(params.id))}>
-  //         Retry
-  //       </Button>
-  //     </View>
-  //   );
-  // }
 
   return (
     <ScrollView style={{ ...defaultStyle, padding: 0 }} nestedScrollEnabled>
@@ -193,14 +176,13 @@ const ProductDetails = ({ route: { params } }) => {
               height: 250,
               justifyContent: "center",
               alignItems: "center",
-              backgroundColor: "#f5f5f5", // light gray background
+              backgroundColor: "#f5f5f5",
             }}
           >
             <Text style={{ color: "gray" }}>No Images Available</Text>
           </View>
         )}
       </ScrollView>
-
 
       {/* Product Details */}
       <View
@@ -286,20 +268,44 @@ const ProductDetails = ({ route: { params } }) => {
           </View>
         </View>
       </View>
+
+      {/* Feedback Section */}
+      <View style={{ marginTop: 20, padding: 15, backgroundColor: colors.color1 }}>
+        <Text style={{ fontSize: 20, fontWeight: "bold" }}>Customer Feedbacks</Text>
+
+        {feedbacks && feedbacks.length > 0 ? (
+          feedbacks.map((fb) => (
+            <View
+              key={fb._id}
+              style={{
+                marginTop: 10,
+                padding: 10,
+                backgroundColor: colors.color2,
+                borderRadius: 5,
+              }}
+            >
+              <Text style={{ fontWeight: "bold" }}>Rating: {fb.rating} ⭐</Text>
+              <Text>{fb.feedback}</Text>
+              <Text style={{ color: "gray", fontSize: 12 }}>
+                {new Date(fb.createdAt).toLocaleDateString()}
+              </Text>
+            </View>
+          ))
+        ) : (
+          <Text style={{ marginTop: 10, color: "gray" }}>
+            No reviews available yet.
+          </Text>
+        )}
+      </View>
     </ScrollView>
   );
 };
 
 const style = StyleSheet.create({
   quantity: {
-    backgroundColor: colors.color4,
-    height: 25,
-    width: 25,
-    textAlignVertical: "center",
-    textAlign: "center",
-    borderWidth: 1,
-    borderRadius: 5,
-    borderColor: colors.color5,
+    fontSize: 16,
+    fontWeight: "700",
+    marginHorizontal: 5,
   },
 });
 

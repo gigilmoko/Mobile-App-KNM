@@ -45,6 +45,8 @@ import AdminProductsUpdate from "./src/screens/Admin/Product/AdminProductsUpdate
 import AdminProductsCreate from "./src/screens/Admin/Product/AdminProductsCreate";
 import AdminCategoryUpdate from "./src/screens/Admin/Category/AdminCategoryUpdate";
 import AdminCategoryCreate from "./src/screens/Admin/Category/AdminCategoryCreate";
+import OrderDetails from "./src/screens/User/OrderDetails";
+import ProductFeedback from "./src/screens/User/ProductFeedback";
 
 const Stack = createNativeStackNavigator();
 const Drawer = createDrawerNavigator();
@@ -140,11 +142,13 @@ const HomeStack = () => {
                 <Stack.Screen name="eventinfo" component={EventInfo} />
                 <Stack.Screen name="eventlist" component={EventList} />
                 <Stack.Screen name="feedback" component={Feedback} />
+                <Stack.Screen name="productfeedback" component={ProductFeedback} />
 
 
                 <Stack.Screen name="wishlist" component={Wishlist} />
                 <Stack.Screen name="confirmorder" component={ConfirmOrder} />
                 <Stack.Screen name="myorders" component={MyOrders} />
+                <Stack.Screen name="orderdetails" component={OrderDetails} />
                 <Stack.Screen name="productdetail" component={ProductDetails} />
 
 
@@ -154,6 +158,8 @@ const HomeStack = () => {
                 <Stack.Screen name="myaccount" component={MyAccount} />
                 <Stack.Screen name="changepassword" component={ChangePassword} />
                 <Stack.Screen name="updateprofile" component={UpdateProfile} />
+
+
                 {/* Admin */}
                 <Stack.Screen name="dashboard" component={Dashboard} />
                 <Stack.Screen name="adminproducts" component={AdminProducts} />

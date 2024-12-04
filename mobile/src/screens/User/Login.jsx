@@ -19,7 +19,7 @@ const Login = ({ navigation }) => {
             .then(() => {
                 Toast.show({
                     type: 'success',
-                    text1: 'Login Successful',
+                    // text1: 'Login Successful',
                     text2: 'Welcome back!',
                 });
                 console.log("Login was successful");

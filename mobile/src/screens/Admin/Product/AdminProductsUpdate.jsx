@@ -22,8 +22,8 @@ const AdminProductsUpdate = () => {
   const { productId } = route.params;
 
   // Redux state: loading, product details, categories
-  const { product, loading } = useSelector((state) => state.product);
-  const { categories } = useSelector((state) => state.category);
+  const { product, loading: loadingProduct } = useSelector((state) => state.product);
+  const { categories, loading: loadingCategories } = useSelector((state) => state.category);
 
   // Local state for handling updates to product
   const [updatedProduct, setUpdatedProduct] = useState({
@@ -47,18 +47,26 @@ const AdminProductsUpdate = () => {
   }, [dispatch, productId]);
 
   useEffect(() => {
-    if (product) {
-      // Set the fetched product details in local state
-      setUpdatedProduct({
-        name: product.name || "",
-        price: product.price || "",
-        stock: product.stock || "",
-        description: product.description || "",
-        category: product.category || "",
-        images: product.images.map(img => img.url) || [], // Initial images from the product
-      });
-    }
-  }, [product]);
+    const timer = setTimeout(() => {
+      if (product) {
+        console.log("Fetched product:", product);  // Log the fetched product to inspect the structure
+        setUpdatedProduct({
+          name: product.name || "",
+          price: product.price || "",
+          stock: product.stock || "",
+          description: product.description || "",
+          category: product.category || "",
+          images: product.images.map((img) => {
+            console.log("Mapping image:", img);  // Log each image object being mapped
+            return img.url;
+          }) || [], // Initial images from the product
+        });
+      }
+    }, 1000);  // 5 seconds timer
+
+    // Cleanup timer
+    return () => clearTimeout(timer);
+  }, [product]);  // This will run when the product changes
 
   const handleInputChange = (field, value) => {
     setUpdatedProduct((prevState) => ({
@@ -159,215 +167,236 @@ const AdminProductsUpdate = () => {
     }));
   };
 
+  // If either product or categories are loading, show a loading screen
+  if (loadingProduct || loadingCategories) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" color="#0000ff" />
+        <Text style={{ fontSize: 18 }}>Loading...</Text>
+      </View>
+    );
+  }
+
   return (
     <View style={{ flex: 1, backgroundColor: "#ffb703" }}>
       <Header back={true} />
-      {loading ? (
-        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-          <ActivityIndicator size="large" color="#0000ff" />
-          <Text style={{ fontSize: 18 }}>Loading product details...</Text>
-        </View>
-      ) : (
-        <ScrollView
-          contentContainerStyle={{
-            flexGrow: 1,
-            justifyContent: "center",
-            alignItems: "center",
+      <ScrollView
+        contentContainerStyle={{
+          flexGrow: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          backgroundColor: "#F5F5F5",
+          borderTopRightRadius: 30,
+          borderTopLeftRadius: 30,
+          paddingBottom: 100, // Add padding to avoid overlap with footer
+        }}
+      >
+        <View
+          style={{
             backgroundColor: "#F5F5F5",
-            borderTopRightRadius: 30,
-            borderTopLeftRadius: 30,
-            paddingBottom: 100, // Add padding to avoid overlap with footer
+            width: "90%",
+            padding: 20,
+            borderRadius: 10,
+            shadowColor: "#000",
+            shadowOpacity: 0.2,
+            shadowRadius: 5,
+            shadowOffset: { width: 0, height: 3 },
+            elevation: 4,
           }}
         >
-          <View
+          <Text
             style={{
-              backgroundColor: "#F5F5F5",
-              width: "90%",
-              padding: 20,
-              borderRadius: 10,
-              shadowColor: "#000",
-              shadowOpacity: 0.2,
-              shadowRadius: 5,
-              shadowOffset: { width: 0, height: 3 },
-              elevation: 4,
+              fontSize: 24,
+              fontWeight: "bold",
+              marginBottom: 20,
+              textAlign: "center",
+              color: "#333333",
+              paddingTop: 15,
             }}
           >
-            <Text
-              style={{
-                fontSize: 24,
-                fontWeight: "bold",
-                marginBottom: 20,
-                textAlign: "center",
-                color: "#333333",
-                paddingTop: 15,
-              }}
-            >
-              Update Product
-            </Text>
+            Update Product
+          </Text>
 
-            {/* Product Name */}
-            <Text style={{ fontSize: 14, color: "#666666", marginBottom: 10 }}>
-              Product Name*
-            </Text>
-            <TextInput
-              style={{
-                borderWidth: 1,
-                borderColor: "#CCCCCC",
-                borderRadius: 5,
-                padding: 10,
-                marginBottom: 15,
-              }}
-              placeholder="Enter product name"
-              value={updatedProduct.name}
-              onChangeText={(text) => handleInputChange("name", text)}
-            />
+          {/* Product Name */}
+          <Text style={{ fontSize: 14, color: "#666666", marginBottom: 10 }}>
+            Product Name*
+          </Text>
+          <TextInput
+            style={{
+              borderWidth: 1,
+              borderColor: "#CCCCCC",
+              borderRadius: 5,
+              padding: 10,
+              marginBottom: 15,
+            }}
+            placeholder="Enter product name"
+            value={updatedProduct.name}
+            onChangeText={(text) => handleInputChange("name", text)}
+          />
 
-            {/* Description */}
-            <Text style={{ fontSize: 14, color: "#666666", marginBottom: 10 }}>
-              Description*
-            </Text>
-            <TextInput
-              style={{
-                borderWidth: 1,
-                borderColor: "#CCCCCC",
-                borderRadius: 5,
-                padding: 10,
-                marginBottom: 15,
-                height: 100,
-                textAlignVertical: "top",
-              }}
-              placeholder="Enter product description"
-              value={updatedProduct.description}
-              onChangeText={(text) => handleInputChange("description", text)}
-              multiline
-            />
+          {/* Description */}
+          <Text style={{ fontSize: 14, color: "#666666", marginBottom: 10 }}>
+            Description*
+          </Text>
+          <TextInput
+            style={{
+              borderWidth: 1,
+              borderColor: "#CCCCCC",
+              borderRadius: 5,
+              padding: 10,
+              marginBottom: 15,
+              height: 100,
+              textAlignVertical: "top",
+            }}
+            placeholder="Enter product description"
+            value={updatedProduct.description}
+            onChangeText={(text) => handleInputChange("description", text)}
+            multiline
+          />
 
-            {/* Price */}
-            <Text style={{ fontSize: 14, color: "#666666", marginBottom: 10 }}>
-              Price*
-            </Text>
-            <TextInput
-              style={{
-                borderWidth: 1,
-                borderColor: "#CCCCCC",
-                borderRadius: 5,
-                padding: 10,
-                marginBottom: 15,
-              }}
-              placeholder="Enter price"
-              value={String(updatedProduct.price)}
-              onChangeText={(text) => handleInputChange("price", text)}
-              keyboardType="numeric"
-            />
+          {/* Price */}
+          <Text style={{ fontSize: 14, color: "#666666", marginBottom: 10 }}>
+            Price*
+          </Text>
+          <TextInput
+            style={{
+              borderWidth: 1,
+              borderColor: "#CCCCCC",
+              borderRadius: 5,
+              padding: 10,
+              marginBottom: 15,
+            }}
+            placeholder="Enter price"
+            value={String(updatedProduct.price)}
+            onChangeText={(text) => handleInputChange("price", text)}
+            keyboardType="numeric"
+          />
 
-            {/* Stock */}
-            <Text style={{ fontSize: 14, color: "#666666", marginBottom: 10 }}>
-              Stock*
-            </Text>
-            <TextInput
-              style={{
-                borderWidth: 1,
-                borderColor: "#CCCCCC",
-                borderRadius: 5,
-                padding: 10,
-                marginBottom: 15,
-              }}
-              placeholder="Enter stock quantity"
-              value={String(updatedProduct.stock)}
-              onChangeText={(text) => handleInputChange("stock", text)}
-              keyboardType="numeric"
-            />
+          {/* Stock */}
+          <Text style={{ fontSize: 14, color: "#666666", marginBottom: 10 }}>
+            Stock*
+          </Text>
+          <TextInput
+            style={{
+              borderWidth: 1,
+              borderColor: "#CCCCCC",
+              borderRadius: 5,
+              padding: 10,
+              marginBottom: 15,
+            }}
+            placeholder="Enter stock quantity"
+            value={String(updatedProduct.stock)}
+            onChangeText={(text) => handleInputChange("stock", text)}
+            keyboardType="numeric"
+          />
 
-            {/* Category Dropdown */}
-            <Text style={{ fontSize: 14, color: "#666666", marginBottom: 10 }}>
-              Category*
-            </Text>
-            <View style={{ borderWidth: 1, borderColor: '#CCCCCC', borderRadius: 5, marginBottom: 15 }}>
-              <Picker
-                selectedValue={updatedProduct.category}
-                onValueChange={(value) => handleInputChange("category", value)}
-                style={{ height: 50, width: '100%' }}
-              >
-                <Picker.Item label="Select Category" value="" />
-                {categories && categories.map((cat) => (
-                  <Picker.Item key={cat._id} label={cat.name} value={cat._id} />
-                ))}
-              </Picker>
-            </View>
+          {/* Category */}
+          <Text style={{ fontSize: 14, color: "#666666", marginBottom: 10 }}>
+            Category*
+          </Text>
+          <Picker
+            selectedValue={updatedProduct.category}
+            onValueChange={(itemValue) => handleInputChange("category", itemValue)}
+            style={{
+              height: 40,
+              width: "100%",
+              borderColor: "#CCCCCC",
+              borderWidth: 1,
+              borderRadius: 5,
+              marginBottom: 15,
+            }}
+          >
+            {categories.map((category) => (
+              <Picker.Item key={category._id} label={category.name} value={category._id} />
+            ))}
+          </Picker>
 
-            {/* Image Picker */}
-            <Text style={{ fontSize: 14, color: "#666666", marginBottom: 10 }}>
-              Product Images*
-            </Text>
-            <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 15 }}>
-              <TouchableOpacity
-                onPress={openImagePicker}
-                style={{
-                  backgroundColor: "#ffb703",
-                  padding: 12,
-                  borderRadius: 5,
-                  marginRight: 10,
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <MaterialCommunityIcons name="plus" size={24} color="#000" />
-              </TouchableOpacity>
+          {/* Image Picker */}
+          <TouchableOpacity onPress={openImagePicker} style={styles.imagePickerButton}>
+            <Text style={styles.imagePickerButtonText}>Pick Images</Text>
+          </TouchableOpacity>
 
-              {updatedProduct.images.length > 0 && (
-                <ScrollView horizontal>
-                  <View style={{ flexDirection: "row" }}>
-                    {updatedProduct.images.map((imageUri, index) => (
-                      <View key={index} style={{ position: "relative", marginRight: 10 }}>
-                        <Image
-                          source={{ uri: imageUri }}
-                          style={{ width: 100, height: 100, borderRadius: 10 }}
-                        />
-                        <TouchableOpacity
-                          onPress={() => removeImage(imageUri)}
-                          style={{
-                            position: 'absolute',
-                            top: 0,
-                            right: 0,
-                            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                            padding: 5,
-                            borderRadius: 50,
-                          }}
-                        >
-                          <MaterialCommunityIcons name="close" size={20} color="white" />
-                        </TouchableOpacity>
-                      </View>
-                    ))}
-                  </View>
-                </ScrollView>
-              )}
-            </View>
-
-            {/* Submit Button */}
-            <TouchableOpacity
-              onPress={handleUpdate}
-              style={{
-                backgroundColor: "#ffb703",
-                padding: 12,
-                borderRadius: 5,
-                alignItems: "center",
-              }}
-              disabled={isUpdating}
-            >
-              <Text style={{ color: "#000", fontWeight: "bold" }}>
-                {isUpdating ? 'Updating...' : 'Update Product'}
-              </Text>
-            </TouchableOpacity>
+          {/* Display Selected Images */}
+          <View style={styles.imageGallery}>
+            {updatedProduct.images.map((imageUri, index) => (
+              <View key={index} style={styles.imageContainer}>
+                <Image source={{ uri: imageUri }} style={styles.selectedImage} />
+                <TouchableOpacity
+                  onPress={() => removeImage(imageUri)}
+                  style={styles.removeImageButton}
+                >
+                  <MaterialCommunityIcons name="delete" size={24} color="#ff0000" />
+                </TouchableOpacity>
+              </View>
+            ))}
           </View>
-        </ScrollView>
-      )}
 
-      {/* Footer */}
-      <View style={{ position: "absolute", bottom: 0, width: "100%" }}>
-        <Footer activeRoute={"home"} />
-      </View>
+          {/* Update Button */}
+          <TouchableOpacity
+            style={styles.updateButton}
+            onPress={handleUpdate}
+            disabled={isUpdating}
+          >
+            {isUpdating ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <Text style={styles.updateButtonText}>Update Product</Text>
+            )}
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+      <Footer />
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  imagePickerButton: {
+    backgroundColor: "#007BFF",
+    padding: 10,
+    borderRadius: 5,
+    marginBottom: 15,
+    alignItems: "center",
+  },
+  imagePickerButtonText: {
+    color: "#fff",
+    fontWeight: "bold",
+  },
+  imageGallery: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    marginBottom: 15,
+  },
+  imageContainer: {
+    position: "relative",
+    marginRight: 10,
+    marginBottom: 10,
+  },
+  selectedImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 5,
+  },
+  removeImageButton: {
+    position: "absolute",
+    top: 0,
+    right: 0,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    padding: 5,
+    borderRadius: 50,
+  },
+  updateButton: {
+    backgroundColor: "#ff6600",
+    padding: 15,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 20,
+  },
+  updateButtonText: {
+    color: "#fff",
+    fontWeight: "bold",
+  },
+});
 
 export default AdminProductsUpdate;

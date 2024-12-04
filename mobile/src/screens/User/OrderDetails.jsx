@@ -1,31 +1,20 @@
-import {
-    StyleSheet,
-    Text,
-    View,
-    ScrollView,
-} from "react-native";
 import React, { useState, useEffect } from "react";
-import { colors } from "../../constants";
-import { Button } from "react-native-paper";
+import { Text, View, ScrollView, TouchableOpacity } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 import { useIsFocused, useRoute } from "@react-navigation/native";
 import { getOrderDetails } from '../../redux/actions/orderActions';
 import Header from "../../components/Layout/Header";
 import StepIndicator from "react-native-step-indicator";
 import ConfirmOrderItem from "../../components/Cart/ConfirmOrderItem";
-import { processOrder } from "../../redux/actions/orderActions";
-import DropDownPicker from "react-native-dropdown-picker";
+import { useNavigation } from "@react-navigation/native";
 
-const OrderDetails = ({ admin }) => {
+
+const OrderDetails = () => {
     const dispatch = useDispatch();
+    const navigation = useNavigation();  // Use navigation
     const isFocused = useIsFocused();
-    const [statusDisable, setStatusDisable] = useState(false);
     const route = useRoute();
     const { id } = route.params;
-
-    const updateHandler = () => {
-        dispatch(processOrder(id));
-    };
 
     useEffect(() => {
         dispatch(getOrderDetails(id));
@@ -34,15 +23,6 @@ const OrderDetails = ({ admin }) => {
     const { order } = useSelector((state) => state.order);
     const orderStatus = useSelector((state) => state.order.orderStatus);
     const status = order ? order.orderStatus : '';
-
-    const [items, setItems] = useState([
-        { label: 'Preparing', value: 'Preparing' },
-        { label: 'Shipped', value: 'Shipped' },
-        { label: 'Delivered', value: 'Delivered' }
-    ]);
-
-    const [open, setOpen] = useState(false);
-    const [value, setValue] = useState(null);
 
     const labels = ["Preparing", "Shipping", "Delivery"];
     const [trackingState, setTrackingState] = useState(1);
@@ -73,57 +53,40 @@ const OrderDetails = ({ admin }) => {
     useEffect(() => {
         if (order && order.orderStatus) {
             if (order.orderStatus === "Delivered") {
-                setStatusDisable(true);
                 setTrackingState(3);
             } else if (order.orderStatus === "Shipped") {
-                setStatusDisable(false);
                 setTrackingState(2);
             } else if (order.orderStatus === "Preparing") {
-                setStatusDisable(false);
                 setTrackingState(1);
             }
         }
-    }, [order]);
+    }, [order, navigation]);
 
     return (
         <>
             <Header back={true} />
-            <View style={styles.container}>
-                <View style={styles.screenNameContainer}>
-                    <View>
-                        <Text style={styles.screenNameText}>Order Details</Text>
-                    </View>
-                    <View>
-                        <Text style={styles.screenNameParagraph}>
-                            View all detail about order
-                        </Text>
-                    </View>
+            <View className="flex-1 bg-gray-200 items-center justify-center px-5 pb-0">
+                <View className="mt-2 w-full mb-1">
+                    <Text className="text-3xl font-extrabold text-gray-600">Order Details</Text>
+                    <Text className="mt-2 text-lg">View all details about the order</Text>
                 </View>
-                <ScrollView
-                    style={styles.bodyContainer}
-                    showsVerticalScrollIndicator={false}
-                >
-                    <View style={styles.containerNameContainer}>
-                        <View>
-                            <Text style={styles.containerNameText}>Shipping Address</Text>
-                        </View>
+                <ScrollView className="flex-1 w-full px-1" showsVerticalScrollIndicator={false}>
+                    <View className="mt-2 w-full">
+                        <Text className="text-xl font-extrabold text-gray-600">Shipping Address</Text>
                     </View>
-                    <View style={styles.ShipingInfoContainer}>
-                        <Text style={styles.secondarytextSm}>
+                    <View className="mt-1 bg-white p-3 rounded-lg shadow-md mb-2">
+                        <Text className="text-sm text-gray-600">
                             {order?.shippingInfo?.address}, {order?.shippingInfo?.city}, {order?.shippingInfo?.country} {order?.shippingInfo?.pinCode}
                         </Text>
                     </View>
-                    <View>
-                        <Text style={styles.containerNameText}>Order Info</Text>
+
+                    <View className="mt-2 w-full">
+                        <Text className="text-xl font-extrabold text-gray-600">Order Info</Text>
                     </View>
-                    <View style={styles.orderInfoContainer}>
-                        <Text style={styles.secondarytextMedian}>
-                            Order # {order?._id}
-                        </Text>
-                        <Text style={styles.secondarytextSm}>
-                            Ordered on {order?.createdAt?.split("T")[0]}
-                        </Text>
-                        <View style={{ marginTop: 15, width: "100%" }}>
+                    <View className="mt-1 bg-white p-3 rounded-lg shadow-sm mb-2">
+                        <Text className="text-sm font-bold text-orange-500">Order # {order?._id}</Text>
+                        <Text className="text-sm text-gray-600">Ordered on {order?.createdAt?.split("T")[0]}</Text>
+                        <View className="mt-4 w-full">
                             <StepIndicator
                                 customStyles={customStyles}
                                 currentPosition={trackingState}
@@ -133,248 +96,64 @@ const OrderDetails = ({ admin }) => {
                         </View>
                     </View>
 
-                    <View style={styles.containerNameContainer}>
-                        <View>
-                            <Text style={styles.containerNameText}>Package Details</Text>
-                        </View>
+                    <View className="mt-2 w-full">
+                        <Text className="text-xl font-extrabold text-gray-600">Package Details</Text>
                     </View>
-                    <View style={styles.orderItemsContainer}>
-                        <View style={styles.orderItemContainer}>
-                            <Text style={styles.orderItemText}>Package</Text>
+                    <View className="mt-1 bg-white p-3 rounded-lg shadow-sm mb-2">
+                        <View className="flex-row justify-between items-center w-full">
+                            <Text className="text-sm text-gray-600">Package</Text>
                             <Text>{order?.orderStatus}</Text>
                         </View>
-                        <View style={styles.orderItemContainer}>
-                            <Text style={styles.orderItemText}>
-                                Payment Method : {order?.paymentMethod ? order?.orderStatus : ''}
+                        <View className="flex-row justify-between items-center w-full mt-2">
+                            <Text className="text-sm text-gray-600">
+                                Payment Method: {order?.paymentMethod } 
                             </Text>
                         </View>
-                        <ScrollView
-                            style={styles.orderSummaryContainer}
-                            nestedScrollEnabled={true}
-                        >
+                        <ScrollView className="bg-white rounded-lg p-3 max-h-[260px] w-full mb-1" nestedScrollEnabled={true}>
                             {order && order.orderItems && order.orderItems.map((i) => (
-                                <ConfirmOrderItem
+                                <TouchableOpacity 
                                     key={i.product}
-                                    price={i.price}
-                                    image={i.image}
-                                    name={i.name}
-                                    quantity={i.quantity}
-                                />
+                                    onPress={() => {
+                                        // Only navigate to product feedback if the order status is "Delivered"
+                                        if (order?.orderStatus === "Delivered") {
+                                            navigation.navigate('productfeedback', {
+                                                orderId: order._id,
+                                                productId: i.product, // Pass the specific product ID
+                                            });
+                                        }
+                                    }}
+                                >
+                                    <ConfirmOrderItem
+                                        price={i.price}
+                                        image={i.image}
+                                        name={i.name}
+                                        quantity={i.quantity}
+                                    />
+                                    {order?.orderStatus === "Delivered" && (
+                                        <Text style={{ textAlign: 'right' }}>Rate Here!</Text>
+                                    )}
+                                </TouchableOpacity>
                             ))}
                         </ScrollView>
-                        <View style={styles.orderItemContainer}>
-                            <Text style={{
-                                fontSize: 20,
-                                fontWeight: '500',
-                                maxWidth: '80%',
-                                color: '#000000',
-                                opacity: 0.5,
-                            }}>Total</Text>
-                            <Text style={{
-                                fontSize: 24,
-                                fontWeight: '500',
-                                color: '#e84219',
-                            }}>${order?.totalAmount}</Text>
+                        <View className="flex-row justify-between items-center w-full mt-3">
+                            <Text className="text-l font-medium text-gray-600 opacity-50 max-w-[80%]">Total Price:</Text>
+                            <Text className="text-l font-medium text-orange-600">₱{order?.itemsPrice}</Text>
+                        </View>
+                        <View className="flex-row justify-between items-center w-full mt-3">
+                            <Text className="text-l font-medium text-gray-600 opacity-50 max-w-[80%]">Shipping</Text>
+                            <Text className="text-l font-medium text-orange-600">₱{order?.shippingCharges}</Text>
+                        </View>
+                        <View className="flex-row justify-between items-center w-full mt-3">
+                            <Text className="text-xl font-medium text-gray-600 opacity-50 max-w-[80%]">Overall Price:</Text>
+                            <Text className="text-2xl font-medium text-orange-600">₱{order?.totalAmount}</Text>
                         </View>
                     </View>
-                    <View style={styles.emptyView}></View>
+
+                    <View className="h-4"></View>
                 </ScrollView>
-                {admin && (
-                        <View>
-                            {statusDisable == false ? (
-                                <>
-                                    <View style={styles.bottom1Container}>
-                                        <View>
-                                            <DropDownPicker
-                                                style={{ width: 200 }}
-                                                open={open}
-                                                value={value}
-                                                items={items}
-                                                setOpen={setOpen}
-                                                setValue={setValue}
-                                                setItems={setItems}
-                                                disabled={statusDisable}
-                                                disabledStyle={{
-                                                    backgroundColor: colors.light,
-                                                    borderColor: colors.white,
-                                                }}
-                                                labelStyle={{ color: colors.muted }}
-                                            />
-                                        </View>
-                                        <Button onPress={updateHandler}>Update Order</Button>
-                                    </View>
-                                </>
-                            ) : (
-                                <View style={styles.bottom2Container}>
-                                <Text style={styles.deliveryText}>This order was already delivered to the customer</Text>
-                                </View>
-                            )}
-                        </View>
-                )}
             </View>
         </>
     );
 };
 
-export default OrderDetails
-
-const styles = StyleSheet.create({
-    container: {
-        flexDirecion: "row",
-        backgroundColor: "#F5F5F5",
-        alignItems: "center",
-        justifyContent: "center",
-        paddingHorizontal: 20,
-        paddingBottom: 0,
-        flex: 1,
-    },
-    TopBarContainer: {
-        width: "100%",
-        display: "flex",
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-    },
-    screenNameContainer: {
-        marginTop: 10,
-        width: "100%",
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "flex-start",
-        alignItems: "flex-start",
-        marginBottom: 5,
-    },
-    screenNameText: {
-        fontSize: 30,
-        fontWeight: "800",
-        color: "#707981",
-    },
-    screenNameParagraph: {
-        marginTop: 10,
-        fontSize: 15,
-    },
-    bodyContainer: { flex: 1, width: "100%", padding: 5 },
-    ShipingInfoContainer: {
-        marginTop: 5,
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "center",
-        alignItems: "flex-start",
-        backgroundColor: "#FFFFFF",
-        padding: 10,
-        borderRadius: 10,
-        borderColor: "#707981",
-        elevation: 5,
-        marginBottom: 10,
-    },
-    containerNameContainer: {
-        marginTop: 10,
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "center",
-        alignItems: "flex-start",
-    },
-    containerNameText: {
-        fontSize: 18,
-        fontWeight: "800",
-        color: "#707981",
-    },
-    secondarytextSm: {
-        color: "#707981",
-        fontSize: 13,
-    },
-    orderItemsContainer: {
-        height: 350,
-        marginTop: 5,
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "center",
-        alignItems: "flex-start",
-        backgroundColor: "#FFFFFF",
-        padding: 10,
-        borderRadius: 10,
-
-        borderColor: "#FFFFFF",
-        elevation: 3,
-        marginBottom: 10,
-    },
-    orderItemContainer: {
-        width: "100%",
-        display: "flex",
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-    },
-    orderItemText: {
-        fontSize: 13,
-        color: "#707981",
-    },
-    orderSummaryContainer: {
-        backgroundColor: "#FFFFFF",
-        borderRadius: 10,
-        padding: 10,
-        maxHeight: 260,
-        width: "100%",
-        marginBottom: 5,
-    },
-    bottom1Container: {
-        backgroundColor: "#FFFFFF",
-        width: "110%",
-        height: 70,
-        borderTopLeftRadius: 10,
-        borderTopEndRadius: 10,
-        elevation: 5,
-        display: "flex",
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-between",
-
-        paddingLeft: 10,
-        paddingRight: 10,
-    },
-    bottom2Container: {
-        backgroundColor: "#FFFFFF",
-        width: 375,
-        height: 70,
-        borderTopLeftRadius: 10,
-        borderTopEndRadius: 10,
-        elevation: 5,
-        display: "flex",
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "center",
-        paddingHorizontal: 10,
-    },
-    orderInfoContainer: {
-        marginTop: 5,
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "center",
-        alignItems: "flex-start",
-        backgroundColor: "#FFFFFF",
-        padding: 10,
-        borderRadius: 10,
-
-        borderColor: "#707981",
-        elevation: 1,
-        marginBottom: 10,
-    },
-    primarytextMedian: {
-        color: "#FB6831",
-        fontSize: 15,
-        fontWeight: "bold",
-    },
-    secondarytextMedian: {
-        color: "#707981",
-        fontSize: 15,
-        fontWeight: "bold",
-    },
-    deliveryText: {
-        color: 'red',
-        fontSize: 16,
-        textAlign: 'center',
-    },
-    emptyView: {
-        height: 20,
-    },
-});
+export default OrderDetails;

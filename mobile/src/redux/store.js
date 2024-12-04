@@ -9,6 +9,7 @@ import calendarReducer from "./reducers/calendarReducers";
 import feedbackReducer from "./reducers/feedbackReducers";
 import userInterestReducers from "./reducers/userInterestReducers"
 import { categoryReducer } from "./reducers/categoryReducers";
+import { productFeedbackReducer } from "./reducers/productFeedbackReducer";
 
 export const store = configureStore({
     reducer: {
@@ -21,7 +22,8 @@ export const store = configureStore({
         calendar: calendarReducer,
         feedback: feedbackReducer,
         userInterested: userInterestReducers, 
-        category: categoryReducer
+        category: categoryReducer,
+        feedbacks: productFeedbackReducer
     },
 });
 
