@@ -87,7 +87,7 @@ const AdminProductsCreate = () => {
         images: uploadResponses, // Images are now an array of objects with URLs and public_ids
       };
 
-      console.log("Data sent to newProduct action:", productData);
+      // console.log("Data sent to newProduct action:", productData);
       dispatch(newProduct(productData));
 
       setIsUpdating(false);

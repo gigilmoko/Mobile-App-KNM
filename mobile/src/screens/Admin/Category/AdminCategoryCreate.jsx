@@ -11,11 +11,13 @@ import Header from "../../../components/Layout/Header";
 import Toast from "react-native-toast-message"; // Import Toast
 import { useDispatch } from "react-redux";
 import { createCategory } from "../../../redux/actions/categoryActions";
+import { useNavigation } from "@react-navigation/native"; // Import useNavigation
 
 const AdminCategoryCreate = () => {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const dispatch = useDispatch();
+  const navigation = useNavigation(); // Initialize useNavigation hook
   const [centered, setCentered] = useState(true);
 
   const handleCreateCategory = () => {
@@ -29,8 +31,27 @@ const AdminCategoryCreate = () => {
     }
 
     const categoryData = { name, description };
-    dispatch(createCategory(categoryData));
-    console.log(categoryData);
+
+    // Dispatch createCategory and handle success/failure
+    dispatch(createCategory(categoryData))
+      .then((response) => {
+        // If successful, navigate to admin category list page
+        navigation.navigate("admincategory"); // Replace "AdminCategory" with your route name
+        Toast.show({
+          type: "success",
+          text1: "Success",
+          text2: "Category created successfully!",
+        });
+      })
+      .catch((error) => {
+        Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: error.message || "Something went wrong.",
+        });
+      });
+
+    // console.log(categoryData);
   };
 
   return (
@@ -137,7 +158,7 @@ const AdminCategoryCreate = () => {
               }}
               onPress={handleCreateCategory}
             >
-              <Text style={{ textAlign: "center", color: "#000", }}>
+              <Text style={{ textAlign: "center", color: "#000" }}>
                 Create Category
               </Text>
             </TouchableOpacity>

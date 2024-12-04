@@ -89,7 +89,7 @@ const Main = () => {
     const { user } = useSelector((state) => state.user);
 
     useEffect(() => {
-        console.log("Loading user data...");
+        // console.log("Loading user data...");
         dispatch(loadUser(user));
     }, [dispatch]);
 

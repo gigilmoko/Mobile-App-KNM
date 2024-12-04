@@ -36,12 +36,12 @@ export const userReducer = createReducer(initialState, (builder) => {
         
         // Success cases
         .addCase("loginSuccess", (state, action) => {
-            console.log("Login Success Action Dispatched", action);
+            // console.log("Login Success Action Dispatched", action);
             state.loading = false;
             state.isAuthenticated = true;
             state.user = action.payload; 
             state.message = "Login successful";
-            console.log("User logged in successfully, state:", state);
+            // console.log("User logged in successfully, state:", state);
         })
         
         .addCase("loadUserSuccess", (state, action) => {

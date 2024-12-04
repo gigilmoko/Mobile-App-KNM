@@ -6,7 +6,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { getAllCategories, deleteCategory } from "../../../redux/actions/categoryActions";
 import { useNavigation } from "@react-navigation/native";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons"; // Import MaterialCommunityIcons
-import { Swipeable } from "react-native-gesture-handler"; // Import Swipeable for swipe actions
+import { GestureHandlerRootView, Swipeable } from "react-native-gesture-handler"; // Import Swipeable for swipe actions
 
 const AdminCategory = () => {
   const navigation = useNavigation();
@@ -59,51 +59,53 @@ const AdminCategory = () => {
   );
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#ffb703" }}>
-      <Header back={true} />
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <View style={{ flex: 1, backgroundColor: "#ffb703" }}>
+        <Header back={true} />
 
-      {loading ? (
-        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-          <Text style={{ fontSize: 18 }}>Loading...</Text>
-        </View>
-      ) : (
-        <ScrollView contentContainerStyle={{ flexGrow: 1, paddingBottom: 100 }}>
-          <View style={styles.container}>
-            <View style={{ alignItems: "center" }}>
-              <Text style={styles.headerText}>Categories</Text>
-            </View>
-
-            <View style={{ marginTop: 20 }}>
-              {categories.map((category) => (
-                <Swipeable
-                  key={category._id}
-                  renderRightActions={() => renderRightActions(category._id)}
-                  overshootRight={false}
-                >
-                  <TouchableOpacity
-                    style={styles.categoryCard}
-                    onPress={() => handleCategoryClick(category._id)}
-                  >
-                    <Text style={styles.categoryTitle}>{category.name}</Text>
-                    <Text style={styles.categoryDescription}>{category.description}</Text>
-                  </TouchableOpacity>
-                </Swipeable>
-              ))}
-            </View>
+        {loading ? (
+          <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+            <Text style={{ fontSize: 18 }}>Loading...</Text>
           </View>
-        </ScrollView>
-      )}
+        ) : (
+          <ScrollView contentContainerStyle={{ flexGrow: 1, paddingBottom: 100 }}>
+            <View style={styles.container}>
+              <View style={{ alignItems: "center" }}>
+                <Text style={styles.headerText}>Categories</Text>
+              </View>
 
-      {/* Floating + Icon Button */}
-      <TouchableOpacity
-        style={styles.floatingButton}
-        onPress={handleNewCategoryClick}
-      >
-        <MaterialCommunityIcons name="plus" size={30} color="#FFF" />
-      </TouchableOpacity>
+              <View style={{ marginTop: 20 }}>
+                {categories.map((category) => (
+                  <Swipeable
+                    key={category._id}
+                    renderRightActions={() => renderRightActions(category._id)}
+                    overshootRight={false}
+                  >
+                    <TouchableOpacity
+                      style={styles.categoryCard}
+                      onPress={() => handleCategoryClick(category._id)}
+                    >
+                      <Text style={styles.categoryTitle}>{category.name}</Text>
+                      <Text style={styles.categoryDescription}>{category.description}</Text>
+                    </TouchableOpacity>
+                  </Swipeable>
+                ))}
+              </View>
+            </View>
+          </ScrollView>
+        )}
 
-      <Footer activeRoute={"home"} />
-    </View>
+        {/* Floating + Icon Button */}
+        <TouchableOpacity
+          style={styles.floatingButton}
+          onPress={handleNewCategoryClick}
+        >
+          <MaterialCommunityIcons name="plus" size={30} color="#FFF" />
+        </TouchableOpacity>
+
+        <Footer activeRoute={"home"} />
+      </View>
+    </GestureHandlerRootView>
   );
 };
 

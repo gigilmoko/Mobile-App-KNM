@@ -8,7 +8,7 @@ export const expressInterest = (eventId) => async (dispatch, getState) => {
 
     try {
         const token = await AsyncStorage.getItem('token');
-        console.log('Retrieved Token:', token);
+        // console.log('Retrieved Token:', token);
 
         if (!token) {
             throw new Error('No token found');
@@ -24,7 +24,7 @@ export const expressInterest = (eventId) => async (dispatch, getState) => {
         });
 
         const data = await response.json();
-        console.log('Server Response:', data);
+        // console.log('Server Response:', data);
 
         if (response.ok) {
             dispatch({
@@ -65,7 +65,7 @@ export const getUserInterest = (eventId) => async (dispatch, getState) => {
 
     try {
         const token = await AsyncStorage.getItem('token');
-        console.log('Retrieved Token:', token);
+        // console.log('Retrieved Token:', token);
 
         if (!token) {
             throw new Error('No token found');
@@ -80,7 +80,7 @@ export const getUserInterest = (eventId) => async (dispatch, getState) => {
         });
 
         const data = await response.json();
-        console.log('Server Response for user interest:', data);
+        // console.log('Server Response for user interest:', data);
 
         if (response.ok) {
             dispatch({

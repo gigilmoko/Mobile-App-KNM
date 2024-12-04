@@ -9,7 +9,7 @@ export const submitProductFeedback = (rating, feedback, orderId, productId) => a
 
         // Retrieve the token from AsyncStorage
         const token = await AsyncStorage.getItem('token');
-        console.log("Retrieved Token:", token); // Log the token
+        // console.log("Retrieved Token:", token); // Log the token
 
         // API call to get the user details from the /me endpoint
         const { data: userData } = await axios.get(`${server}/me`, {
@@ -19,7 +19,7 @@ export const submitProductFeedback = (rating, feedback, orderId, productId) => a
             withCredentials: true,
         });
 
-        console.log("User Data from /me:", userData); // Log the user data
+        // console.log("User Data from /me:", userData); // Log the user data
 
         if (!userData || !userData.user || !userData.user._id) {
             throw new Error('User ID not found');
@@ -35,7 +35,7 @@ export const submitProductFeedback = (rating, feedback, orderId, productId) => a
         const correctProductId = productId; // This should be the `product` field inside the `orderItems` array.
 
         const feedbackData = { rating, feedback, productId: correctProductId, orderId: correctOrderId, userId };
-        console.log("Feedback Data to Submit:", feedbackData); // Log the feedback data
+        // console.log("Feedback Data to Submit:", feedbackData); // Log the feedback data
 
         // API call to submit feedback
         const { data } = await axios.post(
@@ -49,7 +49,7 @@ export const submitProductFeedback = (rating, feedback, orderId, productId) => a
             }
         );
 
-        console.log("Response Data:", data); // Log the response data
+        // console.log("Response Data:", data); // Log the response data
 
         if (data.success) {
             dispatch({
@@ -63,7 +63,7 @@ export const submitProductFeedback = (rating, feedback, orderId, productId) => a
             });
         }
     } catch (error) {
-        console.error("Error:", error.response?.data || error.message); // Log the error response
+        // console.error("Error:", error.response?.data || error.message); // Log the error response
         dispatch({
             type: "submitProductFeedbackFail",
             payload: error.response?.data.message || "Network error",
@@ -77,7 +77,7 @@ export const fetchProductFeedbacks = (productId) => async (dispatch) => {
 
         // Retrieve the token from AsyncStorage
         const token = await AsyncStorage.getItem('token');
-        console.log("Retrieved Token:", token); // Log the token
+        // console.log("Retrieved Token:", token); // Log the token
 
         // API call to get the product feedbacks
         const { data } = await axios.get(`${server}/feedback/product/${productId}`, {
@@ -87,7 +87,7 @@ export const fetchProductFeedbacks = (productId) => async (dispatch) => {
             withCredentials: true,
         });
 
-        console.log("Product Feedbacks Data:", data); // Log the feedback data
+        // console.log("Product Feedbacks Data:", data); // Log the feedback data
 
         if (data.success) {
             dispatch({

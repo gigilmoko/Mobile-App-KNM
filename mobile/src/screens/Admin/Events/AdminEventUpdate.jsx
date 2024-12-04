@@ -20,7 +20,7 @@ const AdminEventUpdate = () => {
 
     const { eventId } = route.params;
     const { event, loading } = useSelector((state) => state.calendar);
-    console.log("frontend calendar: ", event)
+    // console.log("frontend calendar: ", event)
     // Local state for handling updates to event
     const [updatedEvent, setUpdatedEvent] = useState({
         title: "",

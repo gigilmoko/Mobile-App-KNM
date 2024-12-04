@@ -42,7 +42,7 @@ const UpdateProfile = ({ navigation }) => {
                 address,
             };
 
-            console.log("Data to be sent:", updatedProfileData); 
+            // console.log("Data to be sent:", updatedProfileData); 
         
             await dispatch(updateProfile(updatedProfileData));
             setIsProfileChanged(true);

@@ -61,7 +61,7 @@ const Home = ({ navigation }) => {
 
     // Search effect
     useEffect(() => {
-        console.log("Searching for:", searchQuery); 
+        // console.log("Searching for:", searchQuery); 
     
         const timeOutId = setTimeout(() => {
             dispatch(searchProducts(searchQuery)); 
@@ -275,6 +275,14 @@ const Home = ({ navigation }) => {
             )}
             </View>
 
+            {/* Floating Wishlist Button */}
+            <TouchableOpacity
+                style={styles.floatingWishlistButton}
+                onPress={() => navigation.navigate("wishlist")}
+            >
+                <Icon name="heart-outline" size={30} color="#fff" />
+            </TouchableOpacity>
+
             {/* Footer */}
             <Footer />
         </View>
@@ -282,7 +290,6 @@ const Home = ({ navigation }) => {
 };
 
 export default Home;
-
 
 const styles = StyleSheet.create({
     container: {

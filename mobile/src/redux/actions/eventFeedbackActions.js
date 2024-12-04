@@ -4,13 +4,13 @@ import { server } from '../store'; // Make sure to import your server config
 
 // Submit Event Feedback Action
 export const submitEventFeedback = (rating, description, eventId) => async (dispatch) => {
-    console.log("Submit Event touched")
+    // console.log("Submit Event touched")
   try {
     dispatch({ type: 'submitEventFeedbackRequest' });
 
     // Retrieve the token from AsyncStorage
     const token = await AsyncStorage.getItem('token');
-    console.log("Retrieved Token:", token); // Log the token
+    // console.log("Retrieved Token:", token); // Log the token
 
     if (!token) {
       throw new Error('No token found');
@@ -24,7 +24,7 @@ export const submitEventFeedback = (rating, description, eventId) => async (disp
       withCredentials: true,
     });
 
-    console.log("User Data from /me:", userData); // Log the user data
+    // console.log("User Data from /me:", userData); // Log the user data
 
     if (!userData || !userData.user || !userData.user._id) {
       throw new Error('User ID not found');
@@ -34,7 +34,7 @@ export const submitEventFeedback = (rating, description, eventId) => async (disp
 
     // Data to be submitted
     const eventFeedbackData = { rating, description, eventId, userId }; // Changed 'feedbackData' to 'eventFeedbackData'
-    console.log("Event Feedback Data to Submit:", eventFeedbackData); // Log the feedback data
+    // console.log("Event Feedback Data to Submit:", eventFeedbackData); // Log the feedback data
 
     // API call to submit feedback
     const { data } = await axios.post(
@@ -48,7 +48,7 @@ export const submitEventFeedback = (rating, description, eventId) => async (disp
       }
     );
 
-    console.log("Response Data:", data); // Log the response data
+    // console.log("Response Data:", data); // Log the response data
 
     if (data.success) {
       dispatch({
@@ -76,7 +76,7 @@ export const fetchEventFeedback = (eventId) => async (dispatch) => {
   
       // Retrieve the token from AsyncStorage
       const token = await AsyncStorage.getItem('token');
-      console.log("Retrieved Token:", token); // Log the token
+      // console.log("Retrieved Token:", token); // Log the token
   
       if (!token) {
         throw new Error('No token found');
@@ -90,7 +90,7 @@ export const fetchEventFeedback = (eventId) => async (dispatch) => {
         withCredentials: true,
       });
   
-      console.log("Response Data:", data); // Log the response data
+      // console.log("Response Data:", data); // Log the response data
   
       if (data.success) {
         dispatch({

@@ -1,16 +1,10 @@
-import {
-    StyleSheet,
-    Text,
-    View,
-    ScrollView,
-    TouchableOpacity,
-} from "react-native";
 import React from "react";
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { useDispatch, useSelector } from "react-redux";
 import { Toast } from "react-native-toast-message/lib/src/Toast";
-import { Swipeable } from "react-native-gesture-handler";
+import { GestureHandlerRootView, Swipeable } from "react-native-gesture-handler";
 import Header from "../../components/Layout/Header";
 
 const WishlistCard = ({
@@ -96,7 +90,7 @@ const Wishlist = () => {
     };
 
     return (
-        <>
+        <GestureHandlerRootView style={{ flex: 1 }}>
             <Header back={true} emptyWishlist={true} />
 
             <View style={styles.container}>
@@ -132,7 +126,7 @@ const Wishlist = () => {
                     )}
                 </ScrollView>
             </View>
-        </>
+        </GestureHandlerRootView>
     );
 };
 

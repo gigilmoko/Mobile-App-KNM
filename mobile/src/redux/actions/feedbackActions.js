@@ -15,11 +15,11 @@ export const submitFeedback = (rating, feedback) => async (dispatch) => {
 
         // Retrieve the token from AsyncStorage
         const token = await AsyncStorage.getItem('token');
-        console.log("Retrieved Token:", token); // Log the token
+        // console.log("Retrieved Token:", token); // Log the token
 
 
         const feedbackData = { rating, feedback };
-        console.log("Feedback Data to Submit:", feedbackData); // Log the feedback data
+        // console.log("Feedback Data to Submit:", feedbackData); // Log the feedback data
 
 
         const { data } = await axios.post(
@@ -34,7 +34,7 @@ export const submitFeedback = (rating, feedback) => async (dispatch) => {
         );
 
 
-        console.log("Response Data:", data); // Log the response data
+        // console.log("Response Data:", data); // Log the response data
 
 
         if (data.success) {

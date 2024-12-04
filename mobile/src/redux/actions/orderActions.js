@@ -77,7 +77,7 @@ export const placeOrder = (
 
 
 export const processOrder = (id, status) => async (dispatch) => {
-    console.log("processorder touched")
+    // console.log("processorder touched")
     try {
         dispatch({
             type: "processOrderRequest",
@@ -91,7 +91,7 @@ export const processOrder = (id, status) => async (dispatch) => {
                 withCredentials: true,
             }
         );
-        console.log("process order", data)
+        // console.log("process order", data)
         dispatch({
             type: "processOrderSuccess",
             payload: data.message,
@@ -118,7 +118,7 @@ export const getOrderDetails = (id) => async (dispatch) => {
         {
             withCredentials: true
         })
-        console.log("Action Fetched Order: ", JSON.stringify(data, null, 2));
+        // console.log("Action Fetched Order: ", JSON.stringify(data, null, 2));
 
         dispatch({
             type: "getOrderDetailsSuccess",
@@ -126,7 +126,7 @@ export const getOrderDetails = (id) => async (dispatch) => {
         })
 
     } catch (error) {
-        console.log("Action Error");
+        // console.log("Action Error");
         dispatch({
             type: "getOrderDetailsFail",
             payload: error.response.data.message

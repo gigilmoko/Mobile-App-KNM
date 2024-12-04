@@ -49,7 +49,7 @@ const AdminProductsUpdate = () => {
   useEffect(() => {
     const timer = setTimeout(() => {
       if (product) {
-        console.log("Fetched product:", product);  // Log the fetched product to inspect the structure
+        // console.log("Fetched product:", product);  // Log the fetched product to inspect the structure
         setUpdatedProduct({
           name: product.name || "",
           price: product.price || "",
@@ -57,7 +57,7 @@ const AdminProductsUpdate = () => {
           description: product.description || "",
           category: product.category || "",
           images: product.images.map((img) => {
-            console.log("Mapping image:", img);  // Log each image object being mapped
+            // console.log("Mapping image:", img);  // Log each image object being mapped
             return img.url;
           }) || [], // Initial images from the product
         });

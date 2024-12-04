@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity, Alert } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, Alert, StyleSheet } from "react-native";
 import Footer from "../../../components/Layout/Footer";
 import Header from "../../../components/Layout/Header";
 import { Calendar } from "react-native-calendars";
 import { useDispatch, useSelector } from "react-redux";
 import { getAllEvents, deleteEvent } from "../../../redux/actions/calendarActions";
 import moment from "moment";
-import { Swipeable } from "react-native-gesture-handler";
+import { GestureHandlerRootView, Swipeable } from "react-native-gesture-handler";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 
 const AdminEvents = ({ navigation }) => {
@@ -80,15 +80,15 @@ const AdminEvents = ({ navigation }) => {
   };
 
   const renderRightActions = (eventId) => (
-    <View className="flex-row items-center px-2 rounded-xl h-24">
+    <View style={styles.swipeActionContainer}>
       <TouchableOpacity
-        className="p-2 rounded-md border-2 border-[#ffb703] justify-center items-center mr-2"
+        style={styles.swipeActionEdit}
         onPress={() => navigation.navigate("admineventupdate", { eventId })}
       >
         <MaterialCommunityIcons name="pencil" size={24} color="#000" />
       </TouchableOpacity>
       <TouchableOpacity
-        className="p-2 rounded-md border-2 border-[#ffb703] justify-center items-center"
+        style={styles.swipeActionDelete}
         onPress={() => handleDelete(eventId)}
       >
         <MaterialCommunityIcons name="trash-can" size={24} color="#000" />
@@ -97,71 +97,176 @@ const AdminEvents = ({ navigation }) => {
   );
 
   return (
-    <View className="flex-1 bg-[#ffb703]">
-      <Header back={true} />
-      <View className="flex-1 bg-white rounded-t-3xl p-4 pt-2">
-        <View className="items-center mb-2">
-          <Text className="text-2xl font-bold text-black">Events</Text>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <View style={{ flex: 1, backgroundColor: "#ffb703" }}>
+        <Header back={true} />
+        <View style={styles.contentContainer}>
+          <View style={styles.headerContainer}>
+            <Text style={styles.headerText}>Events</Text>
+          </View>
+
+          <ScrollView
+            contentContainerStyle={{ flexGrow: 1, paddingBottom: 70 }}
+            showsVerticalScrollIndicator={false}
+          >
+            <View style={styles.calendarContainer}>
+              <Calendar
+                onDayPress={(day) => {
+                  setSelectedDate(day.dateString);
+                  navigation.navigate("admineventcreate", { selectedDate: day.dateString });
+                }}
+                markedDates={markedDates}
+                theme={{
+                  todayTextColor: "#ffb703",
+                  arrowColor: "#ffb703",
+                  selectedDayBackgroundColor: "#bc430b",
+                  selectedDayTextColor: "#ffffff",
+                }}
+              />
+            </View>
+
+            <View style={styles.tabContainer}>
+              <TouchableOpacity
+                style={[styles.tabButton, activeTab === "past" && styles.activeTabButton]}
+                onPress={() => setActiveTab("past")}
+              >
+                <Text style={styles.tabButtonText}>Past Events</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.tabButton, activeTab === "month" && styles.activeTabButton]}
+                onPress={() => setActiveTab("month")}
+              >
+                <Text style={styles.tabButtonText}>This Month</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.tabButton, activeTab === "nextMonth" && styles.activeTabButton]}
+                onPress={() => setActiveTab("nextMonth")}
+              >
+                <Text style={styles.tabButtonText}>Next Month</Text>
+              </TouchableOpacity>
+            </View>
+
+            {filteredEvents.length === 0 ? (
+              <Text style={styles.noEventsText}>No events to display</Text>
+            ) : (
+              filteredEvents.map((event) => (
+                <Swipeable key={event._id} renderRightActions={() => renderRightActions(event._id)}>
+                  <View style={styles.eventCard}>
+                    <Text style={styles.eventTitle}>{event.title}</Text>
+                    <Text style={styles.eventDate}>{moment(event.date).format("MMM Do, YYYY")}</Text>
+                  </View>
+                </Swipeable>
+              ))
+            )}
+          </ScrollView>
         </View>
-
-        <ScrollView
-          contentContainerStyle={{ flexGrow: 1, paddingBottom: 70 }}
-          showsVerticalScrollIndicator={false}
-        >
-          <View className="mb-5 bg-white rounded-xl shadow-md">
-            <Calendar
-              onDayPress={(day) => {
-                setSelectedDate(day.dateString);
-                navigation.navigate("admineventcreate", { selectedDate: day.dateString });
-              }}
-              markedDates={markedDates}
-              theme={{
-                todayTextColor: "#ffb703",
-                arrowColor: "#ffb703",
-                selectedDayBackgroundColor: "#bc430b",
-                selectedDayTextColor: "#ffffff",
-              }}
-            />
-          </View>
-
-          <View className="flex-row justify-around mb-2">
-            <TouchableOpacity
-              className={`py-2 px-4 rounded-md ${activeTab === "past" ? "bg-[#bc430b]" : "bg-[#ffb703]"}`}
-              onPress={() => setActiveTab("past")}
-            >
-              <Text className="text-sm font-bold text-white">Past Events</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              className={`py-2 px-4 rounded-md ${activeTab === "month" ? "bg-[#bc430b]" : "bg-[#ffb703]"}`}
-              onPress={() => setActiveTab("month")}
-            >
-              <Text className="text-sm font-bold text-white">This Month</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              className={`py-2 px-4 rounded-md ${activeTab === "nextMonth" ? "bg-[#bc430b]" : "bg-[#ffb703]"}`}
-              onPress={() => setActiveTab("nextMonth")}
-            >
-              <Text className="text-sm font-bold text-white">Next Month</Text>
-            </TouchableOpacity>
-          </View>
-
-          {filteredEvents.length === 0 ? (
-            <Text className="text-center text-lg text-gray-500">No events to display</Text>
-          ) : (
-            filteredEvents.map((event) => (
-              <Swipeable key={event._id} renderRightActions={() => renderRightActions(event._id)}>
-                <View className="my-2 border-2 border-[#F4B546] rounded-xl bg-white p-2">
-                  <Text className="text-lg font-semibold text-black">{event.title}</Text>
-                  <Text className="text-sm text-gray-600">{moment(event.date).format("MMM Do, YYYY")}</Text>
-                </View>
-              </Swipeable>
-            ))
-          )}
-        </ScrollView>
+        <Footer />
       </View>
-      <Footer />
-    </View>
+    </GestureHandlerRootView>
   );
 };
+
+const styles = StyleSheet.create({
+  contentContainer: {
+    flex: 1,
+    backgroundColor: "#ffffff",
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    padding: 20,
+  },
+  headerContainer: {
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  headerText: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#000",
+  },
+  calendarContainer: {
+    marginBottom: 20,
+    backgroundColor: "#ffffff",
+    borderRadius: 10,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 2,
+  },
+  tabContainer: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    marginBottom: 10,
+  },
+  tabButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 5,
+    backgroundColor: "#ffb703",
+  },
+  activeTabButton: {
+    backgroundColor: "#bc430b",
+  },
+  tabButtonText: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#fff",
+  },
+  noEventsText: {
+    textAlign: "center",
+    fontSize: 16,
+    color: "#666",
+    marginTop: 20,
+  },
+  eventCard: {
+    backgroundColor: "#f9f9f9",
+    padding: 15,
+    borderRadius: 10,
+    borderColor: "#ffb703",
+    borderWidth: 1,
+    marginBottom: 10,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 2,
+  },
+  eventTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#000",
+  },
+  eventDate: {
+    fontSize: 14,
+    color: "#666",
+    marginTop: 5,
+  },
+  swipeActionContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f9f9f9",
+    paddingLeft: 10,
+    paddingRight: 10,
+    borderRadius: 10,
+    height: 70,
+  },
+  swipeActionEdit: {
+    padding: 10,
+    borderRadius: 5,
+    borderColor: "#ffb703",
+    borderWidth: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 10,
+  },
+  swipeActionDelete: {
+    padding: 10,
+    borderRadius: 5,
+    borderColor: "#ffb703",
+    borderWidth: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+});
 
 export default AdminEvents;

@@ -28,7 +28,7 @@ export const createCategory = (categoryData) => async (dispatch, getState) => {
 
         // Retrieve token from AsyncStorage
         const token = await AsyncStorage.getItem('token');
-        console.log('Retrieved token:', token);
+        // console.log('Retrieved token:', token);
 
         if (!token) {
             throw new Error("User is not authenticated");
@@ -42,11 +42,11 @@ export const createCategory = (categoryData) => async (dispatch, getState) => {
             withCredentials: true,
         });
 
-        console.log("User data response:", userData);
+        // console.log("User data response:", userData);
 
         if (userData.success) {
             const userId = userData.user._id; // Extract user ID
-            console.log("User ID:", userId);
+            // console.log("User ID:", userId);
 
             // Include the user ID in the category data
             const categoryDataWithUser = { ...categoryData, user: userId };
@@ -59,7 +59,7 @@ export const createCategory = (categoryData) => async (dispatch, getState) => {
                 withCredentials: true,
             });
 
-            console.log("Category created successfully:", data);
+            // console.log("Category created successfully:", data);
 
             dispatch({
                 type: "NEW_CATEGORY_SUCCESS",
@@ -72,7 +72,7 @@ export const createCategory = (categoryData) => async (dispatch, getState) => {
             });
         }
     } catch (error) {
-        console.error("Error creating category:", error.response || error);
+        // console.error("Error creating category:", error.response || error);
         dispatch({
             type: "NEW_CATEGORY_FAIL",
             payload: error.response ? error.response.data.message : error.message,
@@ -105,7 +105,7 @@ export const updateCategory = (categoryData) => async (dispatch) => {
 
         // Fetch user by token
         const token = await AsyncStorage.getItem('token');
-        console.log('Retrieved token:', token);
+        // console.log('Retrieved token:', token);
 
         if (!token) {
             throw new Error("User is not authenticated");
@@ -118,20 +118,20 @@ export const updateCategory = (categoryData) => async (dispatch) => {
             withCredentials: true,
         });
 
-        console.log("User data response:", userData);
+        // console.log("User data response:", userData);
 
         if (!userData.success) {
             throw new Error("Failed to load user data");
         }
 
         const userId = userData.user._id; // Accessing the user ID
-        console.log("userId: ", userId);
+        // console.log("userId: ", userId);
 
         // Add the userId to the categoryData (if required for the update)
         const categoryDataWithUser = { ...categoryData, user: userId };
 
         // Log the data being sent to the server
-        console.log("Category data being sent to server:", categoryDataWithUser);
+        // console.log("Category data being sent to server:", categoryDataWithUser);
 
         // Ensure the categoryId is passed in the URL and not in the body
         const { data } = await axios.put(`${server}/category/update/${categoryDataWithUser._id}`, categoryDataWithUser, {
@@ -141,7 +141,7 @@ export const updateCategory = (categoryData) => async (dispatch) => {
             withCredentials: true,
         });
 
-        console.log("Update response data:", data);
+        // console.log("Update response data:", data);
 
         dispatch({
             type: "UPDATE_CATEGORY_SUCCESS",

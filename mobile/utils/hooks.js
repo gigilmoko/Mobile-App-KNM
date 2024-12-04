@@ -27,7 +27,7 @@ export const useMessageAndErrorUser = (navigation, dispatch, navigateTo = "myacc
 
             // Delay the navigation by 2 seconds (2000 milliseconds)
             setTimeout(() => {
-                console.log("Navigating to:", navigateTo);
+                // console.log("Navigating to:", navigateTo);
                 navigation.navigate(navigateTo); // Ensure this points to "myaccount"
 
                 dispatch({ type: "clearMessage" });
@@ -145,7 +145,7 @@ export const useGetOrders = (isFocused, isAdmin = false) => {
             try {
                 // Retrieve token from AsyncStorage
                 const token = await AsyncStorage.getItem('token');
-                console.log("token",token);
+                // console.log("token",token);
                 
                 // Send token in the headers
                 const res = await axios.get(`${server}/my`, {

@@ -2,7 +2,7 @@ import { store } from "../src/redux/store"; // Import the Redux store
 import Toast from "react-native-toast-message"; // Import Toast for notifications
 
 export const notifyEvent = (event) => {
-    console.log("Displaying toast for event:", event); // Log event to verify
+    // console.log("Displaying toast for event:", event); // Log event to verify
     const { title, description } = event; // Ensure data is correct and show the toast
     Toast.show({
         type: "info",

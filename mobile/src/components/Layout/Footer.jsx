@@ -13,7 +13,7 @@ const Footer = () => {
     const activeRoute = route.name;
 
     useEffect(() => {
-        console.log("isAuthenticated state:", isAuthenticated);
+        // console.log("isAuthenticated state:", isAuthenticated);
     }, [isAuthenticated]);
 
     const navigationHandler = (key) => {

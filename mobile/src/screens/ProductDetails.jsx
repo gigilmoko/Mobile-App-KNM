@@ -49,7 +49,7 @@ const ProductDetails = ({ route: { params } }) => {
 
   useEffect(() => {
     if (product) {
-      console.log("Fetched Product Details:", product);
+      // console.log("Fetched Product Details:", product);
     }
     if (error) {
       Toast.show({

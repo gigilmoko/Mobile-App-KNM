@@ -18,7 +18,7 @@ const ChangePassword = ({ navigation }) => {
     const user = useSelector((state) => state.user.user);
 
     const submitHandler = async () => {
-        console.log("Submitting password update");
+        // console.log("Submitting password update");
         
         if (!user) {
             console.error("User not found. Please log in first.");
@@ -27,7 +27,7 @@ const ChangePassword = ({ navigation }) => {
     
         try {
             const response = await dispatch(updatePassword(user._id, oldPassword, newPassword));
-            console.log("Password successfully updated", response);
+            // console.log("Password successfully updated", response);
             // Display success toast notification
             Toast.show({
                 type: 'success',
@@ -59,7 +59,7 @@ const ChangePassword = ({ navigation }) => {
     }, [dispatch]);
 
     useEffect(() => {
-        console.log("User state:", user);
+        // console.log("User state:", user);
     }, [user]);
 
     useEffect(() => {

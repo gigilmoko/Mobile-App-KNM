@@ -18,7 +18,7 @@ export const register = (registrationData) => async (dispatch) => {
         });
 
         // Log the received data
-        console.log('Data received from registration:', data);
+        // console.log('Data received from registration:', data);
 
         dispatch({ type: "registerSuccess", payload: data.message });
         return 'success';
@@ -115,15 +115,15 @@ export const logout = () => async (dispatch) => {
 };
 
 export const updateAvatar = (imageUrl) => async (dispatch, getState) => {
-    console.log('updateAvatar action dispatched');
-    console.log('Image URL:', imageUrl);
+    // console.log('updateAvatar action dispatched');
+    // console.log('Image URL:', imageUrl);
 
     try {
         const { user } = getState().user;
         if (!user || !user._id) {
             throw new Error('User ID is missing');
         }
-        console.log('User ID:', user._id);
+        // console.log('User ID:', user._id);
 
         const response = await axios.put(`${server}/avatar-update/${user._id}`, 
             { avatar: imageUrl },
@@ -135,7 +135,7 @@ export const updateAvatar = (imageUrl) => async (dispatch, getState) => {
             }
         );
 
-        console.log('Response from avatar update:', response.data);
+        // console.log('Response from avatar update:', response.data);
 
         // Dispatch success action
         dispatch({
@@ -176,7 +176,7 @@ export const updateAvatar = (imageUrl) => async (dispatch, getState) => {
 
 export const updatePassword = (userId, oldPassword, newPassword) => async () => {
     try {
-        console.log("Dispatching updatePassword action");
+        // console.log("Dispatching updatePassword action");
 
         const response = await axios.put(
             `${server}/password/update/mobile`,
@@ -187,10 +187,10 @@ export const updatePassword = (userId, oldPassword, newPassword) => async () => 
             }
         );
 
-        console.log("Password update response:", response.data);
+        // console.log("Password update response:", response.data);
         return response.data; // Return the response data
     } catch (error) {
-        console.error("Error updating password:", error.response?.data?.message || error.message);
+        // console.error("Error updating password:", error.response?.data?.message || error.message);
         throw new Error(error.response?.data?.message || error.message); // Throw an error to be caught in submitHandler
     }
 };
@@ -208,22 +208,22 @@ export const updateProfile = (userData) => async (dispatch, getState) => {
 
         const { data } = await axios.put(`${server}/me/update/mobile`, jsonData, config);
 
-        console.log("Profile updated successfully:", data.user);
+        // console.log("Profile updated successfully:", data.user);
     } catch (error) {
-        console.error(
-            error.response && error.response.data.message
-                ? error.response.data.message
-                : error.message
-        );
+        // console.error(
+        //     error.response && error.response.data.message
+        //         ? error.response.data.message
+        //         : error.message
+        // );
     }
 };
 
 export const getUserDetails = (id) => async (dispatch) => {
-    console.log("touched userDetails: ")
+    // console.log("touched userDetails: ")
     try {
 
         const { data } = await axios.get(`${server}/get-user/${id}`)
-        console.log("data: ", data)
+        // console.log("data: ", data)
 
         if (data.success) {
             dispatch({
@@ -231,14 +231,14 @@ export const getUserDetails = (id) => async (dispatch) => {
                 payload: data.user, 
             });
         } else {
-            console.log("Fail")
+            // console.log("Fail")
             dispatch({
                 type: 'USER_DETAILS_FAIL',
                 payload: data.message,
             });
         }
     } catch (error) {
-        console.log("Fail User")
+        // console.log("Fail User")
         dispatch({
             type: 'USER_DETAILS_FAIL',
             payload: error.message,

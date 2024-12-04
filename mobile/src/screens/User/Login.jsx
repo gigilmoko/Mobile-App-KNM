@@ -13,7 +13,7 @@ const Login = ({ navigation }) => {
     const loading = useMessageAndErrorUser(navigation, dispatch, "myaccount");
 
     const submitHandler = () => {
-        console.log("Submitting login:", { email, password });
+        // console.log("Submitting login:", { email, password });
     
         dispatch(login(email, password))
             .then(() => {
@@ -22,7 +22,7 @@ const Login = ({ navigation }) => {
                     // text1: 'Login Successful',
                     text2: 'Welcome back!',
                 });
-                console.log("Login was successful");
+                // console.log("Login was successful");
             })
             .catch((error) => {
                 Toast.show({
@@ -30,13 +30,13 @@ const Login = ({ navigation }) => {
                     text1: 'Login Failed',
                     text2: error?.message || 'Please try again later.',
                 });
-                console.log("Login failed with error:", error);
+                // console.log("Login failed with error:", error);
             });
     };
 
     return (
         <>
-            <View className="flex-1" style={{ backgroundColor: "#9b0000" }}>
+            <View className="flex-1" style={{ backgroundColor: "#ffb703" }}>
                 <View className="flex">
                     <View
                         style={{

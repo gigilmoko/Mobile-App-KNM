@@ -33,7 +33,7 @@ export const productFeedbackReducer = (state = initialState, action) => {
                 error: null,
             };
         case "fetchProductFeedbacksSuccess":
-            console.log("payload feedback:" ,action.payload)
+            // console.log("payload feedback:" ,action.payload)
             return {
                 ...state,
                 loading: false,

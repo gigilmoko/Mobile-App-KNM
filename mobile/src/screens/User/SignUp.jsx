@@ -66,7 +66,7 @@ const SignUp = ({ navigation, route }) => {
             googleLogin,
         };
     
-        console.log('Initial registration data:', registrationData); // Log the initial registration data
+        // console.log('Initial registration data:', registrationData); // Log the initial registration data
     
         // Handle avatar upload if present
         if (avatar) {
@@ -95,7 +95,7 @@ const SignUp = ({ navigation, route }) => {
                 const imageUrl = response.data.secure_url; // Get the Cloudinary image URL
                 registrationData.avatar = imageUrl; // Add image URL to the registration data
     
-                console.log('Uploaded avatar URL:', imageUrl); // Log the uploaded avatar URL
+                // console.log('Uploaded avatar URL:', imageUrl); // Log the uploaded avatar URL
                 
                 // Show success toast for avatar upload
                 Toast.show({
@@ -116,12 +116,12 @@ const SignUp = ({ navigation, route }) => {
             }
         }
     
-        console.log('Final registration data with avatar:', registrationData); // Log the final registration data
+        // console.log('Final registration data with avatar:', registrationData); // Log the final registration data
     
         // Dispatch the register action with the complete JSON object
         try {
             const result = await dispatch(register(registrationData));
-            console.log('Registration result:', result);
+            // console.log('Registration result:', result);
             
             if (result === 'success') {
                 // Show success toast for registration
@@ -132,7 +132,7 @@ const SignUp = ({ navigation, route }) => {
                 
                 navigation.navigate('home'); // Redirect to login on success
             } else {
-                console.log('Registration failed with result:', result); // Log result if not success
+                // console.log('Registration failed with result:', result); // Log result if not success
     
                 // Show error toast for registration failure
                 Toast.show({
@@ -176,7 +176,7 @@ const SignUp = ({ navigation, route }) => {
     }, [route.params]);
 
     return (
-        <View className="flex-1" style={{ backgroundColor: "#9b0000" }}>
+        <View className="flex-1" style={{ backgroundColor: "#ffb703" }}>
             <View className="flex">
             <View
                         style={{

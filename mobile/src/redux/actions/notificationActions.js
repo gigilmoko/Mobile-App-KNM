@@ -58,7 +58,7 @@ export const getNotifications = () => async (dispatch) => {
 
     // Find the newest unread notification
     const newestUnread = sortedNotifications.find(notification => !notification.read);
-    console.log("Newest Unread Notification:", newestUnread);
+    // console.log("Newest Unread Notification:", newestUnread);
 
 
     // Trigger toast only if it's an event notification
@@ -72,7 +72,7 @@ export const getNotifications = () => async (dispatch) => {
 
 
     } catch (error) {
-        console.log("Error fetching notifications:", error.message);
+        // console.log("Error fetching notifications:", error.message);
         dispatch({
             type: "getNotificationsFail",
             payload: error.response?.data?.message || "Failed to fetch notifications",
@@ -104,7 +104,7 @@ export const toggleNotificationReadStatus = (notifId) => async (dispatch) => {
         dispatch({ type: "toggleNotificationReadStatusSuccess", payload: data });
        
     } catch (error) {
-        console.log("Error toggling notification read status:", error.message);
+        // console.log("Error toggling notification read status:", error.message);
         dispatch({
             type: "toggleNotificationReadStatusFail",
             payload: error.response?.data?.message || "Failed to toggle read status",
@@ -126,7 +126,7 @@ export const getUnreadNotificationsCount = () => async (dispatch) => {
 
         dispatch({ type: "getUnreadNotificationsCountSuccess", payload: data.unreadCount });
     } catch (error) {
-        console.log("Error getting unread notifications count:", error.message);
+        // console.log("Error getting unread notifications count:", error.message);
         dispatch({
             type: "getUnreadNotificationsCountFail",
             payload: error.response?.data?.message || "Failed to get unread notifications count",
@@ -151,7 +151,7 @@ export const deleteNotification = (notifId) => async (dispatch) => {
             text1: data.message,
         });
     } catch (error) {
-        console.log("Error deleting notification:", error.message);
+        // console.log("Error deleting notification:", error.message);
         dispatch({
             type: "deleteNotificationFail",
             payload: error.response?.data?.message || "Failed to delete notification",
@@ -181,7 +181,7 @@ export const deleteAllNotifications = () => async (dispatch) => {
             text1: data.message,
         });
     } catch (error) {
-        console.log("Error deleting all notifications:", error.message);
+        // console.log("Error deleting all notifications:", error.message);
         dispatch({
             type: "deleteAllNotificationsFail",
             payload: error.response?.data?.message || "Failed to delete all notifications",

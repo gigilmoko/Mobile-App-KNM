@@ -6,7 +6,7 @@ import { useNavigation } from "@react-navigation/native";
 import { useDispatch, useSelector } from "react-redux";
 import { getAllProducts, deleteProduct } from "../../../redux/actions/productActions";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons"; // Import MaterialCommunityIcons
-import { Swipeable } from "react-native-gesture-handler"; // Import Swipeable for swipe actions
+import { GestureHandlerRootView, Swipeable } from "react-native-gesture-handler"; // Import Swipeable for swipe actions
 
 const AdminProducts = () => {
   const dispatch = useDispatch();
@@ -57,59 +57,61 @@ const AdminProducts = () => {
   );
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#ffb703" }}>
-      <Header back={true} />
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <View style={{ flex: 1, backgroundColor: "#ffb703" }}>
+        <Header back={true} />
 
-      {loading ? (
-        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-          <Text style={{ fontSize: 18 }}>Loading...</Text>
-        </View>
-      ) : (
-        <ScrollView contentContainerStyle={{ flexGrow: 1, paddingBottom: 30 }}>
-          <View style={styles.container}>
-            <View style={{ alignItems: "center" }}>
-              <Text style={styles.headerText}>Products</Text>
-            </View>
-
-            <View style={{ marginTop: 20 }}>
-              {products.length > 0 ? (
-                products.map((product) => (
-                  <Swipeable
-                    key={product._id}
-                    renderRightActions={() => renderRightActions(product._id)}
-                    overshootRight={false}
-                  >
-                    <TouchableOpacity
-                      style={styles.productCard}
-                      onPress={() => handleProductClick(product._id)}
-                    >
-                      <Text style={styles.productTitle}>{product.name}</Text>
-                      <Text style={styles.productDescription}>Price: ₱{product.price}</Text>
-                      <Text style={styles.productDescription}>Description: {product.description}</Text>
-                      <Text style={styles.productDescription}>Stock: {product.stock}</Text>
-                    </TouchableOpacity>
-                  </Swipeable>
-                ))
-              ) : (
-                <Text style={{ textAlign: "center", color: "#666666" }}>No products found</Text>
-              )}
-            </View>
+        {loading ? (
+          <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+            <Text style={{ fontSize: 18 }}>Loading...</Text>
           </View>
-        </ScrollView>
-      )}
+        ) : (
+          <ScrollView contentContainerStyle={{ flexGrow: 1, paddingBottom: 30 }}>
+            <View style={styles.container}>
+              <View style={{ alignItems: "center" }}>
+                <Text style={styles.headerText}>Products</Text>
+              </View>
 
-      {/* Floating + Icon Button */}
-      <TouchableOpacity
-        style={styles.floatingButton}
-        onPress={handleNewProductClick}
-      >
-        <MaterialCommunityIcons name="plus" size={30} color="#FFF" />
-      </TouchableOpacity>
+              <View style={{ marginTop: 20 }}>
+                {products.length > 0 ? (
+                  products.map((product) => (
+                    <Swipeable
+                      key={product._id}
+                      renderRightActions={() => renderRightActions(product._id)}
+                      overshootRight={false}
+                    >
+                      <TouchableOpacity
+                        style={styles.productCard}
+                        onPress={() => handleProductClick(product._id)}
+                      >
+                        <Text style={styles.productTitle}>{product.name}</Text>
+                        <Text style={styles.productDescription}>Price: ₱{product.price}</Text>
+                        <Text style={styles.productDescription}>Description: {product.description}</Text>
+                        <Text style={styles.productDescription}>Stock: {product.stock}</Text>
+                      </TouchableOpacity>
+                    </Swipeable>
+                  ))
+                ) : (
+                  <Text style={{ textAlign: "center", color: "#666666" }}>No products found</Text>
+                )}
+              </View>
+            </View>
+          </ScrollView>
+        )}
 
-      <View style={{ position: "absolute", bottom: 0, width: "100%" }}>
-        <Footer activeRoute={"home"} />
+        {/* Floating + Icon Button */}
+        <TouchableOpacity
+          style={styles.floatingButton}
+          onPress={handleNewProductClick}
+        >
+          <MaterialCommunityIcons name="plus" size={30} color="#FFF" />
+        </TouchableOpacity>
+
+        <View style={{ position: "absolute", bottom: 0, width: "100%" }}>
+          <Footer activeRoute={"home"} />
+        </View>
       </View>
-    </View>
+    </GestureHandlerRootView>
   );
 };
 
