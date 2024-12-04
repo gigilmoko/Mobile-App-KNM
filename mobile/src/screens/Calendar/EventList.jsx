@@ -5,6 +5,7 @@ import {
   ScrollView,
   TouchableOpacity,
   StyleSheet,
+  TextInput,
 } from "react-native";
 import Footer from "../../components/Layout/Footer";
 import Header from "../../components/Layout/Header";
@@ -14,6 +15,7 @@ import moment from "moment";
 
 const EventsList = ({ navigation }) => {
     const [activeTab, setActiveTab] = useState("month");
+    const [searchQuery, setSearchQuery] = useState("");
     const dispatch = useDispatch();
 
     // Get events and loading state from Redux store
@@ -24,26 +26,33 @@ const EventsList = ({ navigation }) => {
         dispatch(getAllEvents());
     }, [dispatch]);
 
-    // Filter events based on the active tab
+    // Filter events based on the active tab and search query
     const filteredEvents = React.useMemo(() => {
         const today = moment();
         const endOfMonth = moment().endOf("month");
         const startOfNextMonth = moment().add(1, "month").startOf("month");
         const endOfNextMonth = moment().add(1, "month").endOf("month");
 
+        let filtered = events;
+
         if (activeTab === "past") {
-        return events.filter((event) => moment(event.date).isBefore(today, "day"));
+            filtered = events.filter((event) => moment(event.date).isBefore(today, "day"));
         } else if (activeTab === "month") {
-        return events.filter((event) =>
-            moment(event.date).isBetween(today, endOfMonth, "day", "[]")
-        );
+            filtered = events.filter((event) =>
+                moment(event.date).isBetween(today, endOfMonth, "day", "[]")
+            );
         } else if (activeTab === "nextMonth") {
-        return events.filter((event) =>
-            moment(event.date).isBetween(startOfNextMonth, endOfNextMonth, "day", "[]")
-        );
+            filtered = events.filter((event) =>
+                moment(event.date).isBetween(startOfNextMonth, endOfNextMonth, "day", "[]")
+            );
         }
-        return events;
-    }, [events, activeTab]);
+
+        if (searchQuery) {
+            filtered = filtered.filter((event) => event.title.toLowerCase().includes(searchQuery.toLowerCase()));
+        }
+
+        return filtered;
+    }, [events, activeTab, searchQuery]);
 
     // Find the most upcoming event
     const upcomingEvent = React.useMemo(() => {
@@ -56,6 +65,13 @@ const EventsList = ({ navigation }) => {
         <View style={styles.container}>
         <Header back={true} />
         <View style={styles.mainContent}>
+            <TextInput
+                style={styles.searchBox}
+                placeholder="Search events..."
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+            />
+
             {upcomingEvent && (
             <View style={styles.upcomingEventContainer}>
                 <Text style={styles.upcomingEventTitle}>Upcoming Event</Text>
@@ -104,7 +120,7 @@ const EventsList = ({ navigation }) => {
                     <TouchableOpacity
                         key={event._id} // Ensure each event has a unique key
                         onPress={() =>
-                        navigation.navigate("eventDetail", { id: event._id })
+                        navigation.navigate("eventinfo", { id: event._id })
                         }
                         style={styles.eventItem}
                     >
@@ -141,17 +157,12 @@ const EventsList = ({ navigation }) => {
 
 export default EventsList;
 
-// Styles (unchanged)
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        // backgroundColor: "#ffb703",
     },
     mainContent: {
         flex: 1,
-        // backgroundColor: "#fff",
-        // borderTopLeftRadius: 30,
-        // borderTopRightRadius: 30,
         paddingHorizontal: 15,
         paddingTop: 10,
     },
@@ -233,7 +244,7 @@ const styles = StyleSheet.create({
         textAlign: "center",
     },
     upcomingEventContainer: {
-        backgroundColor: "#fff",
+        backgroundColor: "#ffb703",
         borderRadius: 10,
         padding: 20,
         marginBottom: 20,
@@ -253,5 +264,12 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: "#666",
         marginTop: 10,
+    },
+    searchBox: {
+        marginBottom: 10,
+        padding: 10,
+        borderColor: "#ccc",
+        borderWidth: 1,
+        borderRadius: 5,
     },
 });

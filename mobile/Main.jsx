@@ -30,7 +30,7 @@ import Cart from "./src/screens/Cart/Cart";
 import Wishlist from "./src/screens/Products/Wishlist";
 import ConfirmOrder from "./src/screens/Cart/ConfirmOrder";
 import MyOrders from "./src/screens/User/MyOrders";
-import ProductDetails from "./src/screens/Products/ProductDetails";
+import ProductDetails from "./src/screens/ProductDetails";
 import NotificationScreen from "./src/screens/Notification/Notification";
 import EventInfo from "./src/screens/Calendar/EventInfo";
 import EventList from "./src/screens/Calendar/EventList";

@@ -54,14 +54,17 @@ const AdminEvents = ({ navigation }) => {
     const startOfNextMonth = moment().add(1, "month").startOf("month");
     const endOfNextMonth = moment().add(1, "month").endOf("month");
 
+    let filtered = events;
+
     if (activeTab === "past") {
-      return events.filter((event) => event?.date && moment(event.date).isBefore(today, "day"));
+      filtered = events.filter((event) => event?.date && moment(event.date).isBefore(today, "day"));
     } else if (activeTab === "month") {
-      return events.filter((event) => event?.date && moment(event.date).isBetween(today, endOfMonth, "day", "[]"));
+      filtered = events.filter((event) => event?.date && moment(event.date).isBetween(today, endOfMonth, "day", "[]"));
     } else if (activeTab === "nextMonth") {
-      return events.filter((event) => event?.date && moment(event.date).isBetween(startOfNextMonth, endOfNextMonth, "day", "[]"));
+      filtered = events.filter((event) => event?.date && moment(event.date).isBetween(startOfNextMonth, endOfNextMonth, "day", "[]"));
     }
-    return events;
+
+    return filtered.sort((a, b) => moment(a.date) - moment(b.date));
   }, [events, activeTab]);
 
   const handleDelete = (eventId) => {
@@ -101,11 +104,10 @@ const AdminEvents = ({ navigation }) => {
           <Text className="text-2xl font-bold text-black">Events</Text>
         </View>
 
-       <ScrollView
-  contentContainerStyle={{ flexGrow: 1, paddingBottom: 70 }}
-  showsVerticalScrollIndicator={false}
-  
->
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1, paddingBottom: 70 }}
+          showsVerticalScrollIndicator={false}
+        >
           <View className="mb-5 bg-white rounded-xl shadow-md">
             <Calendar
               onDayPress={(day) => {

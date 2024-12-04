@@ -13,11 +13,14 @@ const Header = ({ back }) => {
     return (
         <View
             style={{
+                position: "absolute",
                 width: '100%',
                 flexDirection: 'row',
                 justifyContent: 'space-between',
                 paddingTop: 30,
                 paddingLeft: 0,
+                zIndex: 1, 
+                backgroundColor: "transparent",
             }}>
             {back && (
                 <TouchableOpacity
