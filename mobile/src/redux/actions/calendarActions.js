@@ -98,16 +98,76 @@ export const getAllEvents = () => async (dispatch) => {
 export const newEvent = (eventData) => async (dispatch) => {
     console.log("Data sent to newEvent action:", eventData);
     try {
-        // Make the API call to create a new event
-        const { data } = await axios.post('/calendar/event', eventData);
+        // Dispatch the request action first
+        dispatch({ type: "NEW_EVENT_REQUEST" });
 
-        // Dispatch the success action with the response data
-        dispatch({
-            type: "NEW_EVENT_SUCCESS",
-            payload: data,
+        // Retrieve token from AsyncStorage
+        const token = await AsyncStorage.getItem('token');
+        console.log('Retrieved token:', token);
+
+        if (!token) {
+            throw new Error("User is not authenticated");
+        }
+
+        // Verify the user with the token
+        const { data: userData } = await axios.get(`${server}/me`, {
+            headers: {
+                "Authorization": `Bearer ${token}`,
+            },
+            withCredentials: true,
         });
+
+        console.log("User data response:", userData);
+
+        if (userData.success) {
+            const userId = userData.user._id; // Extract user ID
+            console.log("User ID:", userId);
+
+            // Include the user ID in the event data
+            const eventDataWithUser = { ...eventData, user: userId };
+
+            // Send the event data to the server
+            const { data } = await axios.post(`${server}/calendar/event`, eventDataWithUser, {
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                },
+                withCredentials: true,
+            });
+
+            console.log("Event created successfully:", data);
+
+            // Dispatch the success action with the response data
+            dispatch({
+                type: "NEW_EVENT_SUCCESS",
+                payload: data.event,
+            });
+        } else {
+            dispatch({
+                type: "NEW_EVENT_FAIL",
+                payload: "Failed to load user data",
+            });
+        }
     } catch (error) {
-        console.error("Error in API call:", error); // Log error details
+        // Detailed error logging
+        if (error.response) {
+            // The request was made and the server responded with a status code
+            // that falls out of the range of 2xx
+            console.error("API Response Error:", {
+                message: error.response.data?.message,
+                status: error.response.status,
+                headers: error.response.headers,
+            });
+        } else if (error.request) {
+            // The request was made but no response was received
+            console.error("No response received from the API:", {
+                request: error.request,
+            });
+        } else {
+            // Something happened in setting up the request that triggered an error
+            console.error("Request Setup Error:", error.message);
+        }
+
+        // Dispatch the failure action with the error message
         dispatch({
             type: "NEW_EVENT_FAIL",
             payload: error.response?.data?.message || error.message,
@@ -162,6 +222,29 @@ export const getEventDetails = (id) => async (dispatch) => {
         dispatch({
             type: "FETCH_EVENT_FAILURE",
             payload: error.response?.data?.message || error.message,
+        });
+    }
+};
+
+export const deleteEvent = (eventId) => async (dispatch) => {
+    console.log("deleteevent touched")
+    try {
+        dispatch({ type: 'DELETE_EVENT_REQUEST' }); // Indicate that the delete request is in progress
+
+        // Make the API call to delete the event using the server constant
+        const response = await axios.delete(`${server}/calendar/event/${eventId}`); // Using the 'server' URL as you requested
+
+        // Dispatch success action and pass eventId to remove from state
+        dispatch({
+            type: 'DELETE_EVENT_SUCCESS',
+            payload: eventId, // Pass the eventId to be removed from state
+        });
+
+        console.log("success")
+    } catch (error) {
+        dispatch({
+            type: 'DELETE_EVENT_FAILURE',
+            payload: error.response ? error.response.data.message : error.message, // Error handling
         });
     }
 };

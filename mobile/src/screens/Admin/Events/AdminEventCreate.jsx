@@ -81,7 +81,7 @@ const AdminCreateEvent = () => {
         image: response.data.secure_url,
       };
 
-      console.log("Data sent to newEvent action:", eventData);
+      console.log("Data sent to newEvent frontend:", eventData);
       dispatch(newEvent(eventData));
 
       setIsUpdating(false);

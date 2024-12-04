@@ -4,7 +4,7 @@ import Footer from "../../../components/Layout/Footer";
 import Header from "../../../components/Layout/Header";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { useDispatch, useSelector } from "react-redux";
-import { getEventDetails, updateEvent } from "../../../redux/actions/calendarActions"; 
+import { fetchEvent, updateEvent } from "../../../redux/actions/calendarActions"; 
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import * as ImagePicker from 'expo-image-picker'; // Updated image picker library
 import axios from 'axios'; // Axios for HTTP requests
@@ -20,7 +20,7 @@ const AdminEventUpdate = () => {
 
     const { eventId } = route.params;
     const { event, loading } = useSelector((state) => state.calendar);
-
+    console.log("frontend calendar: ", event)
     // Local state for handling updates to event
     const [updatedEvent, setUpdatedEvent] = useState({
         title: "",
@@ -41,7 +41,7 @@ const AdminEventUpdate = () => {
     useEffect(() => {
         if (eventId) {
             // Dispatch the action to fetch event details based on the eventId
-            dispatch(getEventDetails(eventId));
+            dispatch(fetchEvent(eventId));
         }
     }, [dispatch, eventId]);
 

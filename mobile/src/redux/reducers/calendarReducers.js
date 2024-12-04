@@ -41,26 +41,6 @@ const calendarReducer = (state = initialState, action) => {
         case "ALL_EVENTS_FAIL":
             return { ...state, events: [], loading: false, error: action.payload };
 
-        // Handling Event Details
-        case "FETCH_EVENT_REQUEST":
-            return {
-                ...state,
-                loading: true,
-            };
-        case "FETCH_EVENT_SUCCESS":
-            return {
-                ...state,
-                loading: false,
-                event: action.payload,
-            };
-        case "FETCH_EVENT_FAILURE":
-            return {
-                ...state,
-                loading: false,
-                error: action.payload,
-            };
-        
-
         // Fetching events before and after the current day
         case "FETCH_EVENTS_BEFORE_REQUEST":
         case "FETCH_EVENTS_AFTER_REQUEST":
@@ -71,6 +51,20 @@ const calendarReducer = (state = initialState, action) => {
             return { ...state, afterCurrentDayEvents: action.payload, loading: false, error: null };
         case "FETCH_EVENTS_BEFORE_FAILURE":
         case "FETCH_EVENTS_AFTER_FAILURE":
+            return { ...state, loading: false, error: action.payload };
+
+        // Deleting an event
+        case "DELETE_EVENT_REQUEST":
+            return { ...state, loading: true, error: null };
+
+        case "DELETE_EVENT_SUCCESS":
+            return {
+                ...state,
+                loading: false,
+                events: state.events.filter((event) => event._id !== action.payload),
+            };
+
+        case "DELETE_EVENT_FAILURE":
             return { ...state, loading: false, error: action.payload };
 
         default:
