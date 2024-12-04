@@ -117,7 +117,7 @@ const EventsList = ({ navigation }) => {
                 <View style={styles.eventsContainer}>
                 {filteredEvents && filteredEvents.length > 0 ? (
                     filteredEvents.map((event) => (
-                    <TouchableOpacity
+                        <TouchableOpacity
                         key={event._id} // Ensure each event has a unique key
                         onPress={() =>
                         navigation.navigate("eventinfo", { id: event._id })
@@ -125,23 +125,24 @@ const EventsList = ({ navigation }) => {
                         style={styles.eventItem}
                     >
                         <Text
-                        style={[
-                            styles.eventTitle,
-                            moment(event.date).isBetween(
-                            moment(),
-                            moment().endOf("month"),
-                            "day",
-                            "[]"
-                            ) && { color: "#ffb703" },
-                        ]}
+                            style={[
+                                styles.eventTitle,
+                                moment(event.date).isBetween(
+                                    moment(),
+                                    moment().endOf("month"),
+                                    "day",
+                                    "[]"
+                                ) && { color: "#ffb703" },
+                            ]}
                         >
-                        {event.title}
+                            {event.title}
                         </Text>
                         <Text style={styles.eventDate}>
-                        {moment(event.date).format("MM-DD-YYYY")}
+                            {moment(event.date).format("MM-DD-YYYY")}
                         </Text>
                         <Text style={styles.eventLocation}>{event.location}</Text>
                     </TouchableOpacity>
+                    
                     ))
                 ) : (
                     <Text style={styles.noEventsText}>No events available</Text>

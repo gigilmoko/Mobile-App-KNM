@@ -6,7 +6,7 @@ import Toast from 'react-native-toast-message';
 export const fetchEvent = (eventId) => async (dispatch) => {
     dispatch({ type: 'FETCH_EVENT_REQUEST' });
 
-
+    console.log("Fetched event touched");
     try {
         const response = await axios.get(`${server}/calendar/event/${eventId}`);
        
