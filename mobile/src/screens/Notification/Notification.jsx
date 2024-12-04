@@ -54,7 +54,7 @@ const NotificationScreen = () => {
             // Attempt to toggle the notification read status
             await dispatch(toggleNotificationReadStatus(notifId));
             // Navigate to the event information screen, passing eventId as a parameter
-            navigation.navigate("eventInfo", { eventId });
+            navigation.navigate("eventinfo", { eventId });
         } catch (error) {
             Toast.show({
                 type: 'error',

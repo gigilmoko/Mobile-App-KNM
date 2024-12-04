@@ -50,16 +50,41 @@ import ProductFeedback from "./src/screens/User/ProductFeedback";
 import AdminCreateEvent from "./src/screens/Admin/Events/AdminEventCreate";
 import AdminEventUpdate from "./src/screens/Admin/Events/AdminEventUpdate";
 import EventFeedback from "./src/screens/User/EventFeedback";
+import { getNotifications } from './src/redux/actions/notificationActions';
+import { monitorNotifications } from "./utils/NotificationService";
 
 const Stack = createNativeStackNavigator();
 const Drawer = createDrawerNavigator();
 
 const CustomDrawerContent = (props) => {
-    const { user, isAuthenticated } = useSelector((state) => state.user);
+    // const { user, isAuthenticated } = useSelector((state) => state.user);
     const dispatch = useDispatch();
     const { navigation } = props;
     const loading = useMessageAndErrorUser(navigation, dispatch, "myaccount");
     const loadingSignOut = useMessageAndErrorUser(navigation, dispatch, "myaccount");
+    // const dispatch = useDispatch();
+    const { user } = useSelector((state) => state.user);
+
+
+    useEffect(() => {
+        console.log("Loading user data...");
+        dispatch(loadUser(user));
+    }, [dispatch]);
+
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            dispatch(getNotifications());
+        }, 5000);
+
+
+        return () => clearInterval(interval); // Cleanup interval on unmount
+    }, [dispatch]);
+
+
+    useEffect(() => {
+        monitorNotifications(); // Initialize notification monitoring
+    }, []);
 
     const logoutHandler = () => {
         dispatch(logout());
@@ -68,7 +93,7 @@ const CustomDrawerContent = (props) => {
 
     return (
         <View style={{ flex: 1 }}>
-            <DrawerContentScrollView {...props}>
+            {/* <DrawerContentScrollView {...props}>
                 <ImageBackground
                     source={require('./src/assets/images/bg5.png')}
                     style={{ flex: 1, alignItems: 'center', padding: 20 }}
@@ -125,7 +150,7 @@ const CustomDrawerContent = (props) => {
                         </View>
                     </TouchableOpacity>
                 )}
-            </View>
+            </View> */}
         </View>
     );
 };
