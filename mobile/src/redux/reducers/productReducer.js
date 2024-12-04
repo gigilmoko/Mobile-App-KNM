@@ -7,9 +7,10 @@ const initialState = {
     success: false, // To handle success of new or updated product
 };
 
+
 export const productReducer = (state = initialState, action) => {
     // console.log("action in reducer: ", action); // Log the action to see what type and payload it contains
-  
+ 
     switch (action.type) {
       case "ALL_PRODUCTS_REQUEST":
         return {
@@ -28,7 +29,7 @@ export const productReducer = (state = initialState, action) => {
           loading: false,
           error: action.payload,
         };
-  
+ 
       // Handling Product Details
       case "getProductDetailsRequest":
         return {
@@ -47,7 +48,7 @@ export const productReducer = (state = initialState, action) => {
           loading: false,
           error: action.payload,
         };
-  
+ 
       // Handling Update Product
       case "UPDATE_PRODUCT_REQUEST":
         return {
@@ -69,7 +70,7 @@ export const productReducer = (state = initialState, action) => {
           error: action.payload,
           success: false,
         };
-  
+ 
       // Handling New Product
       case "NEW_PRODUCT_REQUEST":
         return {
@@ -85,7 +86,7 @@ export const productReducer = (state = initialState, action) => {
               products: [...state.products, action.payload],
               success: true,
             };
-          
+         
       case "NEW_PRODUCT_FAIL":
         return {
           ...state,
@@ -93,7 +94,7 @@ export const productReducer = (state = initialState, action) => {
           error: action.payload,
           success: false,
         };
-  
+ 
       // Handling Searched Products
       case "SEARCH_PRODUCTS_REQUEST":
         return {
@@ -113,9 +114,8 @@ export const productReducer = (state = initialState, action) => {
           error: action.payload,
           searchedProducts: [],
         };
-  
+ 
       default:
         return state;
     }
   };
-  
