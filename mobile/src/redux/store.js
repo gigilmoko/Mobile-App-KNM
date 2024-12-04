@@ -21,16 +21,16 @@ export const store = configureStore({
         calendar: calendarReducer,
         feedback: feedbackReducer,
         userInterested: userInterestReducers, 
-        category: categoryReducer // Ensure this key matches
+        category: categoryReducer
     },
 });
 
 
 //Bahay na Von
-export const server = "http://192.168.1.12:4002/api/"
+// export const server = "http://192.168.1.12:4002/api/"
 
 //Bahay ni Jis
-// export const server = "http://192.168.1.24:4002/api/"
+export const server = "http://192.168.1.24:4002/api/"
 
 //Bahay ni Cleto
 // export const server = "http://192.168.100.3:4001/api/"

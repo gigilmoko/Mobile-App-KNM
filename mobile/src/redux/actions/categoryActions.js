@@ -8,7 +8,7 @@ export const getAllCategories = () => async (dispatch) => {
         dispatch({ type: "ALL_CATEGORIES_REQUEST" });
 
         const { data } = await axios.get(`${server}/category/all`);
-        console.log("data of category:", data)
+        // console.log("data of category:", data)
         dispatch({
             type: "ALL_CATEGORIES_SUCCESS",
             payload: data.categories,

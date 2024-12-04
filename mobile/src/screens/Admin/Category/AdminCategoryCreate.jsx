@@ -1,5 +1,11 @@
-import React, { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, ScrollView, TextInput } from "react-native";
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+  TextInput,
+} from "react-native";
 import Footer from "../../../components/Layout/Footer";
 import Header from "../../../components/Layout/Header";
 import Toast from "react-native-toast-message"; // Import Toast
@@ -10,63 +16,139 @@ const AdminCategoryCreate = () => {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const dispatch = useDispatch();
+  const [centered, setCentered] = useState(true);
 
   const handleCreateCategory = () => {
     if (!name || !description) {
       Toast.show({
         type: "error",
         text1: "Validation Error",
-        text2: "Name and Description are required."
+        text2: "Name and Description are required.",
       });
       return;
     }
 
-    const categoryData = { name, description }; 
+    const categoryData = { name, description };
     dispatch(createCategory(categoryData));
-    console.log(categoryData)
+    console.log(categoryData);
   };
 
   return (
-    <View className="flex-1 bg-yellow-500">
+    <View style={{ flex: 1, backgroundColor: "#ffb703" }}>
       <Header back={true} />
 
-      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-        <View className="bg-white rounded-t-[50px] mt-5 h-full px-4 shadow-lg">
-          <View className="items-center">
-            <Text className="text-xl font-bold mt-4 mb-2">Create Category</Text>
-          </View>
+      <ScrollView
+        contentContainerStyle={{
+          flex: 1,
+          justifyContent: centered ? "center" : "flex-start",
+          alignItems: "center",
+          backgroundColor: "#F5F5F5",
+          borderTopRightRadius: 30,
+          borderTopLeftRadius: 30,
+        }}
+      >
+        <View
+          style={{
+            backgroundColor: "#F5F5F5",
+            width: "90%",
+            height: "60%",
+            padding: 20,
+            borderRadius: 10,
+            shadowColor: "#000",
+            shadowOpacity: 0.2,
+            shadowRadius: 5,
+            shadowOffset: { width: 0, height: 3 },
+            elevation: 4,
+          }}
+        >
+          <Text
+            style={{
+              fontSize: 24,
+              fontWeight: "bold",
+              marginBottom: 20,
+              textAlign: "center",
+              color: "#333333",
+              paddingTop: 15,
+            }}
+          >
+            Create Category
+          </Text>
 
-          <View className="mt-5">
-            <Text className="text-base font-semibold mb-1">Category Name</Text>
-            <TextInput
-              className="w-full border border-gray-300 rounded-md p-2 mb-4"
-              placeholder="Enter category name"
-              value={name}
-              onChangeText={setName}
-            />
+          <Text style={{ fontSize: 14, color: "#666666", marginBottom: 10 }}>
+            Category Name*
+          </Text>
+          <TextInput
+            style={{
+              borderWidth: 1,
+              borderColor: "#CCCCCC",
+              borderRadius: 5,
+              padding: 10,
+              marginBottom: 15,
+            }}
+            placeholder="Enter category name"
+            value={name}
+            onChangeText={setName}
+          />
 
-            <Text className="text-base font-semibold mb-1">Description</Text>
-            <TextInput
-              className="w-full border border-gray-300 rounded-md p-2 mb-4"
-              placeholder="Enter category description"
-              value={description}
-              onChangeText={setDescription}
-              multiline
-            />
+          <Text style={{ fontSize: 14, color: "#666666", marginBottom: 10 }}>
+            Description*
+          </Text>
+          <TextInput
+            style={{
+              borderWidth: 1,
+              borderColor: "#CCCCCC",
+              borderRadius: 5,
+              padding: 10,
+              marginBottom: 15,
+              height: 100,
+              textAlignVertical: "top",
+            }}
+            placeholder="Enter category description"
+            value={description}
+            onChangeText={setDescription}
+            multiline
+          />
+
+          <View style={{ flexDirection: "row", justifyContent: "space-between", paddingTop: "20" }}>
+            <TouchableOpacity
+              style={{
+                backgroundColor: "#DDDDDD",
+                padding: 12,
+                borderRadius: 5,
+                flex: 1,
+                marginRight: 10,
+              }}
+              onPress={() => {
+                setName("");
+                setDescription("");
+              }}
+            >
+              <Text style={{ textAlign: "center", color: "#666666" }}>
+                Cancel
+              </Text>
+            </TouchableOpacity>
 
             <TouchableOpacity
-              className="bg-yellow-500 rounded-md p-3 mt-4"
+              style={{
+                backgroundColor: "#ffb703",
+                padding: 12,
+                borderRadius: 5,
+                flex: 1,
+              }}
               onPress={handleCreateCategory}
             >
-              <Text className="text-white text-center font-bold">Create Category</Text>
+              <Text style={{ textAlign: "center", color: "#000", }}>
+                Create Category
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
-
-        <View className="absolute bottom-0 w-full">
-          <Footer activeRoute={"home"} />
-        </View>
       </ScrollView>
+
+      {/* Footer */}
+      <View style={{ position: "absolute", bottom: 0, width: "100%" }}>
+        <Footer activeRoute={"home"} />
+      </View>
     </View>
   );
 };

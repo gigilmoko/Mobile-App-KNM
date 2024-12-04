@@ -94,20 +94,20 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
     },
     screenNameContainer: {
-        marginTop: 20,
         padding: 16,
         alignItems: 'center',
     },
     screenNameText: {
         fontSize: 24,
         fontWeight: 'bold',
+        paddingTop: 20,
     },
     boxContainer: {
         backgroundColor: '#fff',
-        borderTopLeftRadius: 50,
-        borderTopRightRadius: 50,
+        borderTopLeftRadius: 30,
+        borderTopRightRadius: 30,
         paddingTop: 0,
-        marginTop: 20,
+        marginTop: 0,
         height: '100%',
         paddingHorizontal: 16,
         elevation: 5, // For shadow (Android)
@@ -120,10 +120,10 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     usernameText: {
-        fontSize: 20,
+        fontSize: 24,
         fontWeight: 'bold',
-        marginBottom: 5,
-        marginTop: 10,
+        marginBottom: 15,
+        marginTop: 30,
     },
     OptionsContainer: {
         marginTop: 10,

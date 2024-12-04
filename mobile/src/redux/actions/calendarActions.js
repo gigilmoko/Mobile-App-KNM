@@ -61,11 +61,6 @@ export const fetchEventsAfterCurrentDay = () => async (dispatch) => {
     try {
         const response = await axios.get(`${server}/calendar/events/after`);
 
-
-        // Log the fetched data
-        // console.log('Fetched events after current day:', response.data.data);
-
-
         dispatch({
             type: 'FETCH_EVENTS_AFTER_SUCCESS',
             payload: response.data.data,  // Ensure payload contains the event data

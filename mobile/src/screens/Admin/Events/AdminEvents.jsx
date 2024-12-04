@@ -1,96 +1,280 @@
-import React, { useEffect } from "react";
-import { View, Text, ScrollView, TouchableOpacity } from "react-native";
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  StyleSheet,
+} from "react-native";
 import Footer from "../../../components/Layout/Footer";
 import Header from "../../../components/Layout/Header";
 import { Calendar } from "react-native-calendars";
 import { useDispatch, useSelector } from "react-redux";
 import { getAllEvents } from "../../../redux/actions/calendarActions";
+import moment from "moment";
 
 const AdminEvents = ({ navigation }) => {
-  const [selectedDate, setSelectedDate] = React.useState("");
+  const [selectedDate, setSelectedDate] = useState("");
+  const [activeTab, setActiveTab] = useState("month");
   const dispatch = useDispatch();
+
+  // Get events and loading state from Redux store
   const { events, loading } = useSelector((state) => state.calendar);
 
+  // Generate markedDates object for Calendar
+  const markedDates = React.useMemo(() => {
+    const marks = {};
+    const today = moment().format("YYYY-MM-DD");
+
+    events?.forEach((event) => {
+      const eventDate = moment(event.date).format("YYYY-MM-DD"); // Format date
+      marks[eventDate] = {
+        marked: true,
+        dotColor: "#ffb703",
+        textStyle: {
+          color: "#ffb703", 
+        },
+      };
+    });
+
+    marks[today] = {
+      ...marks[today], // Preserve any existing marks for today
+      marked: true,
+      selected: true,
+      selectedColor: "#ffb703", // Yellow background
+      textStyle: {
+        color: "#000", // Black text for today
+      },
+    };
+
+    console.log("Marked Dates:", marks); // Debugging log
+    return marks;
+  }, [events]);
+
+  // Fetch events on component mount
   useEffect(() => {
     dispatch(getAllEvents());
   }, [dispatch]);
 
-  useEffect(() => {
-    if (events) {
-      console.log("Fetched events:", events);
+  // Filter events based on the active tab
+  const filteredEvents = React.useMemo(() => {
+    const today = moment();
+    const endOfMonth = moment().endOf("month");
+    const startOfNextMonth = moment().add(1, "month").startOf("month");
+    const endOfNextMonth = moment().add(1, "month").endOf("month");
+
+    if (activeTab === "past") {
+      return events.filter((event) => moment(event.date).isBefore(today, "day"));
+    } else if (activeTab === "month") {
+      return events.filter((event) =>
+        moment(event.date).isBetween(today, endOfMonth, "day", "[]")
+      );
+    } else if (activeTab === "nextMonth") {
+      return events.filter((event) =>
+        moment(event.date).isBetween(startOfNextMonth, endOfNextMonth, "day", "[]")
+      );
     }
-  }, [events]);
+    return events;
+  }, [events, activeTab]);
 
   return (
-    <View className="flex-1 bg-yellow-500">
+    <View style={styles.container}>
       <Header back={true} />
-      <View className="bg-white rounded-t-[50px] h-full px-4 shadow-lg">
-        <View className="items-center">
-          <Text className="text-xl font-bold mt-4 mb-2">Events</Text>
+      <View style={styles.mainContent}>
+        <View style={styles.headerContainer}>
+          <Text style={styles.headerText}>Events</Text>
         </View>
 
-        <View className="mt-0 rounded-lg overflow-hidden">
-          <Calendar
-            onDayPress={(day) => {
-              setSelectedDate(day.dateString);
-            }}
-            markedDates={{
-              [selectedDate]: {
-                selected: true,
-                marked: true,
-                selectedColor: "#ffb703",
-              },
-            }}
-            theme={{
-              todayTextColor: "#ffb703",
-              arrowColor: "#ffb703",
-              selectedDayBackgroundColor: "#ffb703",
-              selectedDayTextColor: "#ffffff",
-            }}
-          />
-        </View>
-
-        {loading ? (
-          <View className="flex-1 justify-center items-center">
-            <Text className="text-lg text-gray-800">Loading...</Text>
+        <ScrollView
+          contentContainerStyle={styles.scrollContainer}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.calendarContainer}>
+            <Calendar
+              onDayPress={(day) => {
+                setSelectedDate(day.dateString); // Set selected date
+                navigation.navigate("CreateEvent", { selectedDate: day.dateString }); // Navigate to Create Event screen with the selected date
+              }}
+              markedDates={markedDates} // Pass marked dates
+              theme={{
+                todayTextColor: "#ffb703", // Color for today's text
+                arrowColor: "#ffb703",
+                selectedDayBackgroundColor: "#ffb703",
+                selectedDayTextColor: "#ffffff",
+              }}
+            />
           </View>
-        ) : (
-          <View className="mt-5">
-            <Text className="text-lg font-bold mb-2 text-gray-800">List of Events</Text>
-            <ScrollView>
-              {events && events.length > 0 ? (
-                events.map((event) => (
-                  <TouchableOpacity
-                    key={event.id}
-                    onPress={() =>
-                      navigation.navigate("eventDetail", { id: event.id })
-                    }
-                    className="my-1 border border-yellow-400 rounded-lg bg-white p-3"
-                  >
-                    <Text className="text-lg font-semibold text-black tracking-wide">
-                      {event.title}
-                    </Text>
-                    <Text className="text-base text-gray-600">{event.date}</Text>
-                    <Text className="text-sm text-gray-700 mt-1">
-                      {event.location}
-                    </Text>
-                  </TouchableOpacity>
-                ))
-              ) : (
-                <Text className="text-lg text-gray-600 text-center">
-                  No events available
-                </Text>
-              )}
-            </ScrollView>
-          </View>
-        )}
-      </View>
 
-      <View className="absolute bottom-0 w-full">
-        <Footer activeRoute={"home"} />
+          <View style={styles.tabsContainer}>
+            <TouchableOpacity
+              style={[styles.tab, activeTab === "past" && styles.activeTab]}
+              onPress={() => setActiveTab("past")}
+            >
+              <Text style={styles.tabText}>Past Events</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.tab, activeTab === "month" && styles.activeTab]}
+              onPress={() => setActiveTab("month")}
+            >
+              <Text style={styles.tabText}>Events for the Month</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.tab, activeTab === "nextMonth" && styles.activeTab]}
+              onPress={() => setActiveTab("nextMonth")}
+            >
+              <Text style={styles.tabText}>Future Events</Text>
+            </TouchableOpacity>
+          </View>
+
+          {loading ? (
+            <View style={styles.loadingContainer}>
+              <Text style={styles.loadingText}>Loading...</Text>
+            </View>
+          ) : (
+            <View style={styles.eventsContainer}>
+              {/* <Text style={styles.eventsLabel}>List of Events</Text> */}
+              {filteredEvents && filteredEvents.length > 0 ? (
+                  filteredEvents.map((event) => (
+                    <TouchableOpacity
+                      key={event.id}
+                      onPress={() =>
+                        navigation.navigate("eventDetail", { id: event.id })
+                      }
+                      style={styles.eventItem}
+                    >
+                      <Text
+                        style={[ 
+                          styles.eventTitle, 
+                          moment(event.date).isBetween(
+                            moment(),
+                            moment().endOf("month"),
+                            "day",
+                            "[]"
+                          ) && { color: "#ffb703" }
+                        ]}
+                      >
+                        {event.title}
+                      </Text>
+                      <Text style={styles.eventDate}>
+                        {moment(event.date).format("MM -DD -YYYY")}
+                      </Text>
+                      {/* <Text style={styles.eventLocation}>{event.startDate}</Text> */}
+                      <Text style={styles.eventLocation}>{event.location}</Text>
+                    </TouchableOpacity>
+                  ))
+                ) : (
+                  <Text style={styles.noEventsText}>No events available</Text>
+                )}
+            </View>
+          )}
+        </ScrollView>
       </View>
+      <Footer activeRoute={"home"} />
     </View>
   );
 };
 
 export default AdminEvents;
+
+// Styles (unchanged)
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#ffb703",
+  },
+  mainContent: {
+    flex: 1,
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 50,
+    borderTopRightRadius: 50,
+    paddingHorizontal: 15,
+    paddingTop: 10,
+  },
+  headerContainer: {
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  headerText: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#000",
+  },
+  scrollContainer: {
+    paddingBottom: 20,
+  },
+  calendarContainer: {
+    marginBottom: 20,
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    elevation: 5,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
+  },
+  tabsContainer: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    marginBottom: 0,
+  },
+  tab: {
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    borderRadius: 5,
+    backgroundColor: "#f0f0f0",
+  },
+  activeTab: {
+    backgroundColor: "#ffb703",
+  },
+  tabText: {
+    fontSize: 12,
+    fontWeight: "bold",
+    color: "#333",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingText: {
+    fontSize: 16,
+    color: "#888",
+  },
+  eventsContainer: {
+    marginTop: 20,
+  },
+  eventsLabel: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 10,
+    color: "#333",
+  },
+  eventItem: {
+    marginVertical: 6,
+    borderColor: "#F4B546",
+    borderWidth: 1,
+    borderRadius: 10,
+    backgroundColor: "#fff",
+    padding: 10,
+  },
+  eventTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    letterSpacing: 1,
+    color: "#000",
+  },
+  eventDate: {
+    fontSize: 14,
+    color: "#777",
+  },
+  eventLocation: {
+    fontSize: 12,
+    color: "#333",
+    marginTop: 4,
+  },
+  noEventsText: {
+    fontSize: 16,
+    color: "#888",
+    textAlign: "center",
+  },
+});

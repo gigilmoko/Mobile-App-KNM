@@ -29,7 +29,7 @@ const calendarReducer = (state = initialState, action) => {
 
 
         case "ALL_EVENTS_SUCCESS":
-            console.log("Updating state with events:", action.payload);
+            // console.log("Updating state with events:", action.payload);
             return { ...state, events: action.payload, loading: false, error: null };
 
 
