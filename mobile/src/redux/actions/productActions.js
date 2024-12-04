@@ -7,7 +7,7 @@ export const getAllProducts = (keyword = "", category = "") => async (dispatch) 
 
 
         const { data } = await axios.get(`${server}/product/all?keyword=${keyword}&category=${category}`);
-        console.log("product data:", data)
+        // console.log("product data:", data)
         dispatch({
             type: "ALL_PRODUCTS_SUCCESS",
             payload: data.products,
@@ -105,48 +105,48 @@ export const searchProducts = (keyword) => async (dispatch) => {
 export const updateProduct = (productData) => async (dispatch) => {
     console.log("update touched");
     try {
-      dispatch({ type: "UPDATE_PRODUCT_REQUEST" });
- 
-      const { data } = await axios.put(`${server}/product/update/${productData.id}`, productData);
-      console.log("update product: ", data);
- 
-      dispatch({
-        type: "UPDATE_PRODUCT_SUCCESS",
-        payload: data.product,
-      });
+        dispatch({ type: "UPDATE_PRODUCT_REQUEST" });
+    
+        const { data } = await axios.put(`${server}/product/update/${productData.id}`, productData);
+        console.log("update product: ", data);
+    
+        dispatch({
+            type: "UPDATE_PRODUCT_SUCCESS",
+            payload: data.product,
+        });
     } catch (error) {
-      dispatch({
+    dispatch({
         type: "UPDATE_PRODUCT_FAIL",
         payload: error.response?.data?.message || error.message,
-      });
+    });
     }
-  };
- 
-  // New Product
-  export const newProduct = (productData) => async (dispatch) => {
+
+    dispatch({ type: "NEW_PRODUCT_REQUEST" });
+
+    const { data } = await axios.post(`${server}/product/new`, productData);
+    console.log("API response data:", data); // Log API response
+
+    if (data && data.product) {
+        dispatch({
+        type: "NEW_PRODUCT_SUCCESS",
+        payload: data.product, // Ensure this is the correct structure
+        });
+    } else {
+        console.error("API response does not contain product data:", data);
+    }
+};
+    
+export const newProduct = (productData) => async (dispatch) => {
     console.log("Data sent to newProduct action:", productData);
     try {
-      dispatch({ type: "NEW_PRODUCT_REQUEST" });
- 
-      const { data } = await axios.post(`${server}/product/new`, productData);
-      console.log("API response data:", data); // Log API response
- 
-      if (data && data.product) {
-        dispatch({
-          type: "NEW_PRODUCT_SUCCESS",
-          payload: data.product, // Ensure this is the correct structure
-        });
-      } else {
-        console.error("API response does not contain product data:", data);
-      }
     } catch (error) {
-      console.error("Error in API call:", error); // Log error details
-      dispatch({
+    console.error("Error in API call:", error); // Log error details
+    dispatch({
         type: "NEW_PRODUCT_FAIL",
         payload: error.response?.data?.message || error.message,
-      });
+    });
     }
-  };
+};
 
 
- 
+

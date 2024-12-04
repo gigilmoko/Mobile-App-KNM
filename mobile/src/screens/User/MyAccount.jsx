@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Dimensions  } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Dimensions } from "react-native";
 import Footer from "../../components/Layout/Footer";
 import { useDispatch, useSelector } from "react-redux";
 import { Ionicons } from "@expo/vector-icons";
+import { CameraIcon } from "react-native-heroicons/outline"; // Import CameraIcon from Heroicons
 import OptionList from "../../components/User/OptionList";
 import { Avatar, Button } from "react-native-paper";
 import { loadUser, updateAvatar, logout } from "../../redux/actions/userActions";
@@ -97,12 +98,9 @@ const MyAccount = ({ navigation, route }) => {
     };
 
     return (
-        
-
-        <>
-        <View className="flex-1" style={{ backgroundColor: "#ffb703" }}>
+        <View style={{ flex: 1, backgroundColor: "#ffb703" }}>
             <Header back={true} />
-    
+
             <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
                 <View style={styles.boxContainer}>
                     <View style={styles.UserContainer}>
@@ -115,8 +113,8 @@ const MyAccount = ({ navigation, route }) => {
                                 size={100}
                                 style={{ backgroundColor: "#c70049" }}
                             />
-                            <TouchableOpacity onPress={openImagePicker}>
-                                <Button textColor="#219ebc">Change Photo</Button>
+                            <TouchableOpacity onPress={openImagePicker} style={styles.cameraIconContainer}>
+                                <CameraIcon size={24} color="#219ebc" />
                             </TouchableOpacity>
                             {isAvatarChanged && (
                                 <TouchableOpacity onPress={handleAvatarUpdate} disabled={isUpdating}>
@@ -126,7 +124,7 @@ const MyAccount = ({ navigation, route }) => {
                                 </TouchableOpacity>
                             )}
                         </View>
-    
+
                         <View style={styles.infoContainer}>
                             <Text style={styles.usernameText}>
                                 {user?.fname} {user?.middlei}. {user?.lname}
@@ -135,7 +133,7 @@ const MyAccount = ({ navigation, route }) => {
                             <Text style={styles.addressText}>{user?.address}</Text>
                         </View>
                     </View>
-    
+
                     <View style={styles.OptionsContainer}>
                         {/* Conditionally Render "My Orders" or "Manage Orders" */}
                         {user?.role === "admin" ? (
@@ -154,7 +152,6 @@ const MyAccount = ({ navigation, route }) => {
                             />
                         )}
 
-    
                         <OptionList
                             text={"Change Password"}
                             Icon={Ionicons}
@@ -174,23 +171,20 @@ const MyAccount = ({ navigation, route }) => {
                             onPress={() => navigation.navigate("feedback")}
                         />
                     </View>
-    
+
                     {/* Logout Button */}
                     <Button mode="contained" onPress={handleLogout} style={styles.logoutButton}>
                         Logout
                     </Button>
                 </View>
                 {/* End of Box */}
-    
+
                 <View style={styles.footer}>
                     <Footer activeRoute={"home"} />
                 </View>
             </ScrollView>
         </View>
-    </>
-    
     );
-    
 };
 
 export default MyAccount;
@@ -214,7 +208,6 @@ const styles = StyleSheet.create({
         borderTopLeftRadius: 50,
         borderTopRightRadius: 50,
         paddingTop: 0,
-        marginTop: 20,
         height: '100%',
         paddingHorizontal: 16,
         elevation: 5, // For shadow (Android)
@@ -230,6 +223,15 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         marginBottom: 20,
+        position: 'relative',
+    },
+    cameraIconContainer: {
+        position: 'absolute',
+        bottom: 0,
+        right: 0,
+        backgroundColor: '#fff',
+        borderRadius: 50,
+        padding: 5,
     },
     infoContainer: {
         alignItems: 'center',
@@ -259,16 +261,12 @@ const styles = StyleSheet.create({
     },
     logoutButton: {
         backgroundColor: "#bc430b",
-        // marginTop: 10,
         borderRadius: 5,
     },
     footer: {
         position: "absolute",
-        // bottom: -0.01 * height, // 10% of the screen height
         bottom: 0,
         width: "100%",
         paddingTop: 0,
-       
     },
 });
-

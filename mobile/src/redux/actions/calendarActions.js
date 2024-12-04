@@ -94,3 +94,74 @@ export const getAllEvents = () => async (dispatch) => {
         });
     }
 };
+
+export const newEvent = (eventData) => async (dispatch) => {
+    console.log("Data sent to newEvent action:", eventData);
+    try {
+        // Make the API call to create a new event
+        const { data } = await axios.post('/calendar/event', eventData);
+
+        // Dispatch the success action with the response data
+        dispatch({
+            type: "NEW_EVENT_SUCCESS",
+            payload: data,
+        });
+    } catch (error) {
+        console.error("Error in API call:", error); // Log error details
+        dispatch({
+            type: "NEW_EVENT_FAIL",
+            payload: error.response?.data?.message || error.message,
+        });
+    }
+};
+
+export const updateEvent = (eventData) => async (dispatch) => {
+    console.log("update event touched");
+    try {
+        dispatch({ type: "UPDATE_EVENT_REQUEST" });
+    
+        const { data } = await axios.put(`${server}/calendar/event/${eventData.id}`, eventData);
+        console.log("update event: ", data);
+    
+        dispatch({
+            type: "UPDATE_EVENT_SUCCESS",
+            payload: data.event,
+        });
+    } catch (error) {
+        dispatch({
+            type: "UPDATE_EVENT_FAIL",
+            payload: error.response?.data?.message || error.message,
+        });
+    }
+};
+
+export const getEventDetails = (id) => async (dispatch) => {
+    try {
+        console.log("Fetching event details for ID:", id);  // Log the event ID
+        
+        dispatch({
+            type: "FETCH_EVENT_REQUEST",
+        });
+
+        // Fetch event details from the server
+        const { data } = await axios.get(`${server}/calendar/event/${id}`, {
+            withCredentials: true,
+        });
+
+        console.log("Event details fetched:", data);  // Log the fetched data
+
+        dispatch({
+            type: "FETCH_EVENT_SUCCESS",
+            payload: data.event,
+        });
+    } catch (error) {
+        // Log error to inspect what went wrong
+        console.error("Error fetching event details:", error);
+
+        // Dispatch failure action with error message
+        dispatch({
+            type: "FETCH_EVENT_FAILURE",
+            payload: error.response?.data?.message || error.message,
+        });
+    }
+};

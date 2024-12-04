@@ -5,13 +5,16 @@ import {
   ScrollView,
   TouchableOpacity,
   StyleSheet,
+  Alert,
 } from "react-native";
 import Footer from "../../../components/Layout/Footer";
 import Header from "../../../components/Layout/Header";
 import { Calendar } from "react-native-calendars";
 import { useDispatch, useSelector } from "react-redux";
-import { getAllEvents } from "../../../redux/actions/calendarActions";
+import { getAllEvents, deleteEvent } from "../../../redux/actions/calendarActions";
 import moment from "moment";
+import { Swipeable } from "react-native-gesture-handler";
+import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons"; // Import MaterialCommunityIcons
 
 const AdminEvents = ({ navigation }) => {
   const [selectedDate, setSelectedDate] = useState("");
@@ -30,7 +33,7 @@ const AdminEvents = ({ navigation }) => {
       const eventDate = moment(event.date).format("YYYY-MM-DD"); // Format date
       marks[eventDate] = {
         marked: true,
-        dotColor: "#ffb703",
+        dotColor: "#bc430b",
         textStyle: {
           color: "#ffb703", 
         },
@@ -47,7 +50,7 @@ const AdminEvents = ({ navigation }) => {
       },
     };
 
-    console.log("Marked Dates:", marks); // Debugging log
+    // console.log("Marked Dates:", marks);
     return marks;
   }, [events]);
 
@@ -77,6 +80,36 @@ const AdminEvents = ({ navigation }) => {
     return events;
   }, [events, activeTab]);
 
+  const handleDelete = (eventId) => {
+    // Confirm delete action
+    Alert.alert("Delete Event", "Are you sure you want to delete this event?", [
+      { text: "Cancel" },
+      {
+        text: "Delete",
+        onPress: () => {
+          dispatch(deleteEvent(eventId));
+        },
+      },
+    ]);
+  };
+
+  const renderRightActions = (eventId) => (
+    <View style={styles.swipeActionContainer}>
+      <TouchableOpacity
+        style={styles.swipeActionEdit}
+        onPress={() => navigation.navigate("admineventupdate", { eventId })}
+      >
+        <MaterialCommunityIcons name="pencil" size={24} color="#000" />
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.swipeActionDelete}
+        onPress={() => handleDelete(eventId)}
+      >
+        <MaterialCommunityIcons name="trash-can" size={24} color="#000" />
+      </TouchableOpacity>
+    </View>
+  );
+
   return (
     <View style={styles.container}>
       <Header back={true} />
@@ -93,13 +126,13 @@ const AdminEvents = ({ navigation }) => {
             <Calendar
               onDayPress={(day) => {
                 setSelectedDate(day.dateString); // Set selected date
-                navigation.navigate("CreateEvent", { selectedDate: day.dateString }); // Navigate to Create Event screen with the selected date
+                navigation.navigate("admineventcreate", { selectedDate: day.dateString }); // Navigate to Create Event screen with the selected date
               }}
               markedDates={markedDates} // Pass marked dates
               theme={{
                 todayTextColor: "#ffb703", // Color for today's text
                 arrowColor: "#ffb703",
-                selectedDayBackgroundColor: "#ffb703",
+                selectedDayBackgroundColor: "#bc430b",
                 selectedDayTextColor: "#ffffff",
               }}
             />
@@ -135,32 +168,36 @@ const AdminEvents = ({ navigation }) => {
               {/* <Text style={styles.eventsLabel}>List of Events</Text> */}
               {filteredEvents && filteredEvents.length > 0 ? (
                   filteredEvents.map((event) => (
-                    <TouchableOpacity
-                      key={event.id}
-                      onPress={() =>
-                        navigation.navigate("eventDetail", { id: event.id })
-                      }
-                      style={styles.eventItem}
+                    <Swipeable
+                      key={event._id} // Ensure each event has a unique key
+                      renderRightActions={() => renderRightActions(event._id)}
+                      overshootRight={false}
                     >
-                      <Text
-                        style={[ 
-                          styles.eventTitle, 
-                          moment(event.date).isBetween(
-                            moment(),
-                            moment().endOf("month"),
-                            "day",
-                            "[]"
-                          ) && { color: "#ffb703" }
-                        ]}
+                      <TouchableOpacity
+                        onPress={() =>
+                          navigation.navigate("eventDetail", { id: event._id })
+                        }
+                        style={styles.eventItem}
                       >
-                        {event.title}
-                      </Text>
-                      <Text style={styles.eventDate}>
-                        {moment(event.date).format("MM -DD -YYYY")}
-                      </Text>
-                      {/* <Text style={styles.eventLocation}>{event.startDate}</Text> */}
-                      <Text style={styles.eventLocation}>{event.location}</Text>
-                    </TouchableOpacity>
+                        <Text
+                          style={[ 
+                            styles.eventTitle, 
+                            moment(event.date).isBetween(
+                              moment(),
+                              moment().endOf("month"),
+                              "day",
+                              "[]"
+                            ) && { color: "#ffb703" }
+                          ]}
+                        >
+                          {event.title}
+                        </Text>
+                        <Text style={styles.eventDate}>
+                          {moment(event.date).format("MM-DD-YYYY")}
+                        </Text>
+                        <Text style={styles.eventLocation}>{event.location}</Text>
+                      </TouchableOpacity>
+                    </Swipeable>
                   ))
                 ) : (
                   <Text style={styles.noEventsText}>No events available</Text>
@@ -185,8 +222,8 @@ const styles = StyleSheet.create({
   mainContent: {
     flex: 1,
     backgroundColor: "#fff",
-    borderTopLeftRadius: 50,
-    borderTopRightRadius: 50,
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
     paddingHorizontal: 15,
     paddingTop: 10,
   },
@@ -221,15 +258,15 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 10,
     borderRadius: 5,
-    backgroundColor: "#f0f0f0",
+    backgroundColor: "#ffb703",
   },
   activeTab: {
-    backgroundColor: "#ffb703",
+    backgroundColor: "#bc430b",
   },
   tabText: {
     fontSize: 12,
     fontWeight: "bold",
-    color: "#333",
+    color: "#fff",
   },
   loadingContainer: {
     flex: 1,
@@ -276,5 +313,30 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#888",
     textAlign: "center",
+  },
+  swipeActionContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingLeft: 10,
+    paddingRight: 10,
+    borderRadius: 10,
+    height: 100,
+  },
+  swipeActionEdit: {
+    padding: 10,
+    borderRadius: 5,
+    borderColor: "#ffb703",
+    borderWidth: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 10,
+  },
+  swipeActionDelete: {
+    padding: 10,
+    borderRadius: 5,
+    borderColor: "#ffb703",
+    borderWidth: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
