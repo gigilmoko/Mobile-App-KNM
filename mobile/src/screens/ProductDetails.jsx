@@ -1,13 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, Dimensions, StyleSheet, Image, TouchableOpacity, ScrollView } from "react-native";
-import Header from "../../components/Layout/Header";
+import Header from "../components/Layout/Header";
 import { Avatar, Button } from "react-native-paper";
 import Toast from "react-native-toast-message";
 import { useDispatch, useSelector } from "react-redux";
 import { useIsFocused, useNavigation } from "@react-navigation/native";
-import { getProductDetails } from "../../redux/actions/productActions";
-import { fetchProductFeedbacks } from "../../redux/actions/productFeedbackActions";
-
+import { getProductDetails } from "../redux/actions/productActions";
+import { fetchProductFeedbacks } from "../redux/actions/productFeedbackActions";
 
 const QuantityControl = React.memo(({ quantity, incrementQty, decrementQty }) => (
   <View style={styles.quantityControl}>
@@ -29,30 +28,24 @@ const QuantityControl = React.memo(({ quantity, incrementQty, decrementQty }) =>
   </View>
 ));
 
-
 const ProductDetails = ({ route: { params } }) => {
   const navigate = useNavigation();
   const dispatch = useDispatch();
   const isFocused = useIsFocused();
 
-
   const { isLoading, product, error } = useSelector((state) => state.product);
   const { feedbacks, feedbackLoading } = useSelector((state) => state.feedbacks);
   const { user } = useSelector((state) => state.user);
 
-
   const [quantity, setQuantity] = useState(1);
   const { name, price, stock, description, images } = product || {};
 
-
   const isOutOfStock = stock === 0;
-
 
   useEffect(() => {
     dispatch(getProductDetails(params.id));
     dispatch(fetchProductFeedbacks(params.id));
   }, [dispatch, params.id, isFocused]);
-
 
   useEffect(() => {
     if (product) {
@@ -66,7 +59,6 @@ const ProductDetails = ({ route: { params } }) => {
     }
   }, [product, error]);
 
-
   const incrementQty = () => {
     if (stock <= quantity) {
       return Toast.show({
@@ -77,12 +69,10 @@ const ProductDetails = ({ route: { params } }) => {
     setQuantity((prev) => prev + 1);
   };
 
-
   const decrementQty = () => {
     if (quantity <= 1) return;
     setQuantity((prev) => prev - 1);
   };
-
 
   const addToCartHandler = (id, name, price, image, stock) => {
     if (!user) {
@@ -92,7 +82,6 @@ const ProductDetails = ({ route: { params } }) => {
         text1: "Log in to continue.",
       });
     }
-
 
     dispatch({
       type: "addToCart",
@@ -111,7 +100,6 @@ const ProductDetails = ({ route: { params } }) => {
     });
   };
 
-
   const addToWishlistHandler = (id, name, price, image, stock) => {
     if (!user) {
       navigate.navigate("login");
@@ -120,7 +108,6 @@ const ProductDetails = ({ route: { params } }) => {
         text1: "Log in to continue.",
       });
     }
-
 
     dispatch({
       type: "addToWishlist",
@@ -133,13 +120,11 @@ const ProductDetails = ({ route: { params } }) => {
       },
     });
 
-
     Toast.show({
       type: "success",
       text1: "Added To Wishlist",
     });
   };
-
 
   if (isLoading || feedbackLoading) {
     return (
@@ -149,122 +134,109 @@ const ProductDetails = ({ route: { params } }) => {
     );
   }
 
-
   return (
-    <View style={styles.container}>
+    <ScrollView contentContainerStyle={styles.scrollViewContent}>
       <Header back={true} />
-      <ScrollView contentContainerStyle={styles.scrollViewContent}>
-        <ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false}>
-          {images && images.length > 0 ? (
-            images.map((image, index) => (
-              <View key={index} style={styles.imageWrapper}>
-                <Image
-                  source={{ uri: image.url }}
-                  style={styles.image}
-                />
+      <ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false}>
+        {images && images.length > 0 ? (
+          images.map((image, index) => (
+            <View key={index} style={styles.imageWrapper}>
+              <Image
+                source={{ uri: image.url }}
+                style={styles.image}
+              />
+            </View>
+          ))
+        ) : (
+          <View style={styles.noImageContainer}>
+            <Text style={{ color: "gray" }}>No Images Available</Text>
+          </View>
+        )}
+      </ScrollView>
+
+      <View style={styles.productDetailsContainer}>
+        <Text numberOfLines={2} style={styles.productName}>
+          {name}
+        </Text>
+        <Text style={styles.productPrice}>${price}</Text>
+        <Text style={styles.productDescription} numberOfLines={8}>
+          {description}
+        </Text>
+
+        <View style={styles.quantityContainer}>
+          <Text style={styles.quantityLabel}>Quantity</Text>
+          <QuantityControl
+            quantity={quantity}
+            incrementQty={incrementQty}
+            decrementQty={decrementQty}
+          />
+        </View>
+
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity
+            activeOpacity={0.9}
+            onPress={() =>
+              addToCartHandler(params.id, name, price, images[0]?.url, stock)
+            }
+            disabled={isOutOfStock}
+          >
+            <Button
+              icon={"cart"}
+              style={styles.cartButton}
+              textColor="#fff"
+            >
+              {isOutOfStock ? "Out Of Stock" : "Add To Cart"}
+            </Button>
+          </TouchableOpacity>
+          <View>
+            <TouchableOpacity
+              onPress={() =>
+                addToWishlistHandler(
+                  params.id,
+                  name,
+                  price,
+                  images[0]?.url,
+                  stock
+                )
+              }
+            >
+              <Button
+                icon={"heart"}
+                style={styles.wishlistButton}
+                textColor={"black"}
+              >
+                Add to Wishlist
+              </Button>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Feedback Section */}
+        <View style={styles.feedbackContainer}>
+          <Text style={styles.feedbackTitle}>Customer Feedbacks</Text>
+
+          {feedbacks && feedbacks.length > 0 ? (
+            feedbacks.map((fb) => (
+              <View key={fb._id} style={styles.feedbackBox}>
+                <Text style={styles.feedbackRating}>Rating: {fb.rating} ⭐</Text>
+                <Text>{fb.feedback}</Text>
+                <Text style={styles.feedbackDate}>
+                  {new Date(fb.createdAt).toLocaleDateString()}
+                </Text>
               </View>
             ))
           ) : (
-            <View style={styles.noImageContainer}>
-              <Text style={{ color: "gray" }}>No Images Available</Text>
-            </View>
+            <Text style={styles.noReviewsText}>
+              No reviews available yet.
+            </Text>
           )}
-        </ScrollView>
-
-
-        <View style={styles.productDetailsContainer}>
-          <Text numberOfLines={2} style={styles.productName}>
-            {name}
-          </Text>
-          <Text style={styles.productPrice}>${price}</Text>
-          <Text style={styles.productDescription} numberOfLines={8}>
-            {description}
-          </Text>
-
-
-          <View style={styles.quantityContainer}>
-            <Text style={styles.quantityLabel}>Quantity</Text>
-            <QuantityControl
-              quantity={quantity}
-              incrementQty={incrementQty}
-              decrementQty={decrementQty}
-            />
-          </View>
-
-
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity
-              activeOpacity={0.9}
-              onPress={() =>
-                addToCartHandler(params.id, name, price, images[0]?.url, stock)
-              }
-              disabled={isOutOfStock}
-            >
-              <Button
-                icon={"cart"}
-                style={styles.cartButton}
-                textColor="#fff"
-              >
-                {isOutOfStock ? "Out Of Stock" : "Add To Cart"}
-              </Button>
-            </TouchableOpacity>
-            <View>
-              <TouchableOpacity
-                onPress={() =>
-                  addToWishlistHandler(
-                    params.id,
-                    name,
-                    price,
-                    images[0]?.url,
-                    stock
-                  )
-                }
-              >
-                <Button
-                  icon={"heart"}
-                  style={styles.wishlistButton}
-                  textColor={"black"}
-                >
-                  Add to Wishlist
-                </Button>
-              </TouchableOpacity>
-            </View>
-          </View>
-
-
-          {/* Feedback Section */}
-          <View style={styles.feedbackContainer}>
-            <Text style={styles.feedbackTitle}>Customer Feedbacks</Text>
-
-
-            {feedbacks && feedbacks.length > 0 ? (
-              feedbacks.map((fb) => (
-                <View key={fb._id} style={styles.feedbackBox}>
-                  <Text style={styles.feedbackRating}>Rating: {fb.rating} ⭐</Text>
-                  <Text>{fb.feedback}</Text>
-                  <Text style={styles.feedbackDate}>
-                    {new Date(fb.createdAt).toLocaleDateString()}
-                  </Text>
-                </View>
-              ))
-            ) : (
-              <Text style={styles.noReviewsText}>
-                No reviews available yet.
-              </Text>
-            )}
-          </View>
         </View>
-      </ScrollView>
-    </View>
+      </View>
+    </ScrollView>
   );
 };
 
-
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#f0f0f0",
-  },
   scrollViewContent: {
     flexGrow: 1,
   },
@@ -279,7 +251,7 @@ const styles = StyleSheet.create({
   },
   image: {
     width: Dimensions.get("window").width, // Full width
-    height: Dimensions.get("window").height / 2 + 30, // Half of the screen height + 30px
+    height: Dimensions.get("window").height / 2 + 60, // Half of the screen height + 30px
   },
   noImageContainer: {
     width: Dimensions.get("window").width,
@@ -291,7 +263,7 @@ const styles = StyleSheet.create({
   },
   productDetailsContainer: {
     padding: 15,
-    marginTop: -30, // Overlap the image by 30px
+    marginTop: -40, // Overlap the image by 30px
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
     shadowColor: "#000",
@@ -390,6 +362,4 @@ const styles = StyleSheet.create({
   },
 });
 
-
 export default ProductDetails;
-
