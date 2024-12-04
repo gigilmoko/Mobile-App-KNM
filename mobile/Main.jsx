@@ -49,6 +49,7 @@ import OrderDetails from "./src/screens/User/OrderDetails";
 import ProductFeedback from "./src/screens/User/ProductFeedback";
 import AdminCreateEvent from "./src/screens/Admin/Events/AdminEventCreate";
 import AdminEventUpdate from "./src/screens/Admin/Events/AdminEventUpdate";
+import EventFeedback from "./src/screens/User/EventFeedback";
 
 const Stack = createNativeStackNavigator();
 const Drawer = createDrawerNavigator();
@@ -145,6 +146,7 @@ const HomeStack = () => {
                 <Stack.Screen name="eventlist" component={EventList} />
                 <Stack.Screen name="feedback" component={Feedback} />
                 <Stack.Screen name="productfeedback" component={ProductFeedback} />
+                <Stack.Screen name="eventfeedback" component={EventFeedback} />
 
 
                 <Stack.Screen name="wishlist" component={Wishlist} />

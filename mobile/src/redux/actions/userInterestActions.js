@@ -92,11 +92,11 @@ export const getUserInterest = (eventId) => async (dispatch, getState) => {
                 type: 'GET_INTEREST_FAIL',
                 payload: data.message || 'Something went wrong.',
             });
-            Toast.show({
-                type: 'error',
-                text1: 'Failed to fetch interest',
-                text2: data.message || 'Something went wrong.',
-            });
+            // Toast.show({
+            //     type: 'error',
+            //     text1: 'Failed to fetch interest',
+            //     text2: data.message || 'Something went wrong.',
+            // });
         }
     } catch (error) {
         dispatch({
