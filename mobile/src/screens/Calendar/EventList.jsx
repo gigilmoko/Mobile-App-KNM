@@ -118,30 +118,24 @@ const EventsList = ({ navigation }) => {
                 {filteredEvents && filteredEvents.length > 0 ? (
                     filteredEvents.map((event) => (
                         <TouchableOpacity
-                        key={event._id} // Ensure each event has a unique key
-                        onPress={() =>
-                        navigation.navigate("eventinfo", { id: event._id })
-                        }
-                        style={styles.eventItem}
-                    >
-                        <Text
-                            style={[
-                                styles.eventTitle,
-                                moment(event.date).isBetween(
-                                    moment(),
-                                    moment().endOf("month"),
-                                    "day",
-                                    "[]"
-                                ) && { color: "#ffb703" },
-                            ]}
-                        >
-                            {event.title}
-                        </Text>
-                        <Text style={styles.eventDate}>
-                            {moment(event.date).format("MM-DD-YYYY")}
-                        </Text>
-                        <Text style={styles.eventLocation}>{event.location}</Text>
-                    </TouchableOpacity>
+    key={event._id} // Ensure each event has a unique key
+    onPress={() => navigation.navigate("eventinfo", { eventId: event._id })}
+    style={styles.eventItem}
+>
+    <Text
+        style={[
+            styles.eventTitle,
+            moment(event.date).isBetween(moment(), moment().endOf("month"), "day", "[]") && { color: "#ffb703" },
+        ]}
+    >
+        {event.title}
+    </Text>
+    <Text style={styles.eventDate}>
+        {moment(event.date).format("MM-DD-YYYY")}
+    </Text>
+    <Text style={styles.eventLocation}>{event.location}</Text>
+</TouchableOpacity>
+
                     
                     ))
                 ) : (

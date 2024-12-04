@@ -4,6 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Toast from 'react-native-toast-message';
 
 export const fetchEvent = (eventId) => async (dispatch) => {
+    console.log("Fetched event touched");
     dispatch({ type: 'FETCH_EVENT_REQUEST' });
 
     console.log("Fetched event touched");

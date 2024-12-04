@@ -35,7 +35,7 @@ const EventInfo = ({ route }) => {
             dispatch(loadUser()); 
         }
     }, [eventId, dispatch, user]);
-
+    
     // Log the interestData after it is fetched
     useEffect(() => {
         if (interestData) {
