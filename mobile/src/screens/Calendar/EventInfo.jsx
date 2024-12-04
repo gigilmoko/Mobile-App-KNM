@@ -1,138 +1,254 @@
 import React, { useEffect } from 'react';
-import { View, Text, Image, Button, ScrollView } from 'react-native';
+import { View, Text, Image, Button, ScrollView, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchEvent } from '../../redux/actions/calendarActions';
 import { expressInterest, getUserInterest } from '../../redux/actions/userInterestActions';
 import { loadUser } from '../../redux/actions/userActions';
-import { fetchEventFeedback } from '../../redux/actions/eventFeedbackActions'; // Add fetchEventFeedback action
+import { fetchEventFeedback } from '../../redux/actions/eventFeedbackActions';
 import Toast from 'react-native-toast-message';
-import tw from 'twrnc';
 import Footer from '../../components/Layout/Footer';
 import Header from '../../components/Layout/Header';
 import moment from 'moment';
-import { useNavigation } from '@react-navigation/native'; // Add this import
+import { useNavigation } from '@react-navigation/native';
+
 
 const EventInfo = ({ route }) => {
     const { eventId } = route.params;
     const dispatch = useDispatch();
-    const navigation = useNavigation();  // Initialize the useNavigation hook
-    console.log("event id: ", eventId)
-    
-    // Access the calendar data and user info from the Redux store
-    const { event, loading, error } = useSelector(state => state.calendar);
-    const { user } = useSelector(state => state.auth || {}); 
-    const { interestData, getInterestLoading, getInterestError } = useSelector(state => state.userInterested || {});
-    const { eventFeedback, loadingFeedback, errorFeedback } = useSelector(state => state.eventFeedback || {}); // Access event feedback from Redux
+    const navigation = useNavigation();
 
-    // Fetch event data and user interest data when the component mounts
+
+    const { event, loading, error } = useSelector(state => state.calendar);
+    const { user } = useSelector(state => state.auth || {});
+    const { interestData, getInterestLoading, getInterestError } = useSelector(state => state.userInterested || {});
+    const { eventFeedback, loadingFeedback, errorFeedback } = useSelector(state => state.eventFeedback || {});
+
+
     useEffect(() => {
         if (eventId) {
-            dispatch(getUserInterest(eventId)); 
-            dispatch(fetchEvent(eventId)); 
-            dispatch(fetchEventFeedback(eventId)); // Fetch feedback when eventId changes
-        }   
+        dispatch(getUserInterest(eventId));
+        dispatch(fetchEvent(eventId));
+        dispatch(fetchEventFeedback(eventId));
+        }
         if (user) {
-            dispatch(loadUser()); 
+        dispatch(loadUser());
         }
     }, [eventId, dispatch, user]);
-    
-    // Log the interestData after it is fetched
+
+
     useEffect(() => {
         if (interestData) {
-            console.log('Fetched User Interest Data:', interestData); 
+        // console.log('Fetched User Interest Data:', interestData);
         }
     }, [interestData]);
 
+
     useEffect(() => {
         if (error) {
-            Toast.show({
-                type: 'error',
-                text1: 'Failed to fetch event',
-                text2: error,
-            });
+        Toast.show({
+            type: 'error',
+            text1: 'Failed to fetch event',
+            text2: error,
+        });
         }
     }, [error]);
 
-    // Helper function to format dates
+
     const formatDateTime = (dateTimeString) => {
         const date = new Date(dateTimeString);
         return `${date.toLocaleDateString()} ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
     };
 
-    // Check if the event date is in the past
+
     const isEventPast = event ? moment(event.endDate).isBefore(moment()) : false;
 
+
     const handleInterest = () => {
-        dispatch(expressInterest(eventId)); 
+        dispatch(expressInterest(eventId));
     };
 
+
     const handleRating = () => {
-        // Navigate to the 'eventreview' screen if the event has passed
         navigation.navigate('eventfeedback', { eventId });
     };
 
-    // Ensure interestData is an array before using .some()
+
     const isUserInterested = Array.isArray(interestData) && interestData.some(item => item.eventId === eventId);
 
+
+    if (loading) {
+        return (
+        <View style={styles.loadingContainer}>
+            <Text>Loading event details...</Text>
+        </View>
+        );
+    }
+
+
     return (
-        <View style={tw`flex-1 bg-gray-100`}>
-            <Header back={true} />
-
-            <ScrollView contentContainerStyle={tw`p-4`}>
-                {loading ? (
-                    <Text style={tw`text-center text-gray-500 mt-6`}>Loading event details...</Text>
-                ) : event ? (
-                    <View>
-                        <Text style={tw`text-xl font-bold text-gray-800`}>{event.title}</Text>
-                        {event.image && (
-                            <Image
-                                source={{ uri: event.image }}
-                                style={tw`w-full h-48 mt-4 rounded-lg`}
-                                resizeMode="cover"
-                            />
-                        )}
-                        <Text style={tw`text-gray-600 mt-2`}>Event time: {formatDateTime(event.startDate)} - {formatDateTime(event.endDate)}</Text>
-                        <Text style={tw`text-gray-700 mt-2`}>{event.description}</Text>
-
-                        {/* Conditional button */}
-                        <Button
-                            title={isEventPast 
-                                ? "Rate the Event" 
-                                : getInterestLoading 
-                                ? "Loading..." 
-                                : isUserInterested 
-                                ? "You are already interested" 
-                                : "Express Interest"}
-                            onPress={isEventPast ? handleRating : handleInterest}
-                            color={isEventPast ? "#FFD700" : isUserInterested ? "gray" : "#4CAF50"} 
-                        />
-
-                        {/* Show feedback only if the event is past */}
-                        {isEventPast && eventFeedback && eventFeedback.length > 0 && (
-                            <View style={tw`mt-6`}>
-                                <Text style={tw`text-lg font-bold text-gray-800`}>Event Ratings and Feedback:</Text>
-                                {loadingFeedback ? (
-                                    <Text style={tw`text-gray-500 mt-4`}>Loading feedback...</Text>
-                                ) : (
-                                    eventFeedback.map(feedback => (
-                                        <View key={feedback._id} style={tw`mt-4 border-b pb-4`}>
-                                            <Text style={tw`text-gray-700`}>Rating: {feedback.rating}</Text>
-                                            <Text style={tw`text-gray-600 mt-1`}>{feedback.description}</Text>
-                                        </View>
-                                    ))
-                                )}
-                            </View>
-                        )}
-
-                    </View>
-                ) : (
-                    <Text style={tw`text-center text-gray-500 mt-6`}>No event details available.</Text>
+        <View style={styles.container}>
+        <Header back={true} />
+        <ScrollView contentContainerStyle={styles.scrollViewContent}>
+            {event && (
+            <>
+                {event.image && (
+                <View style={styles.imageWrapper}>
+                    <Image
+                    source={{ uri: event.image }}
+                    style={styles.image}
+                    />
+                </View>
                 )}
-            </ScrollView>
+                <View style={styles.eventDetailsContainer}>
+                <Text numberOfLines={2} style={styles.eventTitle}>
+                    {event.title}
+                </Text>
+                <Text style={styles.eventTime}>
+                    Event time: {formatDateTime(event.startDate)} - {formatDateTime(event.endDate)}
+                </Text>
+                <Text style={styles.eventDescription}>
+                    {event.description}
+                </Text>
 
-            <Footer activeRoute={"eventInfo"} />
+
+                <View style={styles.buttonContainer}>
+                    <TouchableOpacity
+                    activeOpacity={0.9}
+                    onPress={isEventPast ? handleRating : handleInterest}
+                    disabled={getInterestLoading || isUserInterested}
+                    >
+                    <Button
+                        title={isEventPast
+                        ? "Rate the Event"
+                        : getInterestLoading
+                            ? "Loading..."
+                            : isUserInterested
+                            ? "You are already interested"
+                            : "Express Interest"}
+                        color={isEventPast ? "#bc430b" : isUserInterested ? "gray" : "#4CAF50"}
+                    />
+                    </TouchableOpacity>
+                </View>
+
+
+                {isEventPast && eventFeedback && eventFeedback.length > 0 && (
+                    <View style={styles.feedbackContainer}>
+                    <Text style={styles.feedbackTitle}>Event Ratings and Feedback:</Text>
+                    {loadingFeedback ? (
+                        <Text style={styles.loadingFeedback}>Loading feedback...</Text>
+                    ) : (
+                        eventFeedback.map(feedback => (
+                        <View key={feedback._id} style={styles.feedbackBox}>
+                            <Text style={styles.feedbackRating}>Rating: {feedback.rating} ⭐</Text>
+                            <Text style={styles.feedbackDescription}>{feedback.description}</Text>
+                            <Text style={styles.feedbackDate}>
+                            {new Date(feedback.createdAt).toLocaleDateString()}
+                            </Text>
+                        </View>
+                        ))
+                    )}
+                    </View>
+                )}
+                </View>
+            </>
+            )}
+        </ScrollView>
+        <Footer style={styles.footer} activeRoute={"eventInfo"} />
         </View>
     );
 };
+
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: "#f0f0f0",
+    },
+    scrollViewContent: {
+        flexGrow: 1,
+        paddingBottom: 50, // Add padding to ensure content is not hidden behind the footer
+    },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+    },
+    imageWrapper: {
+        flex: 1,
+        alignItems: "center",
+    },
+    image: {
+        width: Dimensions.get("window").width,
+        height: Dimensions.get("window").height / 2 -50,
+    },
+    eventDetailsContainer: {
+        padding: 15,
+        marginTop: -40,
+        borderTopLeftRadius: 30,
+        borderTopRightRadius: 30,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+        elevation: 5,
+        backgroundColor: "#fff",
+        flex: 1,
+    },
+    eventTitle: {
+        fontSize: 25,
+    },
+    eventTime: {
+        fontSize: 15,
+        fontWeight: "400",
+    },
+    eventDescription: {
+        lineHeight: 20,
+        marginVertical: 15,
+        color: "grey",
+    },
+    buttonContainer: {
+        flexDirection: "column",
+        marginTop: 20,
+    },
+    feedbackContainer: {
+        padding: 15,
+        backgroundColor: "#ffb703",
+        borderTopLeftRadius: 5,
+        borderTopRightRadius: 5,
+        flex: 1, // Ensure it occupies the remaining space
+        marginTop: 20, // Add distance between Add to Wishlist and Feedbacks
+    },
+    feedbackTitle: {
+        fontSize: 20,
+        fontWeight: "bold",
+    },
+    feedbackBox: {
+        marginTop: 10,
+        padding: 10,
+        backgroundColor: "#fff",
+        borderRadius: 5,
+    },
+    feedbackRating: {
+        fontWeight: "bold",
+    },
+    feedbackDescription: {
+        color: "gray",
+        fontSize: 12,
+    },
+    feedbackDate: {
+        color: "gray",
+        fontSize: 12,
+    },
+    loadingFeedback: {
+        color: "gray",
+        textAlign: "center",
+    },
+    footer: {
+        position: "absolute",
+        bottom: 0,
+        width: "100%",
+    },
+});
+
 
 export default EventInfo;

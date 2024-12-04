@@ -77,11 +77,11 @@ export const getNotifications = () => async (dispatch) => {
             type: "getNotificationsFail",
             payload: error.response?.data?.message || "Failed to fetch notifications",
         });
-        Toast.show({
-            type: 'error',
-            text1: 'Failed to load notifications',
-            text2: error.message || 'Please check your connection',
-        });
+        // Toast.show({
+        //     type: 'error',
+        //     text1: 'Failed to load notifications',
+        //     text2: error.message || 'Please check your connection',
+        // });
     }
 };
 
