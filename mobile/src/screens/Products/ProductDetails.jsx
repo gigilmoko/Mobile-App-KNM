@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, Dimensions, StyleSheet, Image, TouchableOpacity, ScrollView } from "react-native";
-import { defaultStyle, colors } from "../styles/styles";
-import Header from "../components/Layout/Header";
+import { defaultStyle, colors } from "../../styles/styles";
+import Header from "../../components/Layout/Header";
 import { Avatar, Button } from "react-native-paper";
 import Toast from "react-native-toast-message";
 import { useDispatch, useSelector } from "react-redux";
 import { useIsFocused, useNavigation } from "@react-navigation/native";
-import { getProductDetails } from "../redux/actions/productActions";
-import { fetchProductFeedbacks } from "../redux/actions/productFeedbackActions";
+import { getProductDetails } from "../../redux/actions/productActions";
+import { fetchProductFeedbacks } from "../../redux/actions/productFeedbackActions";
 
 const QuantityControl = React.memo(({ quantity, incrementQty, decrementQty }) => (
   <View
@@ -24,7 +24,7 @@ const QuantityControl = React.memo(({ quantity, incrementQty, decrementQty }) =>
         size={20}
         style={{
           borderRadius: 5,
-          backgroundColor: quantity <= 1 ? "gray" : colors.color5,
+          backgroundColor: "#fff",
           height: 25,
           width: 25,
         }}
@@ -37,7 +37,7 @@ const QuantityControl = React.memo(({ quantity, incrementQty, decrementQty }) =>
         size={20}
         style={{
           borderRadius: 5,
-          backgroundColor: colors.color5,
+          backgroundColor: "#ffb703",
           height: 25,
           width: 25,
         }}
@@ -67,7 +67,7 @@ const ProductDetails = ({ route: { params } }) => {
 
   useEffect(() => {
     if (product) {
-      console.log("Fetched Product Details:", product); // Log the fetched product data
+      console.log("Fetched Product Details:", product); 
     }
     if (error) {
       Toast.show({
@@ -153,9 +153,8 @@ const ProductDetails = ({ route: { params } }) => {
   }
 
   return (
-    <ScrollView style={{ ...defaultStyle, padding: 0 }} nestedScrollEnabled>
+    <ScrollView>
       <Header back={true} />
-      {/* Image Carousel */}
       <ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false}>
         {images && images.length > 0 ? (
           images.map((image, index) => (
@@ -164,8 +163,8 @@ const ProductDetails = ({ route: { params } }) => {
               source={{ uri: image.url }}
               style={{
                 width: Dimensions.get("window").width,
-                height: 250,
-                resizeMode: "cover",
+                height: 200,
+                // resizeMode: "cover",
               }}
             />
           ))
@@ -184,10 +183,8 @@ const ProductDetails = ({ route: { params } }) => {
         )}
       </ScrollView>
 
-      {/* Product Details */}
       <View
         style={{
-          backgroundColor: colors.color2,
           padding: 15,
           borderTopLeftRadius: 5,
           borderTopRightRadius: 5,
@@ -196,7 +193,7 @@ const ProductDetails = ({ route: { params } }) => {
         <Text numberOfLines={2} style={{ fontSize: 25 }}>
           {name}
         </Text>
-        <Text style={{ fontSize: 18, fontWeight: "900" }}>${price}</Text>
+        <Text style={{ fontSize: 15, fontWeight: "400" }}>${price}</Text>
         <Text
           style={{ lineHeight: 20, marginVertical: 15, color: "grey" }}
           numberOfLines={8}
@@ -212,7 +209,7 @@ const ProductDetails = ({ route: { params } }) => {
             paddingHorizontal: 5,
           }}
         >
-          <Text style={{ color: colors.color3, fontWeight: "100" }}>Quantity</Text>
+          <Text style={{ color:"#000", fontWeight: "300" }}>Quantity</Text>
           <QuantityControl
             quantity={quantity}
             incrementQty={incrementQty}
@@ -228,16 +225,16 @@ const ProductDetails = ({ route: { params } }) => {
             }
             disabled={isOutOfStock}
           >
-            <Button
-              icon={"cart"}
-              style={{
-                borderRadius: 5,
-                backgroundColor: "black",
-              }}
-              textColor={isOutOfStock ? colors.color2 : colors.color2}
-            >
-              {isOutOfStock ? "Out Of Stock" : "Add To Cart"}
-            </Button>
+          <Button
+            icon={"cart"}
+            style={{
+              borderRadius: 5,
+              backgroundColor: "#bc430b",
+            }}
+            textColor="#fff"
+          >
+            {isOutOfStock ? "Out Of Stock" : "Add To Cart"}
+          </Button>
           </TouchableOpacity>
           <View>
             <TouchableOpacity
@@ -258,7 +255,7 @@ const ProductDetails = ({ route: { params } }) => {
                   backgroundColor: "white",
                   marginTop: 4,
                   borderWidth: 1,
-                  borderColor: colors.color1,
+                  borderColor: "#bc430b ",
                 }}
                 textColor={"black"}
               >

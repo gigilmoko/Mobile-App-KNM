@@ -11,7 +11,7 @@ import { useNavigation } from "@react-navigation/native";
 import { useDispatch, useSelector } from "react-redux";
 import { Toast } from "react-native-toast-message/lib/src/Toast";
 import { Swipeable } from "react-native-gesture-handler";
-import Header from "../components/Layout/Header";
+import Header from "../../components/Layout/Header";
 
 const WishlistCard = ({
     id,

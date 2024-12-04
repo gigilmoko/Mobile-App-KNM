@@ -9,6 +9,7 @@ import { loadUser } from "../redux/actions/userActions";
 import { useSetCategories } from "../../utils/hooks";
 import Footer from "../components/Layout/Footer";
 import Toast from "react-native-toast-message";
+import { defaultStyle } from "../styles/styles";
 
 const screenWidth = Dimensions.get("window").width;
 const screenHeight = Dimensions.get("window").height;

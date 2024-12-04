@@ -27,18 +27,14 @@ export const fetchEvent = (eventId) => async (dispatch) => {
     }
 };
 
-// Action to fetch events before the current day
 export const fetchEventsBeforeCurrentDay = () => async (dispatch) => {
     dispatch({ type: 'FETCH_EVENTS_BEFORE_REQUEST' });
-
 
     try {
         const response = await axios.get(`${server}/calendar/events/before`);
 
-
         // Log the fetched data
-        // console.log('Fetched events before current day:', response.data.data);
-
+        console.log('Fetched events before current day:', response.data.data);
 
         dispatch({
             type: 'FETCH_EVENTS_BEFORE_SUCCESS',
@@ -57,9 +53,11 @@ export const fetchEventsBeforeCurrentDay = () => async (dispatch) => {
 export const fetchEventsAfterCurrentDay = () => async (dispatch) => {
     dispatch({ type: 'FETCH_EVENTS_AFTER_REQUEST' });
 
-
     try {
         const response = await axios.get(`${server}/calendar/events/after`);
+
+        // Log the fetched data
+        console.log('Fetched events after current day:', response.data.data);
 
         dispatch({
             type: 'FETCH_EVENTS_AFTER_SUCCESS',
