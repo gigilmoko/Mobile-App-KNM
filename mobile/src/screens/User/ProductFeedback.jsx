@@ -21,9 +21,6 @@ const ProductFeedback = ({ route }) => {
 
   // Get product details from Redux state
   const { product, loading, error } = useSelector((state) => state.product);
-  const { success, feedback: submittedFeedback, error: feedbackError } = useSelector(
-    (state) => state.productFeedback
-  );
 
   // Fetch product details when component mounts
   useEffect(() => {

@@ -77,7 +77,7 @@ const EventInfo = ({ route }) => {
         <View style={styles.container}>
             <Header back={true} />
 
-            <ScrollView contentContainerStyle={styles.scrollViewContent}>
+            <ScrollView contentContainerStyle={styles.scrollViewContent} >
                 {loading ? (
                     <Text style={styles.loadingText}>Loading event details...</Text>
                 ) : event ? (
@@ -146,6 +146,7 @@ const styles = StyleSheet.create({
     },
     scrollViewContent: {
         padding: 16,
+        paddingBottom: 70
     },
     loadingText: {
         textAlign: "center",
