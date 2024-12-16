@@ -5,7 +5,6 @@ import { fetchEvent } from '../../redux/actions/calendarActions';
 import { submitEventFeedback } from '../../redux/actions/eventFeedbackActions';
 import { useNavigation } from '@react-navigation/native';
 import Toast from 'react-native-toast-message';
-import tw from 'twrnc';
 import Footer from '../../components/Layout/Footer';
 import Header from '../../components/Layout/Header';
 
