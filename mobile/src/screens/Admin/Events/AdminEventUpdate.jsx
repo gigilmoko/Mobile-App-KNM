@@ -193,7 +193,7 @@ const AdminEventUpdate = () => {
                     <ActivityIndicator size="large" color="#0000ff" />
                     <Text style={{ fontSize: 18 }}>Loading event details...</Text>
                 </View>
-            ) : (
+                ) : (
                 <ScrollView
                     contentContainerStyle={{
                         flexGrow: 1,

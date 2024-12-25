@@ -15,6 +15,13 @@ export const notificationReducer = (state = initialState, action) => {
         case "getNotificationsFail":
             return { ...state, loading: false, error: action.payload };
 
+        case "sendPushNotificationRequest":
+            return { ...state, loading: true };
+        case "sendPushNotificationSuccess":
+            return { ...state, loading: false, message: action.payload };
+        case "sendPushNotificationFail":
+            return { ...state, loading: false, error: action.payload };
+
 
         case "toggleNotificationReadStatusSuccess":
             return {

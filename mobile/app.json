@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "mobile",
-    "slug": "mobile",
+    "name": "KNM",
+    "slug": "KNM",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -12,27 +12,32 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.miryan1ez.mobile"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "permissions": [
-        "ACCESS_FINE_LOCATION",
-        "ACCESS_COARSE_LOCATION"
-      ],
       "package": "com.miryan1ez.mobile"
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
+    "plugins": [
+      [
+        "onesignal-expo-plugin",
+        {
+          "mode": "development"
+        }
+      ]
+    ],
     "extra": {
+      "oneSignalAppId": "b0a377c8-112d-4a18-8f97-0a8b3f9ce21a",
       "eas": {
-        "projectId": "0a12385f-1dcd-4d86-9ce9-08cef69e4c9d"
+        "projectId": "51d8097f-b355-46fe-a937-a4b2259a6a93"
       }
-    },
-    "owner": "miryan1ez"
+    }
   }
 }

@@ -7,6 +7,15 @@ import { getNotifications } from './src/redux/actions/notificationActions';
 import { monitorNotifications } from "./utils/NotificationService";
 import Toast from 'react-native-toast-message';
 
+import { LogLevel, OneSignal } from 'react-native-onesignal';
+import Constants from "expo-constants";
+
+OneSignal.Debug.setLogLevel(LogLevel.Verbose);
+OneSignal.initialize(Constants.expoConfig.extra.oneSignalAppId);
+
+// Also need enable notifications to complete OneSignal setup
+OneSignal.Notifications.requestPermission(true);
+
 // Import Screens
 import Home from "./src/screens/Home";
 import Login from "./src/screens/User/Login";
@@ -92,7 +101,7 @@ const Main = () => {
 
     // Load user data on mount
     useEffect(() => {
-        console.log("Loading user data...");
+        // console.log("Loading user data...");
         dispatch(loadUser(user));
     }, [dispatch, user]);
 

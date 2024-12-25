@@ -27,6 +27,11 @@ export const store = configureStore({
         feedbacks: productFeedbackReducer,
         eventFeedback: eventFeedbackReducer,
     },
+    middleware: (getDefaultMiddleware) =>
+        getDefaultMiddleware({
+            immutableCheck: false, // Disables immutability checks
+            serializableCheck: false, // Disables serializability checks
+        }),
 });
 
 
@@ -34,11 +39,10 @@ export const store = configureStore({
 // export const server = "http://192.168.1.12:4002/api/"
 
 //Bahay ni Jis
-// export const server = "http://192.168.1.24:4002/api/"
+export const server = "http://192.168.1.17:4002/api/"
 
 //Bahay ni Cleto
-// export const server = "http://192.168.100.3:4001/api/"
+// export const server = "http://192.168.100.3:4002/api/"
 
 //Deployed Server
-export const server = "https://knm-t7bh.onrender.com/api/"
-
+// export const server = "https://knm-t7bh.onrender.com/api/"

@@ -25,16 +25,11 @@ export const getAllCategories = () => async (dispatch) => {
 export const createCategory = (categoryData) => async (dispatch, getState) => {
     try {
         dispatch({ type: "NEW_CATEGORY_REQUEST" });
-
-        // Retrieve token from AsyncStorage
         const token = await AsyncStorage.getItem('token');
-        // console.log('Retrieved token:', token);
 
         if (!token) {
             throw new Error("User is not authenticated");
         }
-
-        // Verify the user with the token
         const { data: userData } = await axios.get(`${server}/me`, {
             headers: {
                 "Authorization": `Bearer ${token}`,
@@ -42,24 +37,15 @@ export const createCategory = (categoryData) => async (dispatch, getState) => {
             withCredentials: true,
         });
 
-        // console.log("User data response:", userData);
-
         if (userData.success) {
-            const userId = userData.user._id; // Extract user ID
-            // console.log("User ID:", userId);
-
-            // Include the user ID in the category data
+            const userId = userData.user._id;
             const categoryDataWithUser = { ...categoryData, user: userId };
-
-            // Send the category data to the server
             const { data } = await axios.post(`${server}/category/new`, categoryDataWithUser, {
                 headers: {
                     "Authorization": `Bearer ${token}`,
                 },
                 withCredentials: true,
             });
-
-            // console.log("Category created successfully:", data);
 
             dispatch({
                 type: "NEW_CATEGORY_SUCCESS",
@@ -72,7 +58,6 @@ export const createCategory = (categoryData) => async (dispatch, getState) => {
             });
         }
     } catch (error) {
-        // console.error("Error creating category:", error.response || error);
         dispatch({
             type: "NEW_CATEGORY_FAIL",
             payload: error.response ? error.response.data.message : error.message,

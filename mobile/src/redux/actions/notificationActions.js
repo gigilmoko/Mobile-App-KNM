@@ -37,15 +37,9 @@ export const getNotifications = () => async (dispatch) => {
         dispatch({ type: "getNotificationsRequest" });
         const token = await AsyncStorage.getItem("token");
 
-
-
-
         const { data } = await axios.get(`${server}/notifications`, {
             headers: { Authorization: `Bearer ${token}` },
         });
-
-
-
 
         // console.log("Fetched notifications:", JSON.stringify(data, null, 2));
         dispatch({ type: "getNotificationsSuccess", payload: data });
@@ -85,13 +79,10 @@ export const getNotifications = () => async (dispatch) => {
     }
 };
 
-
 // Toggle notification read status
 export const toggleNotificationReadStatus = (notifId) => async (dispatch) => {
     try {
         const token = await AsyncStorage.getItem("token");
-
-
         const { data } = await axios.put(
             `${server}/notifications/${notifId}/toggleReadStatus`,
             {},
@@ -99,10 +90,7 @@ export const toggleNotificationReadStatus = (notifId) => async (dispatch) => {
                 headers: { Authorization: `Bearer ${token}` },
             }
         );
-
-
         dispatch({ type: "toggleNotificationReadStatusSuccess", payload: data });
-       
     } catch (error) {
         // console.log("Error toggling notification read status:", error.message);
         dispatch({
@@ -139,11 +127,9 @@ export const deleteNotification = (notifId) => async (dispatch) => {
     try {
         const token = await AsyncStorage.getItem("token");
 
-
         const { data } = await axios.delete(`${server}/notifications/${notifId}`, {
             headers: { Authorization: `Bearer ${token}` },
         });
-
 
         dispatch({ type: "deleteNotificationSuccess", payload: notifId });
         Toast.show({
@@ -190,6 +176,55 @@ export const deleteAllNotifications = () => async (dispatch) => {
             type: 'error',
             text1: 'Failed to delete all notifications',
             text2: error.message || 'Please try again',
+        });
+    }
+};
+
+export const sendPushNotification = (pushData) => async (dispatch) => {
+    dispatch({ type: "sendPushNotificationRequest" });
+
+    try {
+        const token = await AsyncStorage.getItem("token");
+        if (!token) {
+            throw new Error("No token found");
+        }
+        const { data: userData } = await axios.get(`${server}/me`, {
+            headers: {
+                "Authorization": `Bearer ${token}`,
+            },
+            withCredentials: true,
+        });
+
+        if (userData.success) {
+            const userId = userData.user._id;
+            const pushDataWithUser = { ...pushData, user: userId };
+
+            console.log('Sending push notification with data:', pushDataWithUser);
+            const { data } = await axios.post(
+                `${server}/notifications/create`,
+                pushDataWithUser,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                    withCredentials: true,
+                }
+            );
+
+            console.log('Push notification response:', data);
+            dispatch({ type: "sendPushNotificationSuccess", payload: data });
+            return data; // Return the response data
+        } else {
+            dispatch({
+                type: "sendPushNotificationFail",
+                payload: "Failed to load user data",
+            });
+        }
+    } catch (error) {
+        console.error('Error sending push notification:', error);
+        dispatch({
+            type: "sendPushNotificationFail",
+            payload: error.response ? error.response.data.message : error.message,
         });
     }
 };

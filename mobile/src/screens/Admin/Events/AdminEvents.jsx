@@ -1,17 +1,21 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, ScrollView, TouchableOpacity, Alert, StyleSheet } from "react-native";
-import Footer from "../../../components/Layout/Footer";
-import Header from "../../../components/Layout/Header";
 import { Calendar } from "react-native-calendars";
 import { useDispatch, useSelector } from "react-redux";
 import { getAllEvents, deleteEvent } from "../../../redux/actions/calendarActions";
 import moment from "moment";
 import { GestureHandlerRootView, Swipeable } from "react-native-gesture-handler";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
+import axios from "axios";
+import { server } from "../../../redux/store";
+import AsyncStorage from "@react-native-async-storage/async-storage"; // Import AsyncStorage
+import Toast from 'react-native-toast-message';
+import { sendPushNotification } from "../../../redux/actions/notificationActions"; // Import the action
 
 const AdminEvents = ({ navigation }) => {
   const [selectedDate, setSelectedDate] = useState("");
   const [activeTab, setActiveTab] = useState("month");
+  const [processingEventId, setProcessingEventId] = useState(null); // State to track processing event
   const dispatch = useDispatch();
 
   // Get events and loading state from Redux store
@@ -79,17 +83,51 @@ const AdminEvents = ({ navigation }) => {
     ]);
   };
 
-  const renderRightActions = (eventId) => (
+  const handleNotification = async (event) => {
+    console.log('Event object:', event);
+
+    if (!event || !event._id || !event.title || !event.description || !event.date) {
+      console.error('Invalid event object:', event);
+      Toast.show({ type: 'error', text1: 'Error', text2: 'Invalid event data' });
+      return;
+    }
+
+    setProcessingEventId(event._id);
+
+    Alert.alert('Processing', 'Sending push notification...', [{ text: 'OK' }]);
+
+    try {
+      const pushData = {
+        title: event.title,
+        description: event.description,
+        eventDate: event.date,
+        eventId: event._id,
+      };
+
+      const response = await dispatch(sendPushNotification(pushData));
+
+      console.log('Push notification response:', response);
+
+      Toast.show({ type: 'success', text1: 'Push notification sent successfully' });
+    } catch (error) {
+      console.error('Error sending push notification:', error);
+      Toast.show({ type: 'error', text1: 'Error', text2: error.message || 'Failed to send push notification' });
+    }
+
+    setProcessingEventId(null);
+  };
+
+  const renderRightActions = (event) => (
     <View style={styles.swipeActionContainer}>
       <TouchableOpacity
         style={styles.swipeActionEdit}
-        onPress={() => navigation.navigate("admineventupdate", { eventId })}
+        onPress={() => navigation.navigate("admineventupdate", { eventId: event._id })}
       >
         <MaterialCommunityIcons name="pencil" size={24} color="#000" />
       </TouchableOpacity>
       <TouchableOpacity
         style={styles.swipeActionDelete}
-        onPress={() => handleDelete(eventId)}
+        onPress={() => handleDelete(event._id)}
       >
         <MaterialCommunityIcons name="trash-can" size={24} color="#000" />
       </TouchableOpacity>
@@ -99,12 +137,13 @@ const AdminEvents = ({ navigation }) => {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <View style={{ flex: 1, backgroundColor: "#ffb703" }}>
-        <Header back={true} />
+        <View style={styles.headerContainer}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+            <MaterialCommunityIcons name="arrow-left" size={24} color="#000" />
+          </TouchableOpacity>
+          <Text style={styles.headerText}>Events</Text>
+        </View>
         <View style={styles.contentContainer}>
-          <View style={styles.headerContainer}>
-            <Text style={styles.headerText}>Events</Text>
-          </View>
-
           <ScrollView
             contentContainerStyle={{ flexGrow: 1, paddingBottom: 70 }}
             showsVerticalScrollIndicator={false}
@@ -150,38 +189,57 @@ const AdminEvents = ({ navigation }) => {
               <Text style={styles.noEventsText}>No events to display</Text>
             ) : (
               filteredEvents.map((event) => (
-                <Swipeable key={event._id} renderRightActions={() => renderRightActions(event._id)}>
+                <Swipeable key={event._id} renderRightActions={() => renderRightActions(event)}>
                   <View style={styles.eventCard}>
-                    <Text style={styles.eventTitle}>{event.title}</Text>
-                    <Text style={styles.eventDate}>{moment(event.date).format("MMM Do, YYYY")}</Text>
+                    <View>
+                      <Text style={styles.eventTitle}>{event.title}</Text>
+                      <Text style={styles.eventDate}>{moment(event.date).format("MMM Do, YYYY")}</Text>
+                    </View>
+                    <View style={styles.eventActions}>
+                      {moment(event.date).isBefore(moment(), "day") ? (
+                        <TouchableOpacity style={styles.disabledNotifButton} disabled>
+                          <MaterialCommunityIcons name="bell-off" size={24} color="#666" />
+                        </TouchableOpacity>
+                      ) : (
+                        <TouchableOpacity style={styles.notifButton} onPress={() => handleNotification(event)}>
+                          <MaterialCommunityIcons name="bell" size={24} color="#000" />
+                        </TouchableOpacity>
+                      )}
+                    </View>
                   </View>
                 </Swipeable>
               ))
             )}
           </ScrollView>
         </View>
-        <Footer />
       </View>
     </GestureHandlerRootView>
   );
 };
 
 const styles = StyleSheet.create({
+  headerContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 10,
+    backgroundColor: "#ffb703",
+  },
+  backButton: {
+    position: "absolute",
+    left: 10,
+  },
+  headerText: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#000",
+  },
   contentContainer: {
     flex: 1,
     backgroundColor: "#ffffff",
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
     padding: 20,
-  },
-  headerContainer: {
-    alignItems: "center",
-    marginBottom: 10,
-  },
-  headerText: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#000",
   },
   calendarContainer: {
     marginBottom: 20,
@@ -230,6 +288,9 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     shadowOffset: { width: 0, height: 3 },
     elevation: 2,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   eventTitle: {
     fontSize: 16,
@@ -240,6 +301,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#666",
     marginTop: 5,
+  },
+  eventActions: {
+    flexDirection: "row",
+    alignItems: "center",
   },
   swipeActionContainer: {
     flexDirection: "row",
@@ -263,6 +328,22 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 5,
     borderColor: "#ffb703",
+    borderWidth: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  notifButton: {
+    padding: 10,
+    borderRadius: 5,
+    borderColor: "#ffb703",
+    borderWidth: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  disabledNotifButton: {
+    padding: 10,
+    borderRadius: 5,
+    borderColor: "#ccc",
     borderWidth: 1,
     justifyContent: "center",
     alignItems: "center",

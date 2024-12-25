@@ -102,10 +102,10 @@ const ProductFeedback = ({ route }) => {
 
           {/* Product Card */}
           {loading ? (
-            <ActivityIndicator size="large" color="#0000ff" />
-          ) : error ? (
-            <Text style={{ color: 'red' }}>{error}</Text>
-          ) : (
+              <ActivityIndicator size="large" color="#0000ff" />
+            ) : error ? (
+              <Text style={{ color: 'red' }}>{error}</Text>
+            ) : (
             <View
               style={{
                 backgroundColor: '#f8f8f8',
