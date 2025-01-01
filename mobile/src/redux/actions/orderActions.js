@@ -4,26 +4,34 @@ import Toast from "react-native-toast-message";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export const placeOrder = (
-    orderItems,
+    orderProducts,
     shippingInfo,
     paymentMethod,
     itemsPrice,
     shippingCharges,
     totalAmount,
-    navigation // Add navigation parameter
+    navigation 
 ) => async (dispatch) => {
     try {
+        console.log("Dispatching placeOrderRequest");
         dispatch({
             type: "placeOrderRequest",
         });
 
-        const token = await AsyncStorage.getItem('token');
+        // const token = await AsyncStorage.getItem('jwt'); // Ensure the correct key is used
+        // if (!token) {
+        //     throw new Error("No token found");
+        // }
+        // console.log("Token retrieved:", token);
+
         const { data } = await axios.get(`${server}/me`, {
             headers: {
                 "Authorization": `Bearer ${token}`,
             },
             withCredentials: true,
         });
+
+        console.log("User data fetched:", data);
 
         if (data.success) {
             const userId = data.user._id;
@@ -33,7 +41,7 @@ export const placeOrder = (
                 {
                     userId,
                     shippingInfo,
-                    orderItems,
+                    orderProducts,
                     paymentMethod,
                     itemsPrice,
                     shippingCharges,
@@ -47,6 +55,8 @@ export const placeOrder = (
                     withCredentials: true,
                 }
             );
+
+            console.log("Order placed successfully:", response.data);
 
             dispatch({
                 type: "placeOrderSuccess",
@@ -63,7 +73,7 @@ export const placeOrder = (
             throw new Error("Failed to fetch user data.");
         }
     } catch (error) {
-        const errorMessage = error.response?.data?.message || "An error occurred while placing the order.";
+        const errorMessage = error.message || error.response?.data?.message || "An error occurred while placing the order.";
         console.error("Error placing order:", errorMessage);
 
         dispatch({

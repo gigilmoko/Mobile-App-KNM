@@ -297,7 +297,7 @@ const styles = StyleSheet.create({
     },
     header: {
         padding: 16,
-        paddingTop: 40,
+        // paddingTop: 40,
         backgroundColor: "#ffb703",
     },
     headerText: {

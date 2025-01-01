@@ -48,6 +48,7 @@ import ProductFeedback from "./src/screens/User/ProductFeedback";
 import AdminCreateEvent from "./src/screens/Admin/Events/AdminEventCreate";
 import AdminEventUpdate from "./src/screens/Admin/Events/AdminEventUpdate";
 import EventFeedback from "./src/screens/User/EventFeedback";
+import EditAddress from "./src/screens/Address/EditAddress";
 
 const Stack = createNativeStackNavigator();
 
@@ -68,6 +69,7 @@ const HomeStack = () => {
             <Stack.Screen name="productfeedback" component={ProductFeedback} />
             <Stack.Screen name="eventfeedback" component={EventFeedback} />
             <Stack.Screen name="wishlist" component={Wishlist} />
+            <Stack.Screen name="editaddress" component={EditAddress} />
             <Stack.Screen name="confirmorder" component={ConfirmOrder} />
             <Stack.Screen name="myorders" component={MyOrders} />
             <Stack.Screen name="orderdetails" component={OrderDetails} />
@@ -78,6 +80,7 @@ const HomeStack = () => {
             <Stack.Screen name="myaccount" component={MyAccount} />
             <Stack.Screen name="changepassword" component={ChangePassword} />
             <Stack.Screen name="updateprofile" component={UpdateProfile} />
+
             {/* Admin Screens */}
             <Stack.Screen name="dashboard" component={Dashboard} />
             <Stack.Screen name="adminproducts" component={AdminProducts} />

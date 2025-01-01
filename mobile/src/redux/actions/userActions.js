@@ -43,9 +43,6 @@ export const login = (email, password) => async (dispatch) => {
                 withCredentials: true,
             }
         );
-
-        // Save the token (assuming the response contains a token)
-        // localStorage.setItem('token', data.token);
         await AsyncStorage.setItem('token', data.token);
 
         dispatch({
