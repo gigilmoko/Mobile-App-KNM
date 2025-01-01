@@ -44,6 +44,7 @@ export const login = (email, password) => async (dispatch) => {
             }
         );
         await AsyncStorage.setItem('token', data.token);
+        console.log('Token:', data.token);
 
         dispatch({
             type: "loginSuccess",

@@ -8,7 +8,7 @@ const OrderList = ({
     orderedOn,
     status,
     statusColor,
-    paymentMethod,
+    paymentInfo,
     i = 0,
     navigate,
 }) => {
@@ -36,7 +36,7 @@ const OrderList = ({
                 <Text style={styles.secondaryText} i={i}>{address} </Text>
             </View>
             <View style={styles.innerRow}>
-                <Text style={styles.secondaryText} i={i}>Payment Method : {paymentMethod}</Text>
+                <Text style={styles.secondaryText} i={i}>Payment Method : {paymentInfo}</Text>
                 <Text style={styles.secondaryText} i={i}>Total Amount : ${price}</Text>
             </View>
             <View style={styles.innerRow}>

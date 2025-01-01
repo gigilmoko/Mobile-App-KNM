@@ -94,7 +94,7 @@ const NotificationScreen = () => {
         }
     };
 
-    const renderRightActions = (progress, dragX, item) => {
+    const renderRightActions = (item) => {
         return (
             <View style={styles.swipeActionsContainer}>
                 <TouchableOpacity

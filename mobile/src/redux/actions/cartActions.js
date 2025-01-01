@@ -5,7 +5,7 @@ export const placeOrder =
     (
         orderItems,
         shippingInfo,
-        paymentMethod,
+        paymentInfo,
         itemsPrice,
         shippingCharges,
         totalAmount,
@@ -22,7 +22,7 @@ export const placeOrder =
                     {
                         shippingInfo,
                         orderItems,
-                        paymentMethod,
+                        paymentInfo,
                         paymentInfo,
                         itemsPrice,
                         shippingCharges,

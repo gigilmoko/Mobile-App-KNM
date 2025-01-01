@@ -1,12 +1,11 @@
 import axios from "axios";
 import { server } from "../store";
-import Toast from "react-native-toast-message";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export const placeOrder = (
     orderProducts,
     shippingInfo,
-    paymentMethod,
+    paymentInfo,
     itemsPrice,
     shippingCharges,
     totalAmount,
@@ -18,11 +17,11 @@ export const placeOrder = (
             type: "placeOrderRequest",
         });
 
-        // const token = await AsyncStorage.getItem('jwt'); // Ensure the correct key is used
-        // if (!token) {
-        //     throw new Error("No token found");
-        // }
-        // console.log("Token retrieved:", token);
+        const token = await AsyncStorage.getItem('token'); // Ensure the correct key is used
+        if (!token) {
+            throw new Error("No token found");
+        }
+        console.log("Token retrieved:", token);
 
         const { data } = await axios.get(`${server}/me`, {
             headers: {
@@ -42,7 +41,7 @@ export const placeOrder = (
                     userId,
                     shippingInfo,
                     orderProducts,
-                    paymentMethod,
+                    paymentInfo,
                     itemsPrice,
                     shippingCharges,
                     totalAmount,
@@ -66,8 +65,7 @@ export const placeOrder = (
             // Clear the cart after placing the order
             dispatch({ type: "clearCart" });
 
-            // Redirect to order confirmation or another page
-            navigation.navigate("myaccount"); // Replace with your route
+            return response.data; // Return the response data for further handling
 
         } else {
             throw new Error("Failed to fetch user data.");

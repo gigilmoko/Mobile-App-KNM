@@ -14,9 +14,6 @@ import { placeOrder } from "../../redux/actions/orderActions";
 import ConfirmOrderItem from "../../components/Cart/ConfirmOrderItem";
 import { useNavigation } from "@react-navigation/native";
 import { useMessageAndErrorOrder } from "../../../utils/hooks";
-import axios from "axios";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { server } from "../../redux/store";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 
 const methods = [
@@ -30,9 +27,7 @@ const ConfirmOrder = () => {
   const navigation = useNavigation();
   const { user, isAuthenticated } = useSelector((state) => state.user);
   const { cartItems } = useSelector((state) => state.cart);
-  const [paymentMethod, setPaymentMethod] = useState("COD");
-  const [userProfile, setUserProfile] = useState("");
-  const [token, setToken] = useState("");
+  const [paymentInfo, setPaymentInfo] = useState("COD");
 
   const itemsPrice = cartItems.reduce((prev, curr) => prev + curr.quantity * curr.price, 0);
   const shippingCharges = 10; // Updated shipping charges to 10 pesos
@@ -40,63 +35,52 @@ const ConfirmOrder = () => {
 
   useEffect(() => {
     dispatch(loadUser());
-
-    const fetchData = async () => {
-      try {
-        const jwt = await AsyncStorage.getItem("jwt");
-        if (!jwt) {
-          console.log("No token found");
-          return;
-        }
-        setToken(jwt);
-        const response = await axios.get(`${server}me`, {
-          headers: { Authorization: `Bearer ${jwt}` },
-        });
-
-        setUserProfile(response.data.user);
-      } catch (error) {
-        console.log("Error fetching user data:", error);
-      }
-    };
-
-    fetchData();
   }, [dispatch]);
 
   const handlePlaceOrder = async () => {
+    if (!isAuthenticated) {
+      console.log("User not authenticated, redirecting to login...");
+      navigation.navigate("login");
+      return;
+    }
+
     const shippingInfo = {
       address: user?.address,
     };
 
     const order = {
-      userId: user._id,
+      user: user._id,
+      orderProducts: cartItems.map(item => ({
+        product: item.product,
+        quantity: item.quantity,
+        price: item.price,
+      })),
       shippingInfo,
-      orderProducts: cartItems,
-      paymentMethod,
+      paymentInfo,
       itemsPrice,
       shippingCharges,
       totalAmount,
     };
 
-    try {
-      const response = await axios.post(`${server}/neworder`, order, {
-      });
+    console.log("Placing order with details:", order);
 
-      if (response.data.success && paymentMethod === "GCash") {
-        const { checkoutUrl } = response.data;
-        Linking.canOpenURL(checkoutUrl).then((supported) => {
-          if (supported) {
-            Linking.openURL(checkoutUrl);
-          } else {
-            Alert.alert(
-              'GCash app is not installed on your device.',
-              'Please install the GCash app from the App Store or Google Play Store.',
-              [
-                { text: 'OK' },
-                { text: 'Open Store', onPress: () => Linking.openURL('https://play.google.com/store/apps/details?id=com.globe.gcash.android') }
-              ]
-            );
-          }
-        }).catch((err) => console.error('An error occurred', err));
+    try {
+      const response = await dispatch(placeOrder(
+        cartItems,
+        shippingInfo,
+        paymentInfo,
+        itemsPrice,
+        shippingCharges,
+        totalAmount,
+        navigation
+      ));
+
+      console.log("Order response:", response);
+
+      if (response.checkoutUrl && paymentInfo === "GCash") {
+        const { checkoutUrl } = response;
+        console.log("GCash checkout URL:", checkoutUrl);
+        Linking.openURL(checkoutUrl).catch((err) => console.error('An error occurred', err));
       } else {
         Alert.alert('Order Placed Successfully');
         dispatch({ type: "clearCart" });
@@ -133,7 +117,7 @@ const ConfirmOrder = () => {
           </View>
           <Text style={styles.text}>Name: {user?.fname} {user?.lname}</Text>
           <Text style={styles.text}>Phone: {user?.phone}</Text>
-          <Text style={styles.text}>Address: {user?.address?.houseNo}, {user?.address?.streetName}, {user?.address?.barangay}, {user?.address?.city}</Text>
+          <Text style={styles.text}>Address: {user?.address}</Text>
         </View>
 
         <View style={styles.card}>
@@ -166,10 +150,10 @@ const ConfirmOrder = () => {
             <TouchableOpacity
               key={index}
               style={styles.radioContainer}
-              onPress={() => setPaymentMethod(item.value)}
+              onPress={() => setPaymentInfo(item.value)}
             >
               <View style={styles.radioCircle}>
-                {paymentMethod === item.value && <View style={styles.selectedRb} />}
+                {paymentInfo === item.value && <View style={styles.selectedRb} />}
               </View>
               <Text style={styles.radioText}>{item.name}</Text>
             </TouchableOpacity>

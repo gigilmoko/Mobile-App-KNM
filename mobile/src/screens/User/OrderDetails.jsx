@@ -106,7 +106,7 @@ const OrderDetails = () => {
                         </View>
                         <View className="flex-row justify-between items-center w-full mt-2">
                             <Text className="text-sm text-gray-600">
-                                Payment Method: {order?.paymentMethod } 
+                                Payment Method: {order?.paymentInfo } 
                             </Text>
                         </View>
                         <ScrollView className="bg-white rounded-lg p-3 max-h-[260px] w-full mb-1" nestedScrollEnabled={true}>

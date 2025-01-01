@@ -56,7 +56,7 @@ const MyOrders = () => {
                                     price={item.totalAmount}
                                     status={item.orderStatus}
                                     statusColor={getStatusColor(item.orderStatus)}
-                                    paymentMethod={item.paymentMethod}
+                                    paymentInfo={item.paymentInfo}
                                     orderedOn={item.createdAt.split("T")[0]}
                                     address={`${item.shippingInfo.address}`}
                                     navigate={navigate}
