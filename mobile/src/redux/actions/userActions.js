@@ -244,3 +244,64 @@ export const getUserDetails = (id) => async (dispatch) => {
     }
 };
 
+export const updateAddress = (userData) => async (dispatch, getState) => {
+    try {
+        console.log('update address touched');
+        
+        // Dispatch the loadUser action to fetch user details if needed
+        await dispatch(loadUser());
+
+        // Get user data from the state after dispatching loadUser
+        const { user } = getState().user; // Assuming the user data is stored in user state
+
+        if (!user || !user._id) {
+            throw new Error('User ID is missing');
+        }
+
+        const { deliveryAddress } = userData;
+
+        // Get token from AsyncStorage
+        const token = await AsyncStorage.getItem('token');
+        console.log('Token:', token);
+
+        dispatch({ type: 'UPDATE_ADDRESS_REQUEST' });
+
+        // Prepare config for the API call
+        const config = {
+            headers: {
+                'Content-Type': 'application/json',
+                "Authorization": `Bearer ${token}`, // Send token in the headers
+            },
+        };
+
+        // Prepare the request body, including userId from the state and deliveryAddress from userData
+        const jsonData = {
+            userId: user._id, // Use the userId fetched from loadUser
+            deliveryAddress: deliveryAddress, // Include deliveryAddress in the payload
+        };
+        console.log('Request Body:', jsonData);
+
+        // Send the request to update the address
+        const requestUrl = `${server}/me/update/address`;
+        console.log('Request URL:', requestUrl);
+
+        const { data } = await axios.put(requestUrl, jsonData, config);
+
+        dispatch({
+            type: 'UPDATE_ADDRESS_SUCCESS',
+            payload: data.user,
+        });
+    } catch (error) {
+        console.log('Error during updateAddress:', error);
+        dispatch({
+            type: 'UPDATE_ADDRESS_FAIL',
+            payload:
+                error.response && error.response.data.message
+                    ? error.response.data.message
+                    : error.message,
+        });
+    }
+};
+
+
+  

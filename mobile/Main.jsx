@@ -10,17 +10,17 @@ import Toast from 'react-native-toast-message';
 import { LogLevel, OneSignal } from 'react-native-onesignal';
 import Constants from "expo-constants";
 
-OneSignal.Debug.setLogLevel(LogLevel.Verbose);
-OneSignal.initialize(Constants.expoConfig.extra.oneSignalAppId);
+// OneSignal.Debug.setLogLevel(LogLevel.Verbose);
+// OneSignal.initialize(Constants.expoConfig.extra.oneSignalAppId);
 
-// Also need enable notifications to complete OneSignal setup
-OneSignal.Notifications.requestPermission(true);
+// // Also need enable notifications to complete OneSignal setup
+// OneSignal.Notifications.requestPermission(true);
 
 // Import Screens
 import Home from "./src/screens/Home";
 import Login from "./src/screens/User/Login";
 import SignUp from "./src/screens/User/SignUp";
-import Profile from "./src/screens/User/Profile";
+import AddressUpdate from "./src/screens/User/AddressUpdate";
 import MyAccount from "./src/screens/User/MyAccount";
 import ChangePassword from "./src/screens/User/ChangePassword";
 import UpdateProfile from "./src/screens/User/UpdateProfile";
@@ -49,6 +49,7 @@ import AdminCreateEvent from "./src/screens/Admin/Events/AdminEventCreate";
 import AdminEventUpdate from "./src/screens/Admin/Events/AdminEventUpdate";
 import EventFeedback from "./src/screens/User/EventFeedback";
 import EditAddress from "./src/screens/Address/EditAddress";
+import CurrentAddress from "./src/screens/User/CurrentAddress";
 
 const Stack = createNativeStackNavigator();
 
@@ -76,7 +77,8 @@ const HomeStack = () => {
             <Stack.Screen name="productdetail" component={ProductDetails} />
             <Stack.Screen name="signup" component={SignUp} />
             <Stack.Screen name="login" component={Login} />
-            <Stack.Screen name="profile" component={Profile} />
+            <Stack.Screen name="addressupdate" component={AddressUpdate} />
+            <Stack.Screen name="currentaddress" component={CurrentAddress} />
             <Stack.Screen name="myaccount" component={MyAccount} />
             <Stack.Screen name="changepassword" component={ChangePassword} />
             <Stack.Screen name="updateprofile" component={UpdateProfile} />
@@ -104,9 +106,10 @@ const Main = () => {
 
     // Load user data on mount
     useEffect(() => {
-        // console.log("Loading user data...");
-        dispatch(loadUser(user));
-    }, [dispatch, user]);
+        if (!user || Object.keys(user).length === 0) {
+            dispatch(loadUser());
+        }
+    }, [dispatch]);
 
     // Set up periodic notification fetching
     useEffect(() => {

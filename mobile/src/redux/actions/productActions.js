@@ -107,7 +107,7 @@ export const updateProduct = (productData) => async (dispatch) => {
     // console.log("update touched");
     try {
         dispatch({ type: "UPDATE_PRODUCT_REQUEST" });
-    
+        const token = await AsyncStorage.getItem('token');
         const { data } = await axios.put(`${server}/product/update/${productData.id}`, productData);
         // console.log("update product: ", data);
     
@@ -124,7 +124,12 @@ export const updateProduct = (productData) => async (dispatch) => {
 
     dispatch({ type: "NEW_PRODUCT_REQUEST" });
 
-    const { data } = await axios.post(`${server}/product/new`, productData);
+    const { data } = await axios.post(`${server}/product/new`, productData, 
+    {
+        headers: {  "Authorization": `Bearer ${token}` },       
+        withCredentials: true,      
+    }
+    );
     // console.log("API response data:", data); // Log API response
 
     if (data && data.product) {
@@ -161,9 +166,7 @@ export const newProduct = (productData) => async (dispatch) => {
 
         if (userData.success) {
             const userId = userData.user._id; // Extract user ID
-            // console.log("User ID:", userId);
-
-            // Include the user ID in the product data
+            
             const productDataWithUser = { ...productData, user: userId };
 
             // Send the product data to the server

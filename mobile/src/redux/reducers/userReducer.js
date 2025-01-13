@@ -12,6 +12,7 @@ const initialState = {
 
 export const userReducer = createReducer(initialState, (builder) => {
     builder
+        // Request cases
         .addCase("loginRequest", (state) => {
             state.loading = true;
         })
@@ -33,41 +34,38 @@ export const userReducer = createReducer(initialState, (builder) => {
         .addCase("deleteUserRequest", (state) => {
             state.loading = true;
         })
+        .addCase("UPDATE_ADDRESS_REQUEST", (state) => {
+            state.loading = true; // Start loading for address update
+        })
         
         // Success cases
         .addCase("loginSuccess", (state, action) => {
-            // console.log("Login Success Action Dispatched", action);
             state.loading = false;
             state.isAuthenticated = true;
             state.user = action.payload; 
             state.message = "Login successful";
-            // console.log("User logged in successfully, state:", state);
         })
-        
         .addCase("loadUserSuccess", (state, action) => {
             state.loading = false;
             state.isAuthenticated = true; 
             state.user = action.payload;
         })
-        
         .addCase("getUserProfileSuccess", (state, action) => {
             state.loading = false;
             state.user = action.payload;  
         })
-        
         .addCase("logoutSuccess", (state) => {
             state.loading = false;
             state.isAuthenticated = false;
             state.user = {}; 
             state.message = "Logout successful";
         })
-        
-        // New user details success
-        .addCase("USER_DETAILS_SUCCESS", (state, action) => {
+        .addCase("UPDATE_ADDRESS_SUCCESS", (state, action) => {
             state.loading = false;
-            state.userDetails = action.payload; // Store fetched user details
+            state.user = action.payload; // Update the user data with the new address
+            state.message = "Address updated successfully";
         })
-        
+
         // Fail cases
         .addCase("loginFail", (state, action) => {
             state.loading = false;
@@ -82,10 +80,8 @@ export const userReducer = createReducer(initialState, (builder) => {
             state.loading = false;
             state.error = action.payload;
         })
-        
-        // New user details fail
-        .addCase("USER_DETAILS_FAIL", (state, action) => {
+        .addCase("UPDATE_ADDRESS_FAIL", (state, action) => {
             state.loading = false;
-            state.error = action.payload; // Store the error if fetching user details fails
+            state.error = action.payload; 
         });
 });
