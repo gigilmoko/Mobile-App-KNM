@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, ScrollView, TouchableOpacity } from "react-native";
 import Footer from "../../../components/Layout/Footer";
+
 import { useDispatch, useSelector } from "react-redux";
 import { getAdminOrders } from "../../../redux/actions/orderActions";
 import Toast from "react-native-toast-message";
 import { useNavigation } from "@react-navigation/native";
 import Entypo from 'react-native-vector-icons/Entypo';
+
 
 const AdminOrders = () => {
     const dispatch = useDispatch();
@@ -31,7 +33,7 @@ const AdminOrders = () => {
 
     return (
         <View style={{ flex: 1 }}>
-            <Header back={true} />
+            
             <ScrollView contentContainerStyle={{ flexGrow: 1, paddingBottom: 50 }}>
                 <View style={{ backgroundColor: "#ffffff", borderTopLeftRadius: 30, borderTopRightRadius: 30, marginTop: 0, padding: 20, shadowColor: "#000", shadowOpacity: 0.1, shadowRadius: 5, shadowOffset: { width: 0, height: 3 }, elevation: 2 }}>
                     <Text style={{ fontSize: 24, fontWeight: "bold", textAlign: "center", marginBottom: 20 }}>Orders List</Text>
