@@ -108,7 +108,12 @@ export const updateProduct = (productData) => async (dispatch) => {
     try {
         dispatch({ type: "UPDATE_PRODUCT_REQUEST" });
         const token = await AsyncStorage.getItem('token');
-        const { data } = await axios.put(`${server}/product/update/${productData.id}`, productData);
+        const { data } = await axios.put(`${server}/product/update/${productData.id}`, productData, {
+            headers: {
+                "Authorization": `Bearer ${token}`,
+            },
+            withCredentials: true,
+        });
         // console.log("update product: ", data);
     
         dispatch({
