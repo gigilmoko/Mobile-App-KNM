@@ -4,7 +4,6 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { useDispatch, useSelector } from "react-redux";
 import { loadUser } from "./src/redux/actions/userActions";
 import { getNotifications } from './src/redux/actions/notificationActions';
-import { monitorNotifications } from "./utils/NotificationService";
 import Toast from 'react-native-toast-message';
 
 import { LogLevel, OneSignal } from 'react-native-onesignal';
@@ -104,27 +103,11 @@ const Main = () => {
     const dispatch = useDispatch();
     const { user } = useSelector((state) => state.user);
 
-    // Load user data on mount
     useEffect(() => {
         if (!user || Object.keys(user).length === 0) {
             dispatch(loadUser());
         }
     }, [dispatch]);
-
-    // Set up periodic notification fetching
-    useEffect(() => {
-        const interval = setInterval(() => {
-            dispatch(getNotifications());
-        }, 5000);
-
-        // Cleanup the interval when the component unmounts
-        return () => clearInterval(interval);
-    }, [dispatch]);
-
-    // Initialize notification monitoring
-    useEffect(() => {
-        monitorNotifications();
-    }, []);
 
     return (
         <NavigationContainer>

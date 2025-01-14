@@ -8,7 +8,7 @@ export const placeOrder = (
     paymentInfo,
     itemsPrice,
     shippingCharges,
-    totalAmount,
+    totalPrice,
     navigation 
 ) => async (dispatch) => {
     try {
@@ -44,7 +44,7 @@ export const placeOrder = (
                     paymentInfo,
                     itemsPrice,
                     shippingCharges,
-                    totalAmount,
+                    totalPrice,
                 },
                 {
                     headers: {
@@ -62,11 +62,8 @@ export const placeOrder = (
                 payload: response.data.message,
             });
 
-            // Clear the cart after placing the order
             dispatch({ type: "clearCart" });
-
-            return response.data; // Return the response data for further handling
-
+            return response.data; 
         } else {
             throw new Error("Failed to fetch user data.");
         }
@@ -85,7 +82,7 @@ export const placeOrder = (
 
 
 export const processOrder = (id, status) => async (dispatch) => {
-    // console.log("processorder touched")
+    console.log("processorder touched")
     try {
         dispatch({
             type: "processOrderRequest",
@@ -122,7 +119,6 @@ export const getOrderDetails = (id) => async (dispatch) => {
         // Axios request
 
         const { data } = await axios.get(`${server}/orders/single/${id}`,
-       
         {
             withCredentials: true
         })
@@ -146,35 +142,37 @@ export const getOrderDetails = (id) => async (dispatch) => {
 export const getAdminOrders = () => async (dispatch) => {
     try {
         // console.log("Dispatching getAdminOrdersRequest...");
-
         dispatch({
             type: "getAdminOrdersRequest",
         });
 
-        // console.log("Sending API request to fetch admin orders...");
+        const token = await AsyncStorage.getItem('token');
+        if (!token) {
+            throw new Error("No token found");
+        }
         const { data } = await axios.get(`${server}/orders/list`, {
             withCredentials: true,
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
         });
-
-        // console.log("API response received:", data);
-
         dispatch({
             type: "getAdminOrdersSuccess",
             payload: data.orders,
         });
-
-        // console.log("Dispatching getAdminOrdersSuccess with payload:", data.orders);
+        console.log("Dispatching getAdminOrdersSuccess with payload:", data.orders);
+        
     } catch (error) {
-        console.error("Error fetching admin orders:", error);
+        // console.error("Error fetching admin orders:", error);
 
         dispatch({
             type: "getAdminOrdersFail",
-            payload: error.response?.data?.message || "Failed to fetch admin orders",
+            payload: error.response?.data?.message
         });
 
         console.error(
             "Dispatching getAdminOrdersFail with payload:",
-            error.response?.data?.message || "Failed to fetch admin orders"
+            error.response?.data?.message
         );
     }
 };

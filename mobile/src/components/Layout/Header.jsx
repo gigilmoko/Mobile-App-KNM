@@ -16,7 +16,7 @@ const Header = ({ back }) => {
                 width: '100%',
                 flexDirection: 'row',
                 justifyContent: 'space-between',
-                paddingTop: 30,
+                // paddingTop: 30,
                 paddingLeft: 0,
             }}>
             {back && (

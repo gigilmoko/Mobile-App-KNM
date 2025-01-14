@@ -1,45 +1,57 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, ScrollView, Image, TouchableOpacity } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity } from "react-native";
+import { Picker } from '@react-native-picker/picker';
 import Footer from "../../../components/Layout/Footer";
 import Header from "../../../components/Layout/Header";
-import { useRoute } from "@react-navigation/native"; 
+import { useRoute, useNavigation } from "@react-navigation/native"; 
 import { useDispatch, useSelector } from "react-redux";
 import { getOrderDetails } from "../../../redux/actions/orderActions"; 
 import { getUserDetails } from "../../../redux/actions/userActions"; 
-import { processOrder } from "../../../redux/actions/orderActions"; // Import the processOrder action
+import { processOrder } from "../../../redux/actions/orderActions";
 
 const AdminOrdersDetails = () => {
     const route = useRoute();
+    const navigation = useNavigation();
     const { orderId } = route.params;
     const dispatch = useDispatch();
-
     const [selectedStatus, setSelectedStatus] = useState("");
 
-    // Fetch order details when component mounts
     useEffect(() => {
         dispatch(getOrderDetails(orderId));
     }, [dispatch, orderId]);
 
+    const { order, loading, error, success } = useSelector((state) => state.order);
+    const { userDetails, loadingUser, errorUser } = useSelector((state) => state.user);
+
     // Fetch user details every time the order is fetched or updated
     useEffect(() => {
         if (order && order.user) {
-            dispatch(getUserDetails(order.user)); // Always fetch user details when the order is available
+            dispatch(getUserDetails(order.user));
         }
     }, [dispatch, order]);
 
-    const { order, loading, error } = useSelector((state) => state.order);
-    const { userDetails, loadingUser, errorUser } = useSelector((state) => state.user);
+    useEffect(() => {
+        if (success) {
+            dispatch(getOrderDetails(orderId));
+            navigation.navigate("adminorders");
+        }
+    }, [success, dispatch, orderId, navigation]);
 
     const handleStatusChange = (newStatus) => {
-        if (newStatus !== order.orderStatus) {
+        if (newStatus !== order.status) {
             setSelectedStatus(newStatus);
-            dispatch(processOrder(order._id, newStatus));
+        }
+    };
+
+    const handleSubmit = () => {
+        if (selectedStatus !== order.status) {
+            dispatch(processOrder(order._id, selectedStatus));
         }
     };
 
     useEffect(() => {
         if (order && order._id) {
-            setSelectedStatus(order.orderStatus);
+            setSelectedStatus(order.status);
         }
     }, [order]);
 
@@ -50,50 +62,62 @@ const AdminOrdersDetails = () => {
     };
 
     return (
-        <View className="flex-1 bg-yellow-400">
+        <View style={{ flex: 1 }}>
             <Header back={true} />
 
             <ScrollView contentContainerStyle={{ flexGrow: 1, paddingBottom: 50 }}>
-                <View className="bg-white rounded-lg p-4 mt-5 shadow-md">
-                    <Text className="text-lg font-bold">Order Details:</Text>
+                <View style={{ backgroundColor: "#ffffff", borderTopLeftRadius: 30, borderTopRightRadius: 30, marginTop: 0, padding: 20, shadowColor: "#000", shadowOpacity: 0.1, shadowRadius: 5, shadowOffset: { width: 0, height: 3 }, elevation: 2 }}>
+                    <Text style={{ fontSize: 24, fontWeight: "bold", textAlign: "center", marginBottom: 20 }}>Order Details:</Text>
+
                     {loading ? (
-                        <Text>Loading...</Text>
+                        <Text style={{ textAlign: "center", color: "#666666" }}>Loading...</Text>
                     ) : order && order._id ? (
                         <>
-                            <Text className="text-lg">Order ID: {order._id}</Text>
-                            <Text className="text-lg">Status: {order.orderStatus}</Text>
-                            <View className="mt-4">
-                                <Text className="text-md font-bold">Change Status:</Text>
-                                <View className="border border-gray-300 rounded-lg mt-2">
-                                    <TouchableOpacity onPress={() => handleStatusChange("Preparing")} className={`p-2 ${selectedStatus === "Preparing" ? "bg-gray-300" : ""}`}>
-                                        <Text className="text-md">Preparing</Text>
-                                    </TouchableOpacity>
-                                    <TouchableOpacity onPress={() => handleStatusChange("Shipped")} className={`p-2 ${selectedStatus === "Shipped" ? "bg-gray-300" : ""}`}>
-                                        <Text className="text-md">Shipped</Text>
-                                    </TouchableOpacity>
-                                    <TouchableOpacity onPress={() => handleStatusChange("Delivered")} className={`p-2 ${selectedStatus === "Delivered" ? "bg-gray-300" : ""}`}>
-                                        <Text className="text-md">Delivered</Text>
-                                    </TouchableOpacity>
+                            <Text style={{ fontSize: 18 }}>Order ID: {order._id}</Text>
+                            <Text style={{ fontSize: 18 }}>Status: {order.status}</Text>
+                            <View style={{ marginTop: 20 }}>
+                                <Text style={{ fontSize: 16, fontWeight: "bold" }}>Change Status:</Text>
+                                <View style={{ borderWidth: 1, borderColor: "#ccc", borderRadius: 10, marginTop: 10 }}>
+                                    <Picker
+                                        selectedValue={selectedStatus}
+                                        onValueChange={(itemValue) => handleStatusChange(itemValue)}
+                                        style={{ height: 50, width: '100%' }}
+                                    >
+                                        <Picker.Item label="Preparing" value="Preparing" />
+                                        <Picker.Item label="Shipped" value="Shipped" />
+                                        <Picker.Item label="Delivered" value="Delivered" />
+                                    </Picker>
                                 </View>
+                                <TouchableOpacity
+                                    onPress={handleSubmit}
+                                    style={{
+                                        backgroundColor: "#ffb703",
+                                        padding: 10,
+                                        borderRadius: 10,
+                                        marginTop: 10,
+                                        alignItems: "center",
+                                    }}
+                                >
+                                    <Text style={{ fontSize: 16, fontWeight: "bold", color: "#fff" }}>Update Status</Text>
+                                </TouchableOpacity>
                             </View>
-                            <Text className="text-lg">Total: ₱{order.totalAmount.toFixed(2)}</Text>
-                            <Text className="text-lg">Items: {order.orderItems && order.orderItems.length}</Text>
+                            <Text style={{ fontSize: 18 }}>Total: ₱{order.totalPrice ? order.totalPrice.toFixed(2) : "N/A"}</Text>
+                            <Text style={{ fontSize: 18 }}>Items: {order.orderProducts && order.orderProducts.length}</Text>
                         </>
                     ) : (
-                        <Text className="text-lg">No order details available</Text>
+                        <Text style={{ fontSize: 18 }}>No order details available</Text>
                     )}
                 </View>
 
-                {order && order.orderItems && order.orderItems.length > 0 && (
-                    <View className="bg-white rounded-lg p-4 mt-10 shadow-md">
-                        <Text className="text-lg font-bold">Products Bought:</Text>
-                        {order.orderItems.map((item) => (
-                            <View key={item._id} className="flex-row items-center mt-4">
-                                <Image source={{ uri: item.image }} style={{ width: 50, height: 50, resizeMode: 'cover', marginRight: 10 }} />
+                {order && order.orderProducts && order.orderProducts.length > 0 && (
+                    <View style={{ backgroundColor: "#ffffff", borderRadius: 10, padding: 20, marginTop: 20, shadowColor: "#000", shadowOpacity: 0.1, shadowRadius: 5, shadowOffset: { width: 0, height: 3 }, elevation: 2 }}>
+                        <Text style={{ fontSize: 24, fontWeight: "bold", textAlign: "center", marginBottom: 20 }}>Products Bought:</Text>
+                        {order.orderProducts.map((item) => (
+                            <View key={item._id} style={{ flexDirection: "row", alignItems: "center", marginTop: 20 }}>
                                 <View>
-                                    <Text className="text-md font-bold">Product Name: {item.name}</Text>
-                                    <Text className="text-md">Price: ₱{item.price}</Text>
-                                    <Text className="text-md">Quantity: {item.quantity}</Text>
+                                    <Text style={{ fontSize: 16, fontWeight: "bold" }}>Product Name: {item.product}</Text>
+                                    <Text style={{ fontSize: 16 }}>Price: ₱{item.price}</Text>
+                                    <Text style={{ fontSize: 16 }}>Quantity: {item.quantity}</Text>
                                 </View>
                             </View>
                         ))}
@@ -102,13 +126,12 @@ const AdminOrdersDetails = () => {
 
                 {userDetails && (
                     <TouchableOpacity onPress={handleUserDetailsClick}>
-                        <View className="bg-white rounded-lg p-4 mt-10 shadow-md">
-                            <Text className="text-lg font-bold">User Details:</Text>
-                            <View className="flex-row items-center mt-4">
-                                <Image source={{ uri: userDetails.avatar }} style={{ width: 50, height: 50, borderRadius: 25, marginRight: 10 }} />
+                        <View style={{ backgroundColor: "#ffffff", borderRadius: 10, padding: 20, marginTop: 20, shadowColor: "#000", shadowOpacity: 0.1, shadowRadius: 5, shadowOffset: { width: 0, height: 3 }, elevation: 2 }}>
+                            <Text style={{ fontSize: 24, fontWeight: "bold", textAlign: "center", marginBottom: 20 }}>User Details:</Text>
+                            <View style={{ flexDirection: "row", alignItems: "center", marginTop: 20 }}>
                                 <View>
-                                    <Text className="text-md font-bold">Name: {userDetails.fname} {userDetails.middlei}. {userDetails.lname}</Text>
-                                    <Text className="text-md">Email: {userDetails.email}</Text>
+                                    <Text style={{ fontSize: 16, fontWeight: "bold" }}>Name: {userDetails.fname} {userDetails.middlei}. {userDetails.lname}</Text>
+                                    <Text style={{ fontSize: 16 }}>Email: {userDetails.email}</Text>
                                 </View>
                             </View>
                         </View>
@@ -116,12 +139,11 @@ const AdminOrdersDetails = () => {
                 )}
             </ScrollView>
 
-            <View className="absolute bottom-0 w-full mt-10">
-                <Footer activeRoute={"home"} />
+            <View style={{ position: "absolute", bottom: 0, width: "100%" }}>
+                <Footer />
             </View>
         </View>
     );
 };
-
 
 export default AdminOrdersDetails;

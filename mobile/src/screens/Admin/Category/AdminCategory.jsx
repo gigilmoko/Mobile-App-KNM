@@ -11,8 +11,7 @@ import { GestureHandlerRootView, Swipeable } from "react-native-gesture-handler"
 const AdminCategory = () => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
-  const [isDeleting, setIsDeleting] = useState(false); // State to control delete action
-
+  const [isDeleting, setIsDeleting] = useState(false);
   const { categories, loading } = useSelector((state) => state.category);
 
   useEffect(() => {

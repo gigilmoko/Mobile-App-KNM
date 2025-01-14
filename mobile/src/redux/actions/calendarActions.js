@@ -77,7 +77,6 @@ export const getAllEvents = () => async (dispatch) => {
     try {
         dispatch({ type: "ALL_EVENTS_REQUEST" });
 
-
         const { data } = await axios.get(`${server}/calendar/events`);
         // console.log("events data: ",data)
 

@@ -9,7 +9,6 @@ import { loadUser } from "../redux/actions/userActions";
 import { useSetCategories } from "../../utils/hooks";
 import Footer from "../components/Layout/Footer";
 import Toast from "react-native-toast-message";
-import { defaultStyle } from "../styles/styles";
 
 const screenWidth = Dimensions.get("window").width;
 const screenHeight = Dimensions.get("window").height;
@@ -61,8 +60,6 @@ const Home = ({ navigation }) => {
 
     // Search effect
     useEffect(() => {
-        // console.log("Searching for:", searchQuery); 
-    
         const timeOutId = setTimeout(() => {
             dispatch(searchProducts(searchQuery)); 
         }, 200);
@@ -71,6 +68,7 @@ const Home = ({ navigation }) => {
             clearTimeout(timeOutId);
         };
     }, [dispatch, searchQuery, category, isFocused]); 
+
     const handleCategoryClick = (categoryId) => {
         setSelectedCategory(categoryId);
         setCategory(categoryId === null ? "" : categoryId);
@@ -210,81 +208,85 @@ const Home = ({ navigation }) => {
                 </View>
             </View>
 
-            {/* Main Content */}
-            <View style={styles.content}>
-                {/* Search Bar */}
-                <View style={styles.searchContainer}>
-                    <TextInput
-                        style={styles.searchInput}
-                        placeholder="Search products..."
-                        value={searchQuery}
-                        onChangeText={(text) => setSearchQuery(text)} // Update search query
-                    />
-                </View>
-                {isCategoryFetched ? (
-                <FlatList
-                    data={products}
-                    renderItem={renderProductItem}
-                    keyExtractor={(item) => item._id}
-                    numColumns={2}
-                    contentContainerStyle={styles.productList}
-                    ListHeaderComponent={
-                        <>
-                            <View style={styles.carouselContainer}>
-                                <FlatList
-                                    data={carouselImages}
-                                    renderItem={renderCarouselItem}
-                                    keyExtractor={(item) => item.id}
-                                    horizontal
-                                    showsHorizontalScrollIndicator={false}
-                                    pagingEnabled
-                                    snapToAlignment="center"
-                                    snapToInterval={screenWidth}
-                                    decelerationRate="fast"
-                                    contentContainerStyle={styles.carouselContentContainer}
-                                />
-                            </View>
-                            <View style={styles.primaryTextContainer}>
-                                <Text style={styles.primaryText}>Categories</Text>
-                            </View>
-                            <View style={styles.categoryContainer}>
-                                <FlatList
-                                    data={categories}
-                                    renderItem={renderCategoryItem}
-                                    keyExtractor={(item) => item._id}
-                                    horizontal
-                                    contentContainerStyle={{ alignItems: "center" }}
-                                    showsHorizontalScrollIndicator={false}
-                                    ListHeaderComponent={
-                                        <TouchableOpacity onPress={() => handleCategoryClick(null)}>
-                                            <Text
-                                                style={[styles.categoryButton, selectedCategory === null ? styles.selectedCategory : styles.unselectedCategory]}
-                                            >
-                                                All
-                                            </Text>
-                                        </TouchableOpacity>
-                                    }
-                                />
-                            </View>
-                        </>
-                    }
+            {/* Search Bar */}
+            <View style={styles.searchContainer}>
+                <TextInput
+                    style={styles.searchInput}
+                    placeholder="Search products..."
+                    value={searchQuery}
+                    onChangeText={(text) => setSearchQuery(text)} // Update search query
                 />
-            ) : (
-                // Optionally, you can show a loading spinner or some message if no category is selected or products are being fetched
-                <Text>Loading products...</Text>
-            )}
             </View>
+
+            {/* Main Content */}
+            <FlatList
+                data={products}
+                renderItem={renderProductItem}
+                keyExtractor={(item) => item._id}
+                numColumns={2}
+                columnWrapperStyle={styles.productListRow} // Center the product cards
+                contentContainerStyle={styles.productList}
+                ListHeaderComponent={
+                    <>
+                        {isCategoryFetched ? (
+                            <>
+                                <View style={styles.carouselContainer}>
+                                    <FlatList
+                                        data={carouselImages}
+                                        renderItem={renderCarouselItem}
+                                        keyExtractor={(item) => item.id}
+                                        horizontal
+                                        showsHorizontalScrollIndicator={false}
+                                        pagingEnabled
+                                        snapToAlignment="center"
+                                        snapToInterval={screenWidth}
+                                        decelerationRate="fast"
+                                        contentContainerStyle={styles.carouselContentContainer}
+                                    />
+                                </View>
+                                <View style={styles.primaryTextContainer}>
+                                    <Text style={styles.primaryText}>Categories</Text>
+                                </View>
+                                <View style={styles.categoryContainer}>
+                                    <FlatList
+                                        data={categories}
+                                        renderItem={renderCategoryItem}
+                                        keyExtractor={(item) => item._id}
+                                        horizontal
+                                        contentContainerStyle={{ alignItems: "center" }}
+                                        showsHorizontalScrollIndicator={false}
+                                        ListHeaderComponent={
+                                            <TouchableOpacity onPress={() => handleCategoryClick(null)}>
+                                                <Text
+                                                    style={[styles.categoryButton, selectedCategory === null ? styles.selectedCategory : styles.unselectedCategory]}
+                                                >
+                                                    All
+                                                </Text>
+                                            </TouchableOpacity>
+                                        }
+                                    />
+                                </View>
+                            </>
+                        ) : (
+                            // Optionally, you can show a loading spinner or some message if no category is selected or products are being fetched
+                            <Text>Loading products...</Text>
+                        )}
+                    </>
+                }
+            />
 
             {/* Floating Wishlist Button */}
             <TouchableOpacity
                 style={styles.floatingWishlistButton}
                 onPress={() => navigation.navigate("wishlist")}
             >
-                <Icon name="heart-outline" size={30} color="#fff" />
+                <Icon name="heart-outline" size={20} color="#fff" />
             </TouchableOpacity>
 
             {/* Footer */}
-            <Footer />
+            <View style={styles.footer}>
+                <Footer />
+            </View>
         </View>
     );
 };
@@ -294,68 +296,71 @@ export default Home;
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+        paddingBottom: 60,
     },
     header: {
-        padding: 16,
-        // paddingTop: 40,
+        padding: 12,
         backgroundColor: "#ffb703",
     },
     headerText: {
-        fontSize: 25,
+        fontSize: 18,
         fontWeight: "bold",
         color: "#000",
     },
     locationContainer: {
         flexDirection: "row",
         alignItems: "center",
-        marginTop: 3,
     },
     locationText: {
         marginLeft: 8,
-        fontSize: 16,
+        fontSize: 12,
         color: "#000",
     },
-    content: {
-        flex: 1,
-        marginBottom: 60,
-    },
     searchContainer: {
-        paddingHorizontal: 16,
-        paddingTop: 5,
+        paddingHorizontal: 12,
         backgroundColor: "#ffb703",
-        height: 60,
-        borderBottomLeftRadius: 20,
-        borderBottomRightRadius: 20,
+        height: 40,
+        borderBottomLeftRadius: 10,
+        borderBottomRightRadius: 10,
+        width: "100%", // Ensure the search container takes the full width
     },
     searchInput: {
-        height: 40,
+        height: 35,
         borderColor: "#ccc",
         borderWidth: 1,
         borderRadius: 10,
         paddingHorizontal: 10,
         backgroundColor: "#fff",
+        width: "100%",
     },
     productList: {
         paddingHorizontal: 16,
         paddingTop: 16,
     },
+    productListRow: {
+        justifyContent: 'center', 
+    },
     primaryTextContainer: {
         paddingHorizontal: 5,
+        marginTop: 5, // Adjust space between carousel and categories
     },
     primaryText: {
-        fontSize: 18,
+        fontSize: 16, // Smaller text size
         fontWeight: "bold",
+        marginVertical: 5,
     },
     categoryContainer: {
         flexDirection: "row",
-        height: 80,
+        height: 40, // Less height
+        // marginTop: 10, // Adjust space between categories and category buttons
     },
     categoryButton: {
         flexDirection: "row",
         alignItems: "center",
-        padding: 10,
-        marginHorizontal: 5,
+        padding: 5, // Less padding
+        marginHorizontal: 5, // Less margin
         borderRadius: 5,
+        fontSize: 12, // Smaller text size
     },
     selectedCategory: {
         backgroundColor: "#bc430b",
@@ -369,7 +374,7 @@ const styles = StyleSheet.create({
         position: "absolute",
         bottom: 0,
         width: "100%",
-        paddingTop: 0,
+        backgroundColor: "#ffb703",
     },
     floatingWishlistButton: {
         position: "absolute",
@@ -381,9 +386,9 @@ const styles = StyleSheet.create({
         elevation: 5,
     },
     carouselContainer: {
-        width: screenWidth * 0.95,
-        marginTop: screenHeight * 0.02,
-        height: 200,
+        width: screenWidth * 0.90,
+        margin: screenHeight * 0.002,
+        height: 150,
         alignSelf: "center",
         alignItems: "center",
         justifyContent: "center",
@@ -395,7 +400,7 @@ const styles = StyleSheet.create({
     },
     carouselImage: {
         width: screenWidth,
-        height: 200,
+        height: 150,
         resizeMode: "cover",
     },
 });

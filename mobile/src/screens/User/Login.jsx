@@ -1,4 +1,4 @@
-import { View, Text, Image, TextInput, TouchableOpacity } from "react-native";
+import { View, Text, Image, TextInput, TouchableOpacity, ScrollView } from "react-native";
 import React, { useState } from "react";
 import Entypo from 'react-native-vector-icons/Entypo';
 import { useDispatch, useSelector } from "react-redux";
@@ -13,16 +13,12 @@ const Login = ({ navigation }) => {
     const loading = useMessageAndErrorUser(navigation, dispatch, "myaccount");
 
     const submitHandler = () => {
-        // console.log("Submitting login:", { email, password });
-    
         dispatch(login(email, password))
             .then(() => {
                 Toast.show({
                     type: 'success',
-                    // text1: 'Login Successful',
                     text2: 'Welcome back!',
                 });
-                // console.log("Login was successful");
             })
             .catch((error) => {
                 Toast.show({
@@ -30,12 +26,11 @@ const Login = ({ navigation }) => {
                     text1: 'Login Failed',
                     text2: error?.message || 'Please try again later.',
                 });
-                // console.log("Login failed with error:", error);
             });
     };
 
     return (
-        <>
+        <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
             <View className="flex-1" style={{ backgroundColor: "#ffb703" }}>
                 <View className="flex">
                     <View
@@ -48,7 +43,7 @@ const Login = ({ navigation }) => {
                             <Entypo
                                 name="chevron-left"
                                 style={{
-                                    fontSize:30,
+                                    fontSize: 30,
                                     color: '#bc430b',
                                     padding: 12,
                                     borderRadius: 10,
@@ -117,7 +112,7 @@ const Login = ({ navigation }) => {
                     </View>
                 </View>
             </View>
-        </>
+        </ScrollView>
     );
 };
 

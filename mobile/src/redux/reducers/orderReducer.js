@@ -4,11 +4,11 @@ import { createReducer } from "@reduxjs/toolkit";
 export const orderReducer = createReducer(
     {
         orders: [],
-        order: {}, // Stores single order info after success
+        order: {}, 
         loading: false,
         error: null,
-        message: null, // Stores success messages
-        adminOrders: [], // List of orders for admin
+        message: null,
+        adminOrders: [], 
     },
     (builder) => {
         builder
@@ -51,11 +51,11 @@ export const orderReducer = createReducer(
             })
             .addCase("getAdminOrdersSuccess", (state, action) => {
                 state.loading = false;
-                state.adminOrders = action.payload; // Store the list of orders
+                state.adminOrders = action.payload; 
             })
             .addCase("getAdminOrdersFail", (state, action) => {
                 state.loading = false;
-                state.error = action.payload; // Store the error message
+                state.error = action.payload;
             })
             .addCase("clearError", (state) => {
                 state.error = null;

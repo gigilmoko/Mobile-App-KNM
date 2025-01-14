@@ -1,13 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { getNotifications, deleteNotification, deleteAllNotifications, toggleNotificationReadStatus } from '../../redux/actions/notificationActions';
 import Toast from 'react-native-toast-message';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import Footer from '../../components/Layout/Footer';
-import Header from '../../components/Layout/Header';
 import { useNavigation } from '@react-navigation/native';
 import { GestureHandlerRootView, Swipeable } from 'react-native-gesture-handler';
+import moment from 'moment';
 
 const NotificationScreen = () => {
     const dispatch = useDispatch();
@@ -23,7 +23,6 @@ const NotificationScreen = () => {
             Toast.show({
                 type: 'error',
                 text1: 'Failed to load notifications',
-                text2: error?.message || 'Please check your connection',
             });
         } finally {
             setLoading(false);
@@ -113,44 +112,77 @@ const NotificationScreen = () => {
         );
     };
 
+    const formatDate = (date) => {
+        const now = moment();
+        const notificationDate = moment(date);
+        const diff = now.diff(notificationDate, 'minutes');
+
+        if (diff < 1) return 'just now';
+        if (diff < 60) return `${diff} min ago`;
+        if (diff < 1440) return `${Math.floor(diff / 60)} hour${Math.floor(diff / 60) > 1 ? 's' : ''} ago`;
+        if (diff < 10080) return `${Math.floor(diff / 1440)} day${Math.floor(diff / 1440) > 1 ? 's' : ''} ago`;
+        if (diff < 40320) return `${Math.floor(diff / 10080)} week${Math.floor(diff / 10080) > 1 ? 's' : ''} ago`;
+        return notificationDate.format('MM/DD');
+    };
+
     const unreadCount = notifications.filter(notification => !notification.read).length;
+
+    const renderItem = useCallback(({ item }) => (
+        <Swipeable renderRightActions={() => renderRightActions(item)}>
+            <TouchableOpacity
+                onPress={() => handleNotificationPress(item._id, item.event?._id)}
+                style={[styles.notificationItem, { backgroundColor: item.read ? '#f0f0f0' : '#ffffff' }]}
+            >
+                {item.event && (
+                    <View style={styles.notificationTextContainer}>
+                        <Text style={styles.notificationTitle}>
+                            {`New event: ${item.event.title}`}
+                        </Text>
+                        <Text style={styles.notificationDescription} numberOfLines={2}>
+                            {item.event.description}
+                        </Text>
+                    </View>
+                )}
+                <Text style={styles.notificationDate}>{formatDate(item.createdAt)}</Text>
+            </TouchableOpacity>
+        </Swipeable>
+    ), []);
+
+    const keyExtractor = useCallback((item) => item._id, []);
+
+    const getItemLayout = useCallback((data, index) => ({
+        length: 100,
+        offset: 100 * index,
+        index,
+    }), []);
 
     return (
         <GestureHandlerRootView style={{ flex: 1 }}>
-            <Header back={true} />
+            <View style={styles.headerContainer}>
+                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+                    <Icon name="arrow-left" size={24} color="#000" />
+                </TouchableOpacity>
+                <Text style={styles.headerTitle}>Notifications</Text>
+            </View>
             {loading ? (
                 <Text style={styles.loadingText}>Loading...</Text>
             ) : (
                 <>
-                    <View style={styles.header}>
-                        <Text style={styles.headerText}>Unread Messages: {unreadCount}</Text>
+                    <View style={styles.unreadCountContainer}>
+                        <Text style={styles.unreadCountText}>Unread Messages: {unreadCount}</Text>
                     </View>
                     {notifications.length === 0 ? (
                         <Text style={styles.noNotificationsText}>No notifications available.</Text>
                     ) : (
                         <FlatList
                             data={notifications}
-                            keyExtractor={(item) => item._id}
+                            keyExtractor={keyExtractor}
                             contentContainerStyle={styles.flatListContent}
-                            renderItem={({ item }) => (
-                                <Swipeable renderRightActions={(progress, dragX) => renderRightActions(progress, dragX, item)}>
-                                    <TouchableOpacity
-                                        onPress={() => handleNotificationPress(item._id, item.event._id)}
-                                        style={[
-                                            styles.notificationItem,
-                                            item.read ? styles.readNotification : styles.unreadNotification
-                                        ]}
-                                    >
-                                        <Text style={styles.notificationTitle}>{item.title}</Text>
-                                        <Text style={styles.notificationDescription}>{item.description}</Text>
-                                    </TouchableOpacity>
-                                </Swipeable>
-                            )}
-                            ListFooterComponent={
-                                <TouchableOpacity onPress={handleDeleteAllNotifications}>
-                                    <Text style={styles.deleteAllText}>Delete All Notifications</Text>
-                                </TouchableOpacity>
-                            }
+                            renderItem={renderItem}
+                            getItemLayout={getItemLayout}
+                            initialNumToRender={10}
+                            maxToRenderPerBatch={10}
+                            windowSize={21}
                         />
                     )}
                 </>
@@ -170,13 +202,28 @@ const styles = StyleSheet.create({
         color: "#888",
         marginTop: 20,
     },
-    header: {
+    headerContainer: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: 10,
+    },
+    backButton: {
+        position: "absolute",
+        left: 10,
+    },
+    headerTitle: {
+        fontSize: 24,
+        fontWeight: "bold",
+        color: "#000",
+    },
+    unreadCountContainer: {
         padding: 16,
         backgroundColor: "#fff",
         borderBottomWidth: 1,
         borderBottomColor: "#ccc",
     },
-    headerText: {
+    unreadCountText: {
         fontSize: 18,
         fontWeight: "bold",
     },
@@ -190,18 +237,15 @@ const styles = StyleSheet.create({
         paddingTop: 16,
     },
     notificationItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
         borderBottomWidth: 1,
         borderBottomColor: "#ccc",
         paddingVertical: 16,
         paddingHorizontal: 8,
-        position: "relative",
-        paddingBottom: 5,
     },
-    readNotification: {
-        backgroundColor: "#fff",
-    },
-    unreadNotification: {
-        backgroundColor: "#FEEE91",
+    notificationTextContainer: {
+        flex: 1,
     },
     notificationTitle: {
         color: "#333",
@@ -210,6 +254,10 @@ const styles = StyleSheet.create({
     notificationDescription: {
         color: "#666",
         fontSize: 14,
+    },
+    notificationDate: {
+        color: "#888",
+        fontSize: 12,
     },
     swipeActionsContainer: {
         flexDirection: 'row',
