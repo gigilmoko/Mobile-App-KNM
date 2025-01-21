@@ -52,7 +52,7 @@ const Cart = () => {
 
     const renderItem = ({ item, index }) => (
         <Swipeable
-            renderRightActions={() => renderRightActions(item.product)} // Render delete button
+            renderRightActions={() => renderRightActions(item.product)}
         >
             <CartItem
                 navigate={navigation}
@@ -71,7 +71,7 @@ const Cart = () => {
 
     return (
         <GestureHandlerRootView style={{ flex: 1 }}>
-            <View style={{ width: '100%', height: '100%', backgroundColor: '#ffffff', position: 'relative' }}>
+            <View style={{ width: '100%', height: '100%', backgroundColor: '#fff', position: 'relative' }}>
                 <View style={styles.headerContainer}>
                     <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
                         <MaterialCommunityIcons name="arrow-left" size={24} color="#000" />
@@ -85,7 +85,6 @@ const Cart = () => {
                     contentContainerStyle={{ paddingHorizontal: 16 }}
                     ListEmptyComponent={<Text style={{ textAlign: "center", fontSize: 18 }}>No Items Yet</Text>}
                 />
-                {/* Combined Order Info and Checkout Button in a single box */}
                 <OrderInfo cartItems={cartItems} />
                 <CheckoutButton cartItems={cartItems} navigation={navigation} />
             </View>
@@ -122,13 +121,13 @@ const OrderInfo = ({ cartItems }) => {
 };
 
 const CheckoutButton = ({ cartItems, navigation }) => (
-    <View style={{ marginTop: 10 }}>
+    <View>
         <TouchableOpacity
             onPress={cartItems.length > 0 ? () => navigation.navigate("confirmorder") : null}
             style={styles.checkoutButton}
         >
             <Text style={styles.checkoutButtonText}>
-                CHECKOUT
+                Checkout
             </Text>
         </TouchableOpacity>
     </View>
@@ -140,24 +139,28 @@ const styles = StyleSheet.create({
         alignItems: "center",
         justifyContent: "center",
         padding: 10,
+        backgroundColor: "#fff",
+        borderBottomWidth: 1,
+        borderBottomColor: "#ccc",
+        marginBottom: 10,
     },
     backButton: {
         position: "absolute",
         left: 10,
     },
     headerTitle: {
-        fontSize: 24,
+        fontSize: 20,
         fontWeight: "bold",
-        color: "#000",
     },
     swipeActionDelete: {
-        backgroundColor: 'red',
+        backgroundColor: '#bc430b',
         justifyContent: 'center',
         alignItems: 'center',
-        width: 80,
+        width: 60,
         borderRadius: 10,
         marginVertical: 6,
-        height: 120,
+        height: 100,
+        marginLeft: 10,
     },
     swipeActionText: {
         color: 'white',
@@ -166,36 +169,26 @@ const styles = StyleSheet.create({
     },
     orderInfoContainer: {
         paddingHorizontal: 16,
-        paddingVertical: 20,
-        borderTopLeftRadius: 20,
-        borderTopRightRadius: 20,
-        backgroundColor: '#ffcc73',
+        paddingVertical: 10,
+        borderRadius: 10,
+        backgroundColor: '#f9f9f9',
+        marginHorizontal: 15,
+        borderWidth: 1,
+        borderColor: '#ddd',
+        // flex: 1,
+        
     },
     orderInfoTitle: {
         fontSize: 16,
         color: '#000',
         fontWeight: '500',
-        letterSpacing: 1,
         marginBottom: 10,
     },
     orderInfoRow: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        marginBottom: 8,
-    },
-    orderInfoLabel: {
-        fontSize: 14,
-        fontWeight: '400',
-        maxWidth: '80%',
-        color: '#333',
-        opacity: 0.7,
-    },
-    orderInfoValue: {
-        fontSize: 14,
-        fontWeight: '400',
-        color: '#333',
-        opacity: 0.8,
+        marginBottom: 5,
     },
     orderInfoTotalLabel: {
         fontSize: 20,
@@ -209,19 +202,19 @@ const styles = StyleSheet.create({
         color: '#000',
     },
     checkoutButton: {
-        width: '100%',
-        height: 50,
+        // height: 40,
         backgroundColor: '#bc430b',
-        borderRadius: 5,
+        borderRadius: 10,
         justifyContent: 'center',
         alignItems: 'center',
+        margin: 15,
     },
     checkoutButtonText: {
         fontSize: 16,
         fontWeight: '500',
         letterSpacing: 1,
         color: '#ffffff',
-        textTransform: 'uppercase',
+        padding: 10,
     },
 });
 

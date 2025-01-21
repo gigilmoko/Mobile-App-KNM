@@ -27,7 +27,7 @@ import Cart from "./src/screens/Cart/Cart";
 import Wishlist from "./src/screens/Products/Wishlist";
 import ConfirmOrder from "./src/screens/Cart/ConfirmOrder";
 import MyOrders from "./src/screens/User/MyOrders";
-import ProductDetails from "./src/screens/ProductDetails";
+import ProductDetails from "./src/screens/Products/ProductDetails";
 import NotificationScreen from "./src/screens/Notification/Notification";
 import EventInfo from "./src/screens/Calendar/EventInfo";
 import EventList from "./src/screens/Calendar/EventList";
@@ -47,7 +47,6 @@ import ProductFeedback from "./src/screens/User/ProductFeedback";
 import AdminCreateEvent from "./src/screens/Admin/Events/AdminEventCreate";
 import AdminEventUpdate from "./src/screens/Admin/Events/AdminEventUpdate";
 import EventFeedback from "./src/screens/User/EventFeedback";
-import EditAddress from "./src/screens/Address/EditAddress";
 import CurrentAddress from "./src/screens/User/CurrentAddress";
 
 const Stack = createNativeStackNavigator();
@@ -69,7 +68,6 @@ const HomeStack = () => {
             <Stack.Screen name="productfeedback" component={ProductFeedback} />
             <Stack.Screen name="eventfeedback" component={EventFeedback} />
             <Stack.Screen name="wishlist" component={Wishlist} />
-            <Stack.Screen name="editaddress" component={EditAddress} />
             <Stack.Screen name="confirmorder" component={ConfirmOrder} />
             <Stack.Screen name="myorders" component={MyOrders} />
             <Stack.Screen name="orderdetails" component={OrderDetails} />

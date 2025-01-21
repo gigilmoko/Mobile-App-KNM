@@ -39,7 +39,7 @@ const ProductCard = ({
                 borderWidth: 1, 
                 borderRadius: 10, 
                 backgroundColor: '#ffffff', 
-                alignSelf: 'center', // Center the product card
+                alignSelf: 'center', 
             }}
         >
             {/* Product Image Box */}

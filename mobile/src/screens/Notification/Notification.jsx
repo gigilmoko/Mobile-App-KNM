@@ -7,6 +7,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import Footer from '../../components/Layout/Footer';
 import { useNavigation } from '@react-navigation/native';
 import { GestureHandlerRootView, Swipeable } from 'react-native-gesture-handler';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';  
 import moment from 'moment';
 
 const NotificationScreen = () => {
@@ -15,28 +16,18 @@ const NotificationScreen = () => {
     const notifications = useSelector(state => state.notifications.notifications || []);
     const [loading, setLoading] = useState(true);
 
-    const fetchNotifications = async () => {
-        setLoading(true);
-        try {
-            await dispatch(getNotifications());
-        } catch (error) {
-            Toast.show({
-                type: 'error',
-                text1: 'Failed to load notifications',
-            });
-        } finally {
-            setLoading(false);
-        }
-    };
-
     useEffect(() => {
+        const fetchNotifications = async () => {
+            await dispatch(getNotifications());
+            setLoading(false);
+        };
         fetchNotifications();
-    }, []);
+    }, [dispatch]);
 
     const handleToggleUnread = async (notifId) => {
         try {
             await dispatch(toggleNotificationReadStatus(notifId));
-            fetchNotifications();
+            dispatch(getNotifications());
         } catch (error) {
             Toast.show({
                 type: 'error',
@@ -47,50 +38,17 @@ const NotificationScreen = () => {
     };
 
     const handleNotificationPress = async (notifId, eventId) => {
-        try {
-            await dispatch(toggleNotificationReadStatus(notifId));
-            navigation.navigate("eventinfo", { eventId });
-        } catch (error) {
-            Toast.show({
-                type: 'error',
-                text1: 'Failed to mark as read and navigate',
-                text2: error?.message || 'Please try again',
-            });
-        }
+        await dispatch(toggleNotificationReadStatus(notifId));
+        navigation.navigate("eventinfo", { eventId });
     };
 
     const handleDeleteNotification = async (notifId) => {
-        try {
-            await dispatch(deleteNotification(notifId));
-            Toast.show({
-                type: 'success',
-                text1: 'Notification deleted successfully',
-            });
-            fetchNotifications();
-        } catch (error) {
-            Toast.show({
-                type: 'error',
-                text1: 'Failed to delete notification',
-                text2: error?.message || 'Please try again',
-            });
-        }
-    };
-
-    const handleDeleteAllNotifications = async () => {
-        try {
-            await dispatch(deleteAllNotifications());
-            Toast.show({
-                type: 'success',
-                text1: 'All notifications deleted successfully',
-            });
-            fetchNotifications();
-        } catch (error) {
-            Toast.show({
-                type: 'error',
-                text1: 'Failed to delete all notifications',
-                text2: error?.message || 'Please try again',
-            });
-        }
+        await dispatch(deleteNotification(notifId));
+        Toast.show({
+            type: 'success',
+            text1: 'Notification deleted successfully',
+        });
+        dispatch(getNotifications());
     };
 
     const renderRightActions = (item) => {
@@ -131,7 +89,7 @@ const NotificationScreen = () => {
         <Swipeable renderRightActions={() => renderRightActions(item)}>
             <TouchableOpacity
                 onPress={() => handleNotificationPress(item._id, item.event?._id)}
-                style={[styles.notificationItem, { backgroundColor: item.read ? '#f0f0f0' : '#ffffff' }]}
+                style={[styles.notificationItem, { backgroundColor: item.read ? '#ffffff' : '#f0f0f0', borderRadius: 5 }]}
             >
                 {item.event && (
                     <View style={styles.notificationTextContainer}>
@@ -157,12 +115,12 @@ const NotificationScreen = () => {
     }), []);
 
     return (
-        <GestureHandlerRootView style={{ flex: 1 }}>
+        <GestureHandlerRootView style={styles.container}>
             <View style={styles.headerContainer}>
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                    <Icon name="arrow-left" size={24} color="#000" />
+                    <MaterialCommunityIcons name="arrow-left" size={24} color="#000" />
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>Notifications</Text>
+                <Text style={styles.headerTitle}>Events</Text>
             </View>
             {loading ? (
                 <Text style={styles.loadingText}>Loading...</Text>
@@ -195,53 +153,49 @@ const NotificationScreen = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: "#f0f0f0",
+        backgroundColor: "#ffffff",
     },
     loadingText: {
-        textAlign: "center",
-        color: "#888",
-        marginTop: 20,
+        justifyContent: "center",
+        alignItems: "center",
+        flex: 1,
     },
     headerContainer: {
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "center",
         padding: 10,
+        backgroundColor: "#fff",
+        borderBottomWidth: 1,
+        borderBottomColor: "#ccc",
     },
     backButton: {
         position: "absolute",
         left: 10,
     },
     headerTitle: {
-        fontSize: 24,
+        fontSize: 20,
         fontWeight: "bold",
-        color: "#000",
     },
     unreadCountContainer: {
-        padding: 16,
-        backgroundColor: "#fff",
-        borderBottomWidth: 1,
-        borderBottomColor: "#ccc",
+        padding: 10,
     },
     unreadCountText: {
-        fontSize: 18,
-        fontWeight: "bold",
+        fontSize: 14,
     },
     noNotificationsText: {
         textAlign: "center",
         color: "#888",
-        marginTop: 20,
     },
     flatListContent: {
-        paddingHorizontal: 16,
-        paddingTop: 16,
+        marginHorizontal: 10,
     },
     notificationItem: {
         flexDirection: 'row',
         alignItems: 'center',
         borderBottomWidth: 1,
-        borderBottomColor: "#ccc",
-        paddingVertical: 16,
+        borderBottomColor: "#ffb703",
+        paddingVertical: 8,
         paddingHorizontal: 8,
     },
     notificationTextContainer: {
@@ -258,6 +212,7 @@ const styles = StyleSheet.create({
     notificationDate: {
         color: "#888",
         fontSize: 12,
+        paddingLeft: 10, 
     },
     swipeActionsContainer: {
         flexDirection: 'row',
@@ -269,7 +224,7 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         justifyContent: "center",
         alignItems: "center",
-        marginRight: 10,
+        margin: 5,
     },
     swipeActionDelete: {
         padding: 10,
@@ -278,6 +233,7 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         justifyContent: "center",
         alignItems: "center",
+        margin: 5,
     },
     deleteAllText: {
         color: "red",

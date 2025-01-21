@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, Dimensions, StyleSheet, Image, TouchableOpacity, ScrollView } from "react-native";
-import Header from "../components/Layout/Header";
+import Header from "../../components/Layout/Header";
 import { Avatar, Button } from "react-native-paper";
 import Toast from "react-native-toast-message";
 import { useDispatch, useSelector } from "react-redux";
 import { useIsFocused, useNavigation } from "@react-navigation/native";
-import { getProductDetails } from "../redux/actions/productActions";
-import { fetchProductFeedbacks } from "../redux/actions/productFeedbackActions";
+import { getProductDetails } from "../../redux/actions/productActions";
+import { fetchProductFeedbacks } from "../../redux/actions/productFeedbackActions";
 
 const QuantityControl = React.memo(({ quantity, incrementQty, decrementQty }) => (
   <View style={styles.quantityControl}>

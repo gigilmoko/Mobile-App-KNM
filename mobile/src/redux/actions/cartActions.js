@@ -4,7 +4,7 @@ import { server } from "../store";
 export const placeOrder =
     (
         orderItems,
-        shippingInfo,
+        deliveryAddress,
         paymentInfo,
         itemsPrice,
         shippingCharges,
@@ -20,7 +20,7 @@ export const placeOrder =
                 const { data } = await axios.post(
                     `${server}/new`,
                     {
-                        shippingInfo,
+                        deliveryAddress,
                         orderItems,
                         paymentInfo,
                         paymentInfo,

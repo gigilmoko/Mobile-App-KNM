@@ -17,10 +17,9 @@ const ConfirmOrderItem = ({ price, quantity, image, name}) => {
                 <View style={{
                     width: '30%',
                     height: '100%',
-                    padding: 10,
+                    // padding: 10,
                     justifyContent: 'center',
                     alignItems: 'center',
-                    backgroundColor: "#F4B546",
                     borderRadius: 10,
                     marginRight: 22,
                 }}>

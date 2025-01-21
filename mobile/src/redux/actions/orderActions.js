@@ -4,7 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export const placeOrder = (
     orderProducts,
-    shippingInfo,
+    deliveryAddress,
     paymentInfo,
     itemsPrice,
     shippingCharges,
@@ -39,7 +39,7 @@ export const placeOrder = (
                 `${server}/neworder`,
                 {
                     userId,
-                    shippingInfo,
+                    deliveryAddress,
                     orderProducts,
                     paymentInfo,
                     itemsPrice,
@@ -177,3 +177,34 @@ export const getAdminOrders = () => async (dispatch) => {
     }
 };
 
+
+export const getUserOrders = () => async (dispatch) => {
+    try {
+        dispatch({ type: "getUserOrdersRequest" });
+
+        const token = await AsyncStorage.getItem('token');
+        if (!token) {
+            throw new Error("No token found");
+        }
+
+        const { data } = await axios.get(`${server}/my`, {
+            headers: {
+                "Authorization": `Bearer ${token}`,
+            },
+        });
+
+        dispatch({
+            type: "getUserOrdersSuccess",
+            payload: data.orders,
+        });
+    } catch (error) {
+        dispatch({
+            type: "getUserOrdersFail",
+            payload: error.response?.data?.message || error.message,
+        });
+        Toast.show({
+            type: "error",
+            text1: error.response?.data?.message || error.message,
+        });
+    }
+};

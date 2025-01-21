@@ -209,6 +209,7 @@ const styles = StyleSheet.create({
   subheading: {
     fontSize: 18,
     fontWeight: "600",
+    paddingBottom: 10,
   },
   text: {
     fontSize: 16,
@@ -257,11 +258,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   button: {
-    width: 300,
+    width: '100%',
     backgroundColor: "#bc430b",
-    padding: 15,
-    borderRadius: 8,
+    // height: 40,
+    borderRadius: 10,
     alignItems: "center",
+    justifyContent: "center",
   },
   disabledButton: {
     opacity: 0.5,
@@ -270,6 +272,7 @@ const styles = StyleSheet.create({
     color: "#ffffff",
     fontSize: 16,
     fontWeight: "600",
+    padding: 10,
   },
 });
 

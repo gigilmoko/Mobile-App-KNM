@@ -5,13 +5,11 @@ import { useIsFocused, useRoute } from "@react-navigation/native";
 import { getOrderDetails } from '../../redux/actions/orderActions';
 import Header from "../../components/Layout/Header";
 import StepIndicator from "react-native-step-indicator";
-import ConfirmOrderItem from "../../components/Cart/ConfirmOrderItem";
 import { useNavigation } from "@react-navigation/native";
-
 
 const OrderDetails = () => {
     const dispatch = useDispatch();
-    const navigation = useNavigation();  // Use navigation
+    const navigation = useNavigation();  
     const isFocused = useIsFocused();
     const route = useRoute();
     const { id } = route.params;
@@ -21,11 +19,9 @@ const OrderDetails = () => {
     }, [dispatch, id]);
 
     const { order } = useSelector((state) => state.order);
-    const orderStatus = useSelector((state) => state.order.orderStatus);
-    const status = order ? order.orderStatus : '';
+    const [trackingState, setTrackingState] = useState(1);
 
     const labels = ["Preparing", "Shipping", "Delivery"];
-    const [trackingState, setTrackingState] = useState(1);
     const customStyles = {
         stepIndicatorSize: 25,
         currentStepIndicatorSize: 30,
@@ -60,7 +56,10 @@ const OrderDetails = () => {
                 setTrackingState(1);
             }
         }
-    }, [order, navigation]);
+    }, [order]);
+
+    const overallPrice = order ? order.orderProducts.reduce((acc, item) => acc + item.price * item.quantity, 0) : 0;
+    const totalQuantity = order ? order.orderProducts.reduce((acc, item) => acc + item.quantity, 0) : 0;
 
     return (
         <>
@@ -68,7 +67,7 @@ const OrderDetails = () => {
             <View className="flex-1 bg-gray-200 items-center justify-center px-5 pb-0">
                 <View className="mt-2 w-full mb-1">
                     <Text className="text-3xl font-extrabold text-gray-600">Order Details</Text>
-                    <Text className="mt-2 text-lg">View all details about the order</Text>
+                    <Text className="mt-2 text-md">View all details about the order</Text>
                 </View>
                 <ScrollView className="flex-1 w-full px-1" showsVerticalScrollIndicator={false}>
                     <View className="mt-2 w-full">
@@ -76,7 +75,7 @@ const OrderDetails = () => {
                     </View>
                     <View className="mt-1 bg-white p-3 rounded-lg shadow-md mb-2">
                         <Text className="text-sm text-gray-600">
-                            {order?.shippingInfo?.address}, {order?.shippingInfo?.city}, {order?.shippingInfo?.country} {order?.shippingInfo?.pinCode}
+                            {order?.deliveryAddress?.address}, {order?.deliveryAddress?.city}, {order?.deliveryAddress?.country} {order?.deliveryAddress?.pinCode}
                         </Text>
                     </View>
 
@@ -101,8 +100,7 @@ const OrderDetails = () => {
                     </View>
                     <View className="mt-1 bg-white p-3 rounded-lg shadow-sm mb-2">
                         <View className="flex-row justify-between items-center w-full">
-                            <Text className="text-sm text-gray-600">Package</Text>
-                            <Text>{order?.orderStatus}</Text>
+                            <Text className="text-sm text-gray-600">Total Quantity: {totalQuantity}</Text>
                         </View>
                         <View className="flex-row justify-between items-center w-full mt-2">
                             <Text className="text-sm text-gray-600">
@@ -110,42 +108,22 @@ const OrderDetails = () => {
                             </Text>
                         </View>
                         <ScrollView className="bg-white rounded-lg p-3 max-h-[260px] w-full mb-1" nestedScrollEnabled={true}>
-                            {order && order.orderItems && order.orderItems.map((i) => (
-                                <TouchableOpacity 
-                                    key={i.product}
-                                    onPress={() => {
-                                        // Only navigate to product feedback if the order status is "Delivered"
-                                        if (order?.orderStatus === "Delivered") {
-                                            navigation.navigate('productfeedback', {
-                                                orderId: order._id,
-                                                productId: i.product, // Pass the specific product ID
-                                            });
-                                        }
-                                    }}
-                                >
-                                    <ConfirmOrderItem
-                                        price={i.price}
-                                        image={i.image}
-                                        name={i.name}
-                                        quantity={i.quantity}
-                                    />
-                                    {order?.orderStatus === "Delivered" && (
-                                        <Text style={{ textAlign: 'right' }}>Rate Here!</Text>
-                                    )}
-                                </TouchableOpacity>
-                            ))}
+                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 }}>
+                                <Text style={{ fontWeight: 'bold' }}>Quantity</Text>
+                                <Text style={{ fontWeight: 'bold' }}>Product Name</Text>
+                                <Text style={{ fontWeight: 'bold' }}>Price</Text>
+                            </View>
+                            {order && order.orderProducts && order.orderProducts.map((i) => (
+                                <View key={i.product} style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 }}>
+                                    <Text>{i.quantity}</Text>
+                                    <Text>{i.product}</Text>
+                                    <Text>₱{i.price.toFixed(2)}</Text>
+                                </View>
+                            ))}F
                         </ScrollView>
                         <View className="flex-row justify-between items-center w-full mt-3">
                             <Text className="text-l font-medium text-gray-600 opacity-50 max-w-[80%]">Total Price:</Text>
-                            <Text className="text-l font-medium text-orange-600">₱{order?.itemsPrice}</Text>
-                        </View>
-                        <View className="flex-row justify-between items-center w-full mt-3">
-                            <Text className="text-l font-medium text-gray-600 opacity-50 max-w-[80%]">Shipping</Text>
-                            <Text className="text-l font-medium text-orange-600">₱{order?.shippingCharges}</Text>
-                        </View>
-                        <View className="flex-row justify-between items-center w-full mt-3">
-                            <Text className="text-xl font-medium text-gray-600 opacity-50 max-w-[80%]">Overall Price:</Text>
-                            <Text className="text-2xl font-medium text-orange-600">₱{order?.totalAmount}</Text>
+                            <Text className="text-l font-medium text-orange-600">₱{overallPrice.toFixed(2)}</Text>
                         </View>
                     </View>
 

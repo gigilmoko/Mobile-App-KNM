@@ -29,7 +29,7 @@ const CartItem = ({
                 borderColor: '#F4B546',
                 borderWidth: 1,
                 borderRadius: 10, 
-                backgroundColor: '#fff',
+                backgroundColor: '#f9f9f9',
                 padding: 10,
                 height: 100, // Fixed height to ensure consistent size
             }}
@@ -44,11 +44,9 @@ const CartItem = ({
                 <View
                     style={{
                         width: '30%',
-                        height: '100%', // Ensure the image container takes the full height
-                        padding: 14,
+                        height: '100%',
                         justifyContent: 'center',
                         alignItems: 'center',
-                        backgroundColor: "#F4B546",
                         borderRadius: 10,
                         marginRight: 22,
                     }}
@@ -157,6 +155,7 @@ const CartItem = ({
                                         marginLeft: 20,
                                         padding: 4,
                                         borderColor: '#B9B9B9',
+                                        borderWidth: 1,
                                         opacity: 0.5,
                                     }}
                                 >

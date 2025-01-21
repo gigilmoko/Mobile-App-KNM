@@ -109,9 +109,6 @@ const Feedback = () => {
                 <Text className="text-m font-semibold text-gray-800 mb-1 text-center">
                     Email: kbituin123@gmail.com
                 </Text>
-                <Text className="text-m font-semibold text-gray-800 mb-10 text-center">
-                    Contact No. 09993427665
-                </Text>
 
                 {/* Rating Stars */}
                 <View className="flex-row justify-center mb-4">
