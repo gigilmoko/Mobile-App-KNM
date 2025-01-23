@@ -1,0 +1,124 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
+import { server } from "../store";
+
+// Get pending sessions by rider
+export const getPendingSessionsByRider = (riderId) => async (dispatch) => {
+    try {
+        const token = await AsyncStorage.getItem('riderToken');
+        const { data } = await axios.get(`${server}/delivery-session/pending/${riderId}`, {
+            headers: {
+                "Authorization": `Bearer ${token}`,
+            },
+            withCredentials: true,
+        });
+        dispatch({ type: 'GET_PENDING_SESSIONS', pendingSessions: data.sessions });
+        console.log(data.sessions)
+    } catch (error) {
+        console.error('Error fetching pending sessions:', error);
+        dispatch({ type: 'DELIVERY_SESSION_ERROR', error });
+    }
+};
+
+export const getSessionsByRider = (riderId) => async (dispatch) => {
+    try {
+        const token = await AsyncStorage.getItem('riderToken');
+        const { data } = await axios.get(`${server}/delivery-session/on-going/${riderId}`, {
+            headers: {
+                "Authorization": `Bearer ${token}`,
+            },
+            withCredentials: true,
+        });
+
+        dispatch({
+            type: 'GET_SESSIONS_BY_RIDER',
+            pendingSessions: data.pendingSessions,
+            ongoingSessions: data.ongoingSessions,
+            rejectedSessions: data.rejectedSessions,
+        });
+
+        console.log('Fetched sessions:', data);
+    } catch (error) {
+        console.error('Error fetching sessions:', error);
+        dispatch({ type: 'DELIVERY_SESSION_ERROR', error: error.response?.data?.message || error.message });
+    }
+};
+// Accept work
+export const acceptWork = (sessionId) => async (dispatch) => {
+    try {
+        const token = await AsyncStorage.getItem('riderToken');
+        const { data } = await axios.put(`${server}/delivery-session/${sessionId}/accept`, {}, {
+            headers: {
+                "Authorization": `Bearer ${token}`,
+            },
+            withCredentials: true,
+        });
+        dispatch({ type: 'ACCEPT_WORK', acceptedSession: data.session });
+    } catch (error) {
+        console.error('Error accepting delivery session:', error);
+        dispatch({ type: 'DELIVERY_SESSION_ERROR', error });
+    }
+};
+
+// Decline work
+export const declineWork = (id, riderId, truckId) => async (dispatch) => {
+    try {
+        const token = await AsyncStorage.getItem('riderToken');
+        const { data } = await axios.put(`${server}/delivery-sessions/${id}/decline`, { riderId, truckId }, {
+            headers: {
+                "Authorization": `Bearer ${token}`,
+            },
+            withCredentials: true,
+        });
+        dispatch({ type: 'DECLINE_WORK', declinedSession: data.session });
+    } catch (error) {
+        console.error('Error declining delivery session:', error);
+        dispatch({ type: 'DELIVERY_SESSION_ERROR', error });
+    }
+};
+
+// Start delivery session
+// Start delivery session
+export const startDeliverySession = (id) => async (dispatch) => {
+    try {
+        const token = await AsyncStorage.getItem('riderToken');
+        const route = `${server}/delivery-session/${id}/started-work`; // Route to be sent
+        console.log(`Starting delivery session with ID: ${id}`);
+        console.log(`Route: ${route}`);
+
+        const { data } = await axios.put(route, {}, {
+            headers: {
+                "Authorization": `Bearer ${token}`,
+            },
+            withCredentials: true,
+        });
+        
+        dispatch({ type: 'START_DELIVERY_SESSION', startedSession: data.session });
+    } catch (error) {
+        console.error('Error starting delivery session:', error);
+        dispatch({ type: 'DELIVERY_SESSION_ERROR', error });
+    }
+};
+
+// Complete delivery session
+export const completeDeliverySession = (id) => async (dispatch) => {
+    try {
+        const token = await AsyncStorage.getItem('riderToken');
+        const route = `${server}/delivery-session/${id}/completed-work`; // Route to be sent
+        console.log(`Completing delivery session with ID: ${id}`);
+        console.log(`Route: ${route}`);
+
+        const { data } = await axios.put(route, {}, {
+            headers: {
+                "Authorization": `Bearer ${token}`,
+            },
+            withCredentials: true,
+        });
+        
+        dispatch({ type: 'COMPLETE_DELIVERY_SESSION', completedSession: data.session });
+    } catch (error) {
+        console.error('Error completing delivery session:', error);
+        dispatch({ type: 'DELIVERY_SESSION_ERROR', error });
+    }
+};
+

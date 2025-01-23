@@ -1,17 +1,17 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, ActivityIndicator, Alert, Button, StyleSheet } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
-import { getPendingSessionsByRider, acceptWork, declineWork } from "../../redux/actions/deliverySessionActions";
+import { getSessionsByRider,  completeDeliverySession, startDeliverySession } from "../../redux/actions/deliverySessionActions";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';  // Import useNavigation
 
-const RiderDashboard = () => {
+const OngoingSession = () => {
     const dispatch = useDispatch();
     const navigation = useNavigation();  // Initialize useNavigation hook
     const [loading, setLoading] = useState(true);
     const [riderId, setRiderId] = useState(null);
 
-    const pendingSessions = useSelector((state) => state.deliverySession.pendingSessions);
+    const ongoingSessions = useSelector((state) => state.deliverySession.ongoingSessions);
     const error = useSelector((state) => state.deliverySession.error);
 
     useEffect(() => {
@@ -23,7 +23,7 @@ const RiderDashboard = () => {
                     return;
                 }
                 setRiderId(id);
-                dispatch(getPendingSessionsByRider(id));
+                dispatch(getSessionsByRider(id));  // Fetch ongoing sessions
             } catch (err) {
                 console.error("Error fetching rider ID:", err);
             } finally {
@@ -34,14 +34,14 @@ const RiderDashboard = () => {
         fetchRiderId();
     }, [dispatch]);
 
-    const handleAccept = (sessionId) => {
-        dispatch(acceptWork(sessionId));
-        Alert.alert("Success", "You have accepted the session.");
+    const handleStartDelivery = (id) => {
+        dispatch(startDeliverySession(id));
+        Alert.alert("Success", "You have started the delivery.");
     };
 
-    const handleDecline = (sessionId, truckId) => {
-        dispatch(declineWork(sessionId, riderId, truckId));
-        Alert.alert("Declined", "You have declined the session.");
+    const handleCompleteDelivery = (id) => {
+        dispatch(completeDeliverySession(id));
+        Alert.alert("Success", "You have completed the delivery.");
     };
 
     if (loading) {
@@ -50,31 +50,35 @@ const RiderDashboard = () => {
 
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>Rider Dashboard</Text>
+            <Text style={styles.title}>Ongoing Session</Text>
 
             {error ? (
                 <Text style={styles.errorText}>Error: {JSON.stringify(error)}</Text>
-            ) : pendingSessions?.length > 0 ? (
-                pendingSessions.map((session) => (
+            ) : ongoingSessions?.length > 0 ? (
+                ongoingSessions.map((session) => (
                     <View key={session._id} style={styles.sessionCard}>
                         <Text style={styles.sessionText}>Session ID: {session._id}</Text>
                         <Text style={styles.sessionText}>Status: {session.status}</Text>
-                        <Text style={styles.sessionText}>Rider: {session.rider.fname} {session.rider.lname}</Text>
-                        <Text style={styles.sessionText}>Truck: {session.truck.model} - {session.truck.plateNo}</Text>
+                       
+                        <Text style={styles.sessionText}>
+                            Rider: {session.rider ? `${session.rider.fname} ${session.rider.lname}` : "N/A"}
+                        </Text>
+                        <Text style={styles.sessionText}>
+                            Truck: {session.truck ? `${session.truck.model} - ${session.truck.plateNo}` : "N/A"}
+                        </Text>
 
                         <View style={styles.buttonContainer}>
-                            <Button title="Accept" onPress={() => handleAccept(session._id)} color="green" />
-                            <Button title="Decline" onPress={() => handleDecline(session._id, session.truck._id)} color="red" />
+                            <Button title="Start Delivery" onPress={() => handleStartDelivery(session._id)} color="blue" />
+                            <Button title="Complete Delivery" onPress={() => handleCompleteDelivery(session._id)} color="green" />
                         </View>
                     </View>
                 ))
             ) : (
-                <Text>No pending sessions available.</Text>
+                <Text>No ongoing sessions available.</Text>
             )}
 
             <View style={styles.buttonContainer}>
-                <Button title="Ongoing Session" onPress={() => navigation.navigate('ongoingsession')} /> 
-                <Button title="Refresh Sessions" onPress={() => dispatch(getPendingSessionsByRider(riderId))} />
+                <Button title="Refresh Sessions" onPress={() => dispatch(getSessionsByRider(riderId))} />
             </View>
         </View>
     );
@@ -110,4 +114,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default RiderDashboard;
+export default OngoingSession;
