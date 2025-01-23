@@ -29,7 +29,10 @@ const ConfirmOrder = () => {
   const { cartItems } = useSelector((state) => state.cart);
   const [paymentInfo, setPaymentInfo] = useState("COD");
 
-  const itemsPrice = cartItems.reduce((prev, curr) => prev + curr.quantity * curr.price, 0);
+  const itemsPrice = cartItems.reduce(
+    (prev, curr) => prev + curr.quantity * curr.price,
+    0
+  );
   const shippingCharges = 10; // Updated shipping charges to 10 pesos
   const totalAmount = itemsPrice + shippingCharges;
 
@@ -50,7 +53,7 @@ const ConfirmOrder = () => {
 
     const order = {
       user: user._id,
-      orderProducts: cartItems.map(item => ({
+      orderProducts: cartItems.map((item) => ({
         product: item.product,
         quantity: item.quantity,
         price: item.price,
@@ -65,44 +68,48 @@ const ConfirmOrder = () => {
     console.log("Placing order with details:", order);
 
     try {
-      const response = await dispatch(placeOrder(
-        cartItems,
-        shippingInfo,
-        paymentInfo,
-        itemsPrice,
-        shippingCharges,
-        totalAmount,
-        navigation
-      ));
+      const response = await dispatch(
+        placeOrder(
+          cartItems,
+          shippingInfo,
+          paymentInfo,
+          itemsPrice,
+          shippingCharges,
+          totalAmount,
+          navigation
+        )
+      );
 
       console.log("Order response:", response);
 
       if (response.checkoutUrl && paymentInfo === "GCash") {
         const { checkoutUrl } = response;
         console.log("GCash checkout URL:", checkoutUrl);
-        Linking.openURL(checkoutUrl).catch((err) => console.error('An error occurred', err));
+        Linking.openURL(checkoutUrl).catch((err) =>
+          console.error("An error occurred", err)
+        );
       } else {
-        Alert.alert('Order Placed Successfully');
+        Alert.alert("Order Placed Successfully");
         dispatch({ type: "clearCart" });
         navigation.navigate("My Cart");
       }
     } catch (err) {
-      console.error('Error placing order:', err);
-      Alert.alert('Error', 'Failed to place order');
+      console.error("Error placing order:", err);
+      Alert.alert("Error", "Failed to place order");
     }
   };
 
-  const loading = useMessageAndErrorOrder(
-    dispatch,
-    navigation,
-    "home",
-    () => ({ type: "clearCart" })
-  );
+  const loading = useMessageAndErrorOrder(dispatch, navigation, "home", () => ({
+    type: "clearCart",
+  }));
 
   return (
     <ScrollView style={styles.scrollView}>
       <View style={styles.headerContainer}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={styles.backButton}
+        >
           <MaterialCommunityIcons name="arrow-left" size={24} color="#000" />
         </TouchableOpacity>
         <Text style={styles.headerText}>Order Summary</Text>
@@ -111,19 +118,43 @@ const ConfirmOrder = () => {
         <View style={styles.card}>
           <View style={styles.customerDetailsHeader}>
             <Text style={styles.subheading}>Customer Details</Text>
-            <TouchableOpacity onPress={() => navigation.navigate("editaddress")}>
+            <TouchableOpacity
+              onPress={() => navigation.navigate("editaddress")}
+            >
               <MaterialCommunityIcons name="pencil" size={24} color="#000" />
             </TouchableOpacity>
           </View>
-          <Text style={styles.text}>Name: {user?.fname} {user?.lname}</Text>
+          <Text style={styles.text}>
+            Name: {user?.fname} {user?.lname}
+          </Text>
           <Text style={styles.text}>Phone: {user?.phone}</Text>
-          <Text style={styles.text}>Address: {user?.address}</Text>
+          <Text style={styles.text}>
+            Address:{" "}
+            {user?.deliveryAddress
+              ? `${user.deliveryAddress.houseNo} ${user.deliveryAddress.streetName}, 
+             ${user.deliveryAddress.barangay}, ${user.deliveryAddress.city}`
+              : "No address set"}
+          </Text>
+          {!user?.deliveryAddress && (
+            <TouchableOpacity
+              style={styles.addAddressButton}
+              onPress={() => navigation.navigate("editaddress")}
+            >
+              <Text style={styles.addAddressText}>Add Delivery Address</Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         <View style={styles.card}>
           <Text style={styles.subheading}>Products</Text>
           {cartItems.map((i) => (
-            <ConfirmOrderItem key={i.product} price={i.price} image={i.image} name={i.name} quantity={i.quantity} />
+            <ConfirmOrderItem
+              key={i.product}
+              price={i.price}
+              image={i.image}
+              name={i.name}
+              quantity={i.quantity}
+            />
           ))}
         </View>
 
@@ -153,7 +184,9 @@ const ConfirmOrder = () => {
               onPress={() => setPaymentInfo(item.value)}
             >
               <View style={styles.radioCircle}>
-                {paymentInfo === item.value && <View style={styles.selectedRb} />}
+                {paymentInfo === item.value && (
+                  <View style={styles.selectedRb} />
+                )}
               </View>
               <Text style={styles.radioText}>{item.name}</Text>
             </TouchableOpacity>
@@ -209,7 +242,6 @@ const styles = StyleSheet.create({
   subheading: {
     fontSize: 18,
     fontWeight: "600",
-    paddingBottom: 10,
   },
   text: {
     fontSize: 16,
@@ -258,12 +290,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   button: {
-    width: '100%',
+    width: 300,
     backgroundColor: "#bc430b",
-    // height: 40,
-    borderRadius: 10,
+    padding: 15,
+    borderRadius: 8,
     alignItems: "center",
-    justifyContent: "center",
   },
   disabledButton: {
     opacity: 0.5,
@@ -272,7 +303,22 @@ const styles = StyleSheet.create({
     color: "#ffffff",
     fontSize: 16,
     fontWeight: "600",
+  },
+  addAddressButton: {
+    backgroundColor: "#ffb703",
     padding: 10,
+    borderRadius: 5,
+    marginTop: 10,
+    alignItems: "center",
+  },
+  addAddressText: {
+    color: "#000",
+    fontWeight: "500",
+  },
+  text: {
+    fontSize: 16,
+    marginBottom: 8,
+    color: "#333",
   },
 });
 

@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { TextInput } from "react-native-paper";
 import Header from "../../components/Layout/Header";
 import { useSelector } from "react-redux";
-import MapView, { Marker } from "react-native-maps";
+import WebView from 'react-native-webview';
 
 const CurrentAddress = ({ navigation }) => {
     const { user } = useSelector((state) => state.user);
@@ -14,32 +14,49 @@ const CurrentAddress = ({ navigation }) => {
     const [city, setCity] = useState("");
     const [latitude, setLatitude] = useState("");
     const [longitude, setLongitude] = useState("");
-    const [region, setRegion] = useState(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // Simulate data fetching
         if (user?.deliveryAddress) {
             const { houseNo, streetName, barangay, city, latitude, longitude } = user.deliveryAddress;
             setHouseNo(houseNo || "");
             setStreetName(streetName || "");
             setBarangay(barangay || "");
             setCity(city || "");
-            setLatitude(latitude?.toString() || "");
-            setLongitude(longitude?.toString() || "");
-
-            setRegion({
-                latitude: parseFloat(latitude) || 37.78825,
-                longitude: parseFloat(longitude) || -122.4324,
-                latitudeDelta: 0.005,
-                longitudeDelta: 0.005,
-            });
+            setLatitude(latitude?.toString() || "14.5995");
+            setLongitude(longitude?.toString() || "120.9842");
         }
-        setLoading(false); // Set loading to false once data is loaded
+        setLoading(false);
     }, [user]);
 
+    const mapHtml = `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+        <style>
+          body { margin: 0; padding: 0; }
+          #map { width: 100%; height: 100vh; }
+        </style>
+      </head>
+      <body>
+        <div id="map"></div>
+        <script>
+          const map = L.map('map').setView([${latitude || 14.5995}, ${longitude || 120.9842}], 15);
+          
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+          }).addTo(map);
+
+          L.marker([${latitude || 14.5995}, ${longitude || 120.9842}]).addTo(map);
+        </script>
+      </body>
+    </html>
+  `;
+
     if (loading) {
-        // Show a loading spinner until data is fetched
         return (
             <View style={styles.loaderContainer}>
                 <ActivityIndicator size="large" color="#ffb703" />
@@ -49,22 +66,19 @@ const CurrentAddress = ({ navigation }) => {
     }
 
     return (
-        <View className="flex-1" style={{ backgroundColor: "#ffb703" }}>
+        <View style={{ flex: 1, backgroundColor: "#ffb703" }}>
             <Header back={true} />
             <ScrollView keyboardShouldPersistTaps="handled">
-                <View className="flex-1">
-                    <View className="flex-row justify-center mt-[-40px]">
+                <View style={{ flex: 1 }}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: -40 }}>
                         <Image
                             source={require("../../assets/images/logo.png")}
                             style={{ width: 100, height: 100, marginTop: 30 }}
                         />
                     </View>
-                    <View className="flex-1 bg-white px-8 pt-8 rounded-t-[20px] shadow-lg justify-center">
-                        <Text className="text-gray-700 text-2xl font-bold text-center mb-4">
-                            Current Address
-                        </Text>
+                    <View style={styles.container}>
+                        <Text style={styles.title}>Current Address</Text>
 
-                        {/* Address Form */}
                         <View style={styles.form}>
                             <Text style={styles.label}>House Number</Text>
                             <TextInput value={houseNo} editable={false} style={styles.input} />
@@ -80,39 +94,21 @@ const CurrentAddress = ({ navigation }) => {
                             <TextInput value={longitude} editable={false} style={styles.input} />
                         </View>
 
-                        {/* Map View */}
-                        <View style={{ height: 200, marginTop: 10 }}>
-                            <MapView
-                                style={{ flex: 1 }}
-                                region={region}
-                                showsUserLocation={true}
-                                showsMyLocationButton={true}
-                            >
-                                <Marker
-                                    coordinate={{
-                                        latitude: parseFloat(latitude) || region.latitude,
-                                        longitude: parseFloat(longitude) || region.longitude,
-                                    }}
-                                />
-                            </MapView>
+                        <View style={styles.mapContainer}>
+                            <WebView
+                                source={{ html: mapHtml }}
+                                style={styles.map}
+                                scrollEnabled={false}
+                                javaScriptEnabled={true}
+                            />
                         </View>
 
-                        {/* Change Address Button */}
-                        <View className="flex items-center mt-5 pb-5">
+                        <View style={styles.buttonContainer}>
                             <TouchableOpacity
-                                style={{
-                                    backgroundColor: "#bc430b",
-                                    width: 350,
-                                    height: 50,
-                                    borderRadius: 10,
-                                    justifyContent: "center",
-                                    alignItems: "center",
-                                }}
+                                style={styles.button}
                                 onPress={() => navigation.navigate("addressupdate")}
                             >
-                                <Text style={{ color: "#fff", fontWeight: "bold", fontSize: 16 }}>
-                                    Change Address
-                                </Text>
+                                <Text style={styles.buttonText}>Change Address</Text>
                             </TouchableOpacity>
                         </View>
                     </View>
@@ -134,16 +130,37 @@ const styles = StyleSheet.create({
         fontSize: 18,
         color: "#fff",
     },
+    container: {
+        flex: 1,
+        backgroundColor: '#fff',
+        padding: 20,
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20,
+        shadowColor: "#000",
+        shadowOffset: {
+            width: 0,
+            height: -2,
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+        elevation: 5,
+    },
+    title: {
+        fontSize: 24,
+        fontWeight: "bold",
+        color: "#333",
+        textAlign: "center",
+        marginBottom: 20,
+    },
     form: {
         flex: 1,
         paddingVertical: 10,
-        borderTopLeftRadius: 20,
-        borderTopRightRadius: 20,
     },
     label: {
         fontSize: 16,
         fontWeight: "bold",
         marginBottom: 2,
+        color: "#333",
     },
     input: {
         width: "100%",
@@ -151,6 +168,35 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         marginBottom: 10,
         elevation: 2,
+    },
+    mapContainer: {
+        height: 200,
+        borderRadius: 12,
+        overflow: 'hidden',
+        marginVertical: 15,
+        borderWidth: 1,
+        borderColor: '#ddd',
+    },
+    map: {
+        flex: 1,
+    },
+    buttonContainer: {
+        alignItems: 'center',
+        marginTop: 10,
+        marginBottom: 20,
+    },
+    button: {
+        backgroundColor: "#bc430b",
+        width: '100%',
+        height: 50,
+        borderRadius: 10,
+        justifyContent: "center",
+        alignItems: "center",
+    },
+    buttonText: {
+        color: "#fff",
+        fontWeight: "bold",
+        fontSize: 16,
     },
 });
 
