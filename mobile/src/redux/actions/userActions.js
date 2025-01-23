@@ -11,14 +11,10 @@ export const register = (registrationData) => async (dispatch) => {
     try {
         dispatch({ type: "registerRequest" });
 
-        // Make the API call to register
         const { data } = await axios.post(`${server}/register`, registrationData, {
-            headers: { "Content-Type": "application/json" }, // Set content type to JSON
+            headers: { "Content-Type": "application/json" }, 
             withCredentials: true,
         });
-
-        // Log the received data
-        // console.log('Data received from registration:', data);
 
         dispatch({ type: "registerSuccess", payload: data.message });
         return 'success';
@@ -61,20 +57,17 @@ export const login = (email, password) => async (dispatch) => {
 export const loadUser = () => async (dispatch) => {
     try {
         dispatch({ type: "loadUserRequest" });
-
-        // Retrieve the token from AsyncStorage
         const token = await AsyncStorage.getItem('token');
 
         const { data } = await axios.get(`${server}/me`, {
             headers: {
-                "Authorization": `Bearer ${token}`, // Send token in the headers
+                "Authorization": `Bearer ${token}`, 
             },
             withCredentials: true,
         });
 
         if (data.success) {
             dispatch({ type: "loadUserSuccess", payload: data.user });
-            // dispatch({ type: "loginSuccess", payload: data.user });
         } else {
             dispatch({
                 type: "loadUserFail",
@@ -93,15 +86,12 @@ export const logout = () => async (dispatch) => {
     try {
         dispatch({ type: "logoutRequest" });
 
-        // Perform the logout request
         const { data } = await axios.get(`${server}/logout`, {
             withCredentials: true,
         });
 
-        // Clear AsyncStorage data
-        await AsyncStorage.removeItem('token'); // Remove the token
-        // Optionally, remove any other user-related data if necessary
-        await AsyncStorage.removeItem('user'); // Example for user data, adjust as needed
+        await AsyncStorage.removeItem('token'); 
+        await AsyncStorage.removeItem('user');
 
         dispatch({ type: "logoutSuccess", payload: data.message });
     } catch (error) {
@@ -113,15 +103,12 @@ export const logout = () => async (dispatch) => {
 };
 
 export const updateAvatar = (imageUrl) => async (dispatch, getState) => {
-    // console.log('updateAvatar action dispatched');
-    // console.log('Image URL:', imageUrl);
 
     try {
         const { user } = getState().user;
         if (!user || !user._id) {
             throw new Error('User ID is missing');
         }
-        // console.log('User ID:', user._id);
 
         const response = await axios.put(`${server}/avatar-update/${user._id}`, 
             { avatar: imageUrl },
@@ -133,63 +120,42 @@ export const updateAvatar = (imageUrl) => async (dispatch, getState) => {
             }
         );
 
-        // console.log('Response from avatar update:', response.data);
-
-        // Dispatch success action
         dispatch({
-            type: 'USER_AVATAR_SUCCESS', // Uncomment this line
-            payload: response.data, // Assuming response.data contains the updated user info
-        });
-
-        // Optionally, display a success toast
-        Toast.show({
-            type: 'success',
-            text1: 'Avatar Updated Successfully',
+            type: 'USER_AVATAR_SUCCESS', 
+            payload: response.data, 
         });
 
     } catch (error) {
         console.error('Error updating avatar:', error.response ? error.response.data : error.message);
 
-        // Dispatch fail action only if there's an actual error
         if (error.response) {
             dispatch({
-                type: 'USER_AVATAR_FAIL', // Uncomment this line
+                type: 'USER_AVATAR_FAIL', 
                 payload: error.response.data.message || 'Failed to update avatar',
             });
         } else {
             dispatch({
-                type: 'USER_AVATAR_FAIL', // Uncomment this line
+                type: 'USER_AVATAR_FAIL', 
                 payload: error.message || 'Network error',
             });
         }
-
-        // Display an error toast
-        Toast.show({
-            type: 'error',
-            text1: 'Avatar Update Failed',
-            text2: error.message || 'Please try again.',
-        });
     }
 };
 
 export const updatePassword = (userId, oldPassword, newPassword) => async () => {
     try {
-        // console.log("Dispatching updatePassword action");
 
         const response = await axios.put(
             `${server}/password/update/mobile`,
-            { userId, oldPassword, newPassword }, // Include userId
+            { userId, oldPassword, newPassword }, 
             {
                 headers: { "Content-Type": "application/json" },
                 withCredentials: true,
             }
         );
-
-        // console.log("Password update response:", response.data);
-        return response.data; // Return the response data
+        return response.data; 
     } catch (error) {
-        // console.error("Error updating password:", error.response?.data?.message || error.message);
-        throw new Error(error.response?.data?.message || error.message); // Throw an error to be caught in submitHandler
+        throw new Error(error.response?.data?.message || error.message); 
     }
 };
 
@@ -201,27 +167,18 @@ export const updateProfile = (userData) => async (dispatch, getState) => {
             },
         };
 
-        // Stringify the userData object before sending it in the request
         const jsonData = JSON.stringify(userData);
 
         const { data } = await axios.put(`${server}/me/update/mobile`, jsonData, config);
 
-        // console.log("Profile updated successfully:", data.user);
     } catch (error) {
-        // console.error(
-        //     error.response && error.response.data.message
-        //         ? error.response.data.message
-        //         : error.message
-        // );
+        console.error('Error updating profile:', error);
     }
 };
 
 export const getUserDetails = (id) => async (dispatch) => {
-    // console.log("touched userDetails: ")
     try {
-
         const { data } = await axios.get(`${server}/get-user/${id}`)
-        // console.log("data: ", data)
 
         if (data.success) {
             dispatch({
@@ -229,14 +186,12 @@ export const getUserDetails = (id) => async (dispatch) => {
                 payload: data.user, 
             });
         } else {
-            // console.log("Fail")
             dispatch({
                 type: 'USER_DETAILS_FAIL',
                 payload: data.message,
             });
         }
     } catch (error) {
-        // console.log("Fail User")
         dispatch({
             type: 'USER_DETAILS_FAIL',
             payload: error.message,
@@ -247,41 +202,32 @@ export const getUserDetails = (id) => async (dispatch) => {
 export const updateAddress = (userData) => async (dispatch, getState) => {
     try {
         console.log('update address touched');
-        
-        // Dispatch the loadUser action to fetch user details if needed
         await dispatch(loadUser());
-
-        // Get user data from the state after dispatching loadUser
-        const { user } = getState().user; // Assuming the user data is stored in user state
+        const { user } = getState().user;
 
         if (!user || !user._id) {
             throw new Error('User ID is missing');
         }
 
         const { deliveryAddress } = userData;
-
-        // Get token from AsyncStorage
         const token = await AsyncStorage.getItem('token');
         console.log('Token:', token);
 
         dispatch({ type: 'UPDATE_ADDRESS_REQUEST' });
 
-        // Prepare config for the API call
         const config = {
             headers: {
                 'Content-Type': 'application/json',
-                "Authorization": `Bearer ${token}`, // Send token in the headers
+                "Authorization": `Bearer ${token}`, 
             },
         };
 
-        // Prepare the request body, including userId from the state and deliveryAddress from userData
         const jsonData = {
-            userId: user._id, // Use the userId fetched from loadUser
-            deliveryAddress: deliveryAddress, // Include deliveryAddress in the payload
+            userId: user._id, 
+            deliveryAddress: [deliveryAddress],
         };
         console.log('Request Body:', jsonData);
 
-        // Send the request to update the address
         const requestUrl = `${server}/me/update/address`;
         console.log('Request URL:', requestUrl);
 
@@ -290,6 +236,11 @@ export const updateAddress = (userData) => async (dispatch, getState) => {
         dispatch({
             type: 'UPDATE_ADDRESS_SUCCESS',
             payload: data.user,
+        });
+
+        Toast.show({
+            type: 'success',
+            text1: 'Address updated successfully!',
         });
     } catch (error) {
         console.log('Error during updateAddress:', error);
@@ -300,8 +251,11 @@ export const updateAddress = (userData) => async (dispatch, getState) => {
                     ? error.response.data.message
                     : error.message,
         });
+
+        Toast.show({
+            type: 'error',
+            text1: 'Failed to update address',
+            text2: error.response?.data.message || error.message,
+        });
     }
 };
-
-
-  

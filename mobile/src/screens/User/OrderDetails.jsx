@@ -75,7 +75,7 @@ const OrderDetails = () => {
                     </View>
                     <View className="mt-1 bg-white p-3 rounded-lg shadow-md mb-2">
                         <Text className="text-sm text-gray-600">
-                            {order?.deliveryAddress?.address}, {order?.deliveryAddress?.city}, {order?.deliveryAddress?.country} {order?.deliveryAddress?.pinCode}
+                            {order?.user?.address?.[0]?.houseNo} {order?.user?.address?.[0]?.streetName}, {order?.user?.address?.[0]?.barangay}, {order?.user?.address?.[0]?.city}
                         </Text>
                     </View>
 
@@ -116,10 +116,10 @@ const OrderDetails = () => {
                             {order && order.orderProducts && order.orderProducts.map((i) => (
                                 <View key={i.product} style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 }}>
                                     <Text>{i.quantity}</Text>
-                                    <Text>{i.product}</Text>
+                                    <Text>{i.product.name}</Text>
                                     <Text>₱{i.price.toFixed(2)}</Text>
                                 </View>
-                            ))}F
+                            ))}
                         </ScrollView>
                         <View className="flex-row justify-between items-center w-full mt-3">
                             <Text className="text-l font-medium text-gray-600 opacity-50 max-w-[80%]">Total Price:</Text>

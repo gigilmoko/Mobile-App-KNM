@@ -19,7 +19,6 @@ import Constants from "expo-constants";
 import Home from "./src/screens/Home";
 import Login from "./src/screens/User/Login";
 import SignUp from "./src/screens/User/SignUp";
-import AddressUpdate from "./src/screens/User/AddressUpdate";
 import MyAccount from "./src/screens/User/MyAccount";
 import ChangePassword from "./src/screens/User/ChangePassword";
 import UpdateProfile from "./src/screens/User/UpdateProfile";
@@ -47,7 +46,9 @@ import ProductFeedback from "./src/screens/User/ProductFeedback";
 import AdminCreateEvent from "./src/screens/Admin/Events/AdminEventCreate";
 import AdminEventUpdate from "./src/screens/Admin/Events/AdminEventUpdate";
 import EventFeedback from "./src/screens/User/EventFeedback";
-import CurrentAddress from "./src/screens/User/CurrentAddress";
+import AddressUpdate from "./src/screens/Address/AddressUpdate";
+import CurrentAddress from "./src/screens/Address/CurrentAddress";
+import EditAddress from "./src/screens/Address/EditAddress";
 
 const Stack = createNativeStackNavigator();
 
@@ -74,11 +75,12 @@ const HomeStack = () => {
             <Stack.Screen name="productdetail" component={ProductDetails} />
             <Stack.Screen name="signup" component={SignUp} />
             <Stack.Screen name="login" component={Login} />
-            <Stack.Screen name="addressupdate" component={AddressUpdate} />
-            <Stack.Screen name="currentaddress" component={CurrentAddress} />
             <Stack.Screen name="myaccount" component={MyAccount} />
             <Stack.Screen name="changepassword" component={ChangePassword} />
             <Stack.Screen name="updateprofile" component={UpdateProfile} />
+            <Stack.Screen name="addressupdate" component={AddressUpdate} />
+            <Stack.Screen name="currentaddress" component={CurrentAddress} />
+            <Stack.Screen name="editaddress" component={EditAddress} />
 
             {/* Admin Screens */}
             <Stack.Screen name="dashboard" component={Dashboard} />

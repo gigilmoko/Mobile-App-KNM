@@ -4,7 +4,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export const placeOrder = (
     orderProducts,
-    deliveryAddress,
     paymentInfo,
     itemsPrice,
     shippingCharges,
@@ -17,7 +16,7 @@ export const placeOrder = (
             type: "placeOrderRequest",
         });
 
-        const token = await AsyncStorage.getItem('token'); // Ensure the correct key is used
+        const token = await AsyncStorage.getItem('token'); 
         if (!token) {
             throw new Error("No token found");
         }
@@ -34,13 +33,14 @@ export const placeOrder = (
 
         if (data.success) {
             const userId = data.user._id;
+            const deliveryAddress = data.user.address[0]; // Use the first address in the user's address array
 
             const response = await axios.post(
                 `${server}/neworder`,
                 {
                     userId,
-                    deliveryAddress,
                     orderProducts,
+                    deliveryAddress,
                     paymentInfo,
                     itemsPrice,
                     shippingCharges,
@@ -110,34 +110,26 @@ export const processOrder = (id, status) => async (dispatch) => {
 };
 
 export const getOrderDetails = (id) => async (dispatch) => {
-    
     try {
         dispatch({
             type: "getOrderDetailsRequest",
-        })
+        });
 
-        // Axios request
-
-        const { data } = await axios.get(`${server}/orders/single/${id}`,
-        {
-            withCredentials: true
-        })
-        // console.log("Action Fetched Order: ", JSON.stringify(data, null, 2));
+        const { data } = await axios.get(`${server}/orders/single/${id}`, {
+            withCredentials: true,
+        });
 
         dispatch({
             type: "getOrderDetailsSuccess",
-            payload: data.order
-        })
-
+            payload: data.order,
+        });
     } catch (error) {
-        // console.log("Action Error");
         dispatch({
             type: "getOrderDetailsFail",
-            payload: error.response.data.message
-        })
+            payload: error.response?.data?.message || error.message,
+        });
     }
-
-}
+};
 
 export const getAdminOrders = () => async (dispatch) => {
     try {
