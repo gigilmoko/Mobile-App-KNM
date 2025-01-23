@@ -36,7 +36,7 @@ export const userLogin = (email, password, playerId) => async (dispatch) => {
             { 
                 email, 
                 password, 
-                deviceToken: playerId // Changed playerId to deviceToken to match backend
+                deviceToken: playerId 
             },
             {
                 headers: { "Content-Type": "application/json" },
