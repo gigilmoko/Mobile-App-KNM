@@ -39,12 +39,28 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    
     "extra": {
+      "oneSignalAppId": "b0a377c8-112d-4a18-8f97-0a8b3f9ce21a",
       "eas": {
-        "projectId": "73c7847b-2af0-41bb-a457-644c064395d6"
-      },
-        "oneSignalAppId": "b0a377c8-112d-4a18-8f97-0a8b3f9ce21a"
+        "build": {
+          "experimental": {
+            "ios": {
+              "appExtensions": [
+                {
+                  "targetName": "OneSignalNotificationServiceExtension",
+                  "bundleIdentifier": "com.knm.mobile.OneSignalNotificationServiceExtension",
+                  "entitlements": {
+                    "com.apple.security.application-groups": [
+                      "group.com.knm.mobile.onesignal"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "projectId": "12f78e05-4566-4b75-b700-5fd36769d9df"
+      }
     }
   }
 }

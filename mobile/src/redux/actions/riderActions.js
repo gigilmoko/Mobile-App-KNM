@@ -78,13 +78,13 @@ export const deleteRider = (id) => async (dispatch) => {
   }
 };
 
-export const riderLogin = (email, password) => async (dispatch) => {
+export const riderLogin = (email, password, playerId) => async (dispatch) => {
   try {
       dispatch({ type: "loginRequest" });
 
       const { data } = await axios.post(
           `${server}/rider/login`,
-          { email, password },
+          { email, password, playerId },
           {
               headers: { "Content-Type": "application/json" },
               withCredentials: true,
@@ -95,6 +95,7 @@ export const riderLogin = (email, password) => async (dispatch) => {
       const riderId = data.user._id; 
       console.log('Rider data:', data); 
       console.log('Rider ID:', riderId); 
+      console.log('Rider playerId:', playerId);
 
       // Store rider ID and token
       await AsyncStorage.setItem('riderId', riderId); 

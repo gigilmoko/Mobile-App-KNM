@@ -5,6 +5,12 @@ import { useDispatch, useSelector } from "react-redux";
 import { loadUser } from "./src/redux/actions/userActions";
 import Toast from 'react-native-toast-message';
 
+//ONE SIGNAL
+import { LogLevel, OneSignal } from 'react-native-onesignal';
+import Constants from "expo-constants";
+
+
+
 // Import Screens
 import Home from "./src/screens/Home";
 import Login from "./src/screens/User/Login";
@@ -39,11 +45,16 @@ import EventFeedback from "./src/screens/User/EventFeedback";
 import AddressUpdate from "./src/screens/Address/AddressUpdate";
 import CurrentAddress from "./src/screens/Address/CurrentAddress";
 import EditAddress from "./src/screens/Address/EditAddress";
-import CurrentAddress from "./src/screens/User/CurrentAddress";
 import LoadingRider from "./src/screens/Rider/LoadingRider";
 import RiderStack from "./src/screens/Rider/RiderStack";
 
 const Stack = createNativeStackNavigator();
+
+OneSignal.Debug.setLogLevel(LogLevel.Verbose);
+OneSignal.initialize(Constants.expoConfig.extra.oneSignalAppId);
+
+// Also need enable notifications to complete OneSignal setup
+OneSignal.Notifications.requestPermission(true);
 
 const HomeStack = () => {
     return (

@@ -27,13 +27,17 @@ export const register = (registrationData) => async (dispatch) => {
     }
 };
 
-export const userLogin = (email, password) => async (dispatch) => {
+export const userLogin = (email, password, playerId) => async (dispatch) => {
     try {
         dispatch({ type: "loginRequest" });
 
         const { data } = await axios.post(
             `${server}/login`,
-            { email, password },
+            { 
+                email, 
+                password, 
+                deviceToken: playerId // Changed playerId to deviceToken to match backend
+            },
             {
                 headers: { "Content-Type": "application/json" },
                 withCredentials: true,
@@ -41,6 +45,7 @@ export const userLogin = (email, password) => async (dispatch) => {
         );
         await AsyncStorage.setItem('token', data.token);
         console.log('Token:', data.token);
+        console.log('Device Token:', playerId);
 
         dispatch({
             type: "loginSuccess",
@@ -48,7 +53,7 @@ export const userLogin = (email, password) => async (dispatch) => {
         });
     } catch (error) {
         dispatch({
-            type: "loginFail",
+            type: "loginFail", 
             payload: error.response?.data.message || 'Network error',
         });
     }
