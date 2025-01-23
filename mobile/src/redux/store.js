@@ -11,7 +11,8 @@ import userInterestReducers from "./reducers/userInterestReducers"
 import { categoryReducer } from "./reducers/categoryReducers";
 import { productFeedbackReducer } from "./reducers/productFeedbackReducer";
 import { eventFeedbackReducer } from "./reducers/eventFeedbackReducers"; 
-
+import { riderReducer } from "./reducers/riderReducer";
+import { truckReducer } from "./reducers/truckReducers";
 export const store = configureStore({
     reducer: {
         user: userReducer,
@@ -26,6 +27,8 @@ export const store = configureStore({
         category: categoryReducer,
         feedbacks: productFeedbackReducer,
         eventFeedback: eventFeedbackReducer,
+        rider: riderReducer,
+        truck: truckReducer
     },
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware({

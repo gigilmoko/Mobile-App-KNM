@@ -1,0 +1,68 @@
+{
+    "expo": {
+      "name": "KNM",
+      "slug": "KNM",
+      "version": "1.0.0",
+      "orientation": "portrait",
+      "icon": "./assets/logo.png",
+      "userInterfaceStyle": "light",
+      "splash": {
+        "image": "./assets/splash.png",
+        "resizeMode": "contain",
+        "backgroundColor": "#ffffff"
+      },
+      "plugins": [
+        "@react-native-google-signin/google-signin",
+        [
+          "onesignal-expo-plugin",
+          {
+            "mode": "development"
+          }
+        ]
+      ],
+      "ios": {
+        "bundleIdentifier": "com.knm.mobile",
+        "supportsTablet": true,
+        "infoPlist": {
+          "CFBundleURLSchemes": [
+            "com.googleusercontent.apps.503515447444-aarabl1q05pti2412jlji83db3liqtoc"
+          ]
+        }
+      },
+      "android": {
+        "adaptiveIcon": {
+          "foregroundImage": "./assets/adaptive-icon.png",
+          "backgroundColor": "#ffffff"
+        },
+        "package": "com.miryan1ez.mobile"
+      },
+      "web": {
+        "favicon": "./assets/favicon.png"
+      },
+      
+      "extra": {
+        "oneSignalAppId": "b0a377c8-112d-4a18-8f97-0a8b3f9ce21a",
+        "eas": {
+          "build": {
+            "experimental": {
+              "ios": {
+                "appExtensions": [
+                  {
+                    "targetName": "OneSignalNotificationServiceExtension",
+                    "bundleIdentifier": "com.knm.mobile.OneSignalNotificationServiceExtension",
+                    "entitlements": {
+                      "com.apple.security.application-groups": [
+                        "group.com.knm.mobile.onesignal"
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "projectId": "73c7847b-2af0-41bb-a457-644c064395d6"
+        }
+      }
+    }
+  }
+  

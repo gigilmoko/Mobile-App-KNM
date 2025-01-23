@@ -3,17 +3,7 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { useDispatch, useSelector } from "react-redux";
 import { loadUser } from "./src/redux/actions/userActions";
-import { getNotifications } from './src/redux/actions/notificationActions';
 import Toast from 'react-native-toast-message';
-
-import { LogLevel, OneSignal } from 'react-native-onesignal';
-import Constants from "expo-constants";
-
-// OneSignal.Debug.setLogLevel(LogLevel.Verbose);
-// OneSignal.initialize(Constants.expoConfig.extra.oneSignalAppId);
-
-// // Also need enable notifications to complete OneSignal setup
-// OneSignal.Notifications.requestPermission(true);
 
 // Import Screens
 import Home from "./src/screens/Home";
@@ -49,6 +39,9 @@ import EventFeedback from "./src/screens/User/EventFeedback";
 import AddressUpdate from "./src/screens/Address/AddressUpdate";
 import CurrentAddress from "./src/screens/Address/CurrentAddress";
 import EditAddress from "./src/screens/Address/EditAddress";
+import CurrentAddress from "./src/screens/User/CurrentAddress";
+import LoadingRider from "./src/screens/Rider/LoadingRider";
+import RiderStack from "./src/screens/Rider/RiderStack";
 
 const Stack = createNativeStackNavigator();
 
@@ -95,6 +88,11 @@ const HomeStack = () => {
             <Stack.Screen name="adminevents" component={AdminEvents} />
             <Stack.Screen name="admineventcreate" component={AdminCreateEvent} />
             <Stack.Screen name="admineventupdate" component={AdminEventUpdate} />
+
+            <Stack.Screen name="loadingrider" component={LoadingRider} />
+
+            {/* Rider Stack */}
+            <Stack.Screen name="RiderStack" component={RiderStack} />
         </Stack.Navigator>
     );
 };

@@ -110,14 +110,17 @@ export const processOrder = (id, status) => async (dispatch) => {
 };
 
 export const getOrderDetails = (id) => async (dispatch) => {
+    console.log("getOrderDetails touched");
     try {
+        console.log("try");
         dispatch({
             type: "getOrderDetailsRequest",
         });
-
+        console.log("dispatched");
         const { data } = await axios.get(`${server}/orders/single/${id}`, {
             withCredentials: true,
         });
+        console.log("Action Fetched Order: ", JSON.stringify(data, null, 2));
 
         dispatch({
             type: "getOrderDetailsSuccess",
@@ -128,6 +131,22 @@ export const getOrderDetails = (id) => async (dispatch) => {
             type: "getOrderDetailsFail",
             payload: error.response?.data?.message || error.message,
         });
+        // Enhanced error logging
+        console.error("Action Error:", error); // Log the full error
+        if (error.response) {
+            // The server responded with a status other than 2xx
+            console.error("Error Response:", error.response);
+            dispatch({
+                type: "getOrderDetailsFail",
+                payload: error.response.data.message,
+            });
+        } else if (error.request) {
+            // The request was made but no response was received
+            console.error("Error Request:", error.request);
+        } else {
+            // Something else caused the error
+            console.error("Error Message:", error.message);
+        }
     }
 };
 

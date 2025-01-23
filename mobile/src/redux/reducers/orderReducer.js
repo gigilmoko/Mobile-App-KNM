@@ -41,6 +41,8 @@ export const orderReducer = createReducer(
             .addCase("getOrderDetailsSuccess", (state, action) => {
                 state.loading = false;
                 state.order = action.payload; // Store order details
+                console.log("Order Details Fetched Redux:", action.payload);
+                console.log("Order Details Fetched Redux Order:", state.order);
             })
             .addCase("getOrderDetailsFail", (state, action) => {
                 state.loading = false;

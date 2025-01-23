@@ -2,9 +2,11 @@ import { View, Text, Image, TextInput, TouchableOpacity, ScrollView } from "reac
 import React, { useState } from "react";
 import Entypo from 'react-native-vector-icons/Entypo';
 import { useDispatch, useSelector } from "react-redux";
-import { login } from "../../redux/actions/userActions";
+import { userLogin } from "../../redux/actions/userActions";
+import { riderLogin } from "../../redux/actions/riderActions"; // Import the riderLogin action
 import { useMessageAndErrorUser } from "../../../utils/hooks";
 import Toast from 'react-native-toast-message';  // Import the toast message
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Login = ({ navigation }) => {
     const [email, setEmail] = useState("");
@@ -12,13 +14,15 @@ const Login = ({ navigation }) => {
     const dispatch = useDispatch();
     const loading = useMessageAndErrorUser(navigation, dispatch, "myaccount");
 
-    const submitHandler = () => {
-        dispatch(login(email, password))
+    // Handler for user login
+    const userSubmitHandler = () => {
+        dispatch(userLogin(email, password))
             .then(() => {
                 Toast.show({
                     type: 'success',
                     text2: 'Welcome back!',
                 });
+                navigation.navigate("myaccount"); // Navigate to user dashboard
             })
             .catch((error) => {
                 Toast.show({
@@ -28,6 +32,31 @@ const Login = ({ navigation }) => {
                 });
             });
     };
+
+    // Handler for rider login
+    const riderSubmitHandler = () => {
+        console.log("Rider Login triggered");
+        dispatch(riderLogin(email, password))
+            .then(async () => {
+                
+                Toast.show({
+                    type: 'success',
+                    text2: 'Welcome back, Rider!',
+                });
+                navigation.navigate("loadingrider"); // Navigate to rider dashboard
+            })
+            .catch((error) => {
+                console.log("Rider login failed", error);
+                Toast.show({
+                    type: 'error',
+                    text1: 'Rider Login Failed',
+                    text2: error?.message || 'Please try again later.',
+                });
+            });
+    };
+
+    // Check if the email starts with "newrider"
+    const isRiderLogin = email.startsWith("newrider");
 
     return (
         <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
@@ -94,10 +123,10 @@ const Login = ({ navigation }) => {
                             className="py-2 rounded-xl"
                             loading={loading}
                             disabled={email === "" || password === ""}
-                            onPress={submitHandler}
+                            onPress={isRiderLogin ? riderSubmitHandler : userSubmitHandler} // Use the appropriate handler
                         >
                             <Text style={{ color: '#fff' }} className="text-white-700 font-bold text-center">
-                                Login
+                                {isRiderLogin ? "Login as Rider" : "Login"} {/* Button text changes dynamically */}
                             </Text>
                         </TouchableOpacity>
                     </View>
