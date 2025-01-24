@@ -22,51 +22,33 @@ export const placeOrder = (
         }
         console.log("Token retrieved:", token);
 
-        const { data } = await axios.get(`${server}/me`, {
-            headers: {
-                "Authorization": `Bearer ${token}`,
+        const response = await axios.post(
+            `${server}/neworder`,
+            {
+                orderProducts,
+                paymentInfo,
+                itemsPrice,
+                shippingCharges,
+                totalPrice,
             },
-            withCredentials: true,
+            {
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`,
+                },
+                withCredentials: true,
+            }
+        );
+
+        console.log("Order placed successfully:", response.data);
+
+        dispatch({
+            type: "placeOrderSuccess",
+            payload: response.data.message,
         });
 
-        console.log("User data fetched:", data);
-
-        if (data.success) {
-            const userId = data.user._id;
-            const deliveryAddress = data.user.address[0]; // Use the first address in the user's address array
-
-            const response = await axios.post(
-                `${server}/neworder`,
-                {
-                    userId,
-                    orderProducts,
-                    deliveryAddress,
-                    paymentInfo,
-                    itemsPrice,
-                    shippingCharges,
-                    totalPrice,
-                },
-                {
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": `Bearer ${token}`,
-                    },
-                    withCredentials: true,
-                }
-            );
-
-            console.log("Order placed successfully:", response.data);
-
-            dispatch({
-                type: "placeOrderSuccess",
-                payload: response.data.message,
-            });
-
-            dispatch({ type: "clearCart" });
-            return response.data; 
-        } else {
-            throw new Error("Failed to fetch user data.");
-        }
+        dispatch({ type: "clearCart" });
+        return response.data; 
     } catch (error) {
         const errorMessage = error.message || error.response?.data?.message || "An error occurred while placing the order.";
         console.error("Error placing order:", errorMessage);
