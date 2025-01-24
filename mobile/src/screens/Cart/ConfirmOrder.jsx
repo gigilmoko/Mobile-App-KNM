@@ -35,6 +35,7 @@ const ConfirmOrder = () => {
 
   useEffect(() => {
     dispatch(loadUser());
+    console.log("User loaded:", user);
   }, [dispatch]);
 
   const handlePlaceOrder = async () => {
@@ -45,7 +46,12 @@ const ConfirmOrder = () => {
     }
 
     const shippingInfo = {
-      address: user?.address,
+      houseNo: user?.deliveryAddress?.houseNo,
+      streetName: user?.deliveryAddress?.streetName,
+      barangay: user?.deliveryAddress?.barangay,
+      city: user?.deliveryAddress?.city,
+      latitude: user?.deliveryAddress?.latitude,
+      longitude: user?.deliveryAddress?.longitude,
     };
 
     const order = {
@@ -66,12 +72,11 @@ const ConfirmOrder = () => {
 
     try {
       const response = await dispatch(placeOrder(
-        cartItems,
-        shippingInfo,
-        paymentInfo,
-        itemsPrice,
-        shippingCharges,
-        totalAmount,
+        order.orderProducts,
+        order.paymentInfo,
+        order.itemsPrice,
+        order.shippingCharges,
+        order.totalAmount,
         navigation
       ));
 
@@ -117,7 +122,9 @@ const ConfirmOrder = () => {
           </View>
           <Text style={styles.text}>Name: {user?.fname} {user?.lname}</Text>
           <Text style={styles.text}>Phone: {user?.phone}</Text>
-          <Text style={styles.text}>Address: {user?.address}</Text>
+          <Text style={styles.text}>
+  Address: {user?.deliveryAddress?.[0]?.houseNo}, {user?.deliveryAddress?.[0]?.streetName}, {user?.deliveryAddress?.[0]?.barangay}, {user?.deliveryAddress?.[0]?.city}
+</Text>
         </View>
 
         <View style={styles.card}>

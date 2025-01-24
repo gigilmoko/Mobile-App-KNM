@@ -42,7 +42,7 @@ export const store = configureStore({
 
 
 //Bahay na Von
-export const server = "http://192.168.1.7:4002/api/"
+export const server = "http://192.168.1.6:4002/api/"
 // export const server = "http://192.168.43.21:4002/api/"
 
 //Bahay ni Jis

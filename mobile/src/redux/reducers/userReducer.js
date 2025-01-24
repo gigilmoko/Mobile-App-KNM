@@ -40,6 +40,9 @@ export const userReducer = createReducer(initialState, (builder) => {
         .addCase("registerUserMemberRequest", (state) => {
             state.loading = true;
         })
+        .addCase("getUserDetailsRequest", (state) => {
+            state.loading = true;
+        })
         
         // Success cases
         .addCase("loginSuccess", (state, action) => {
@@ -72,6 +75,10 @@ export const userReducer = createReducer(initialState, (builder) => {
             state.loading = false;
             state.message = action.payload;
         })
+        .addCase("getUserDetailsSuccess", (state, action) => {
+            state.loading = false;
+            state.userDetails = action.payload;
+        })
 
         // Fail cases
         .addCase("loginFail", (state, action) => {
@@ -92,6 +99,10 @@ export const userReducer = createReducer(initialState, (builder) => {
             state.error = action.payload; 
         })
         .addCase("registerUserMemberFail", (state, action) => {
+            state.loading = false;
+            state.error = action.payload;
+        })
+        .addCase("getUserDetailsFail", (state, action) => {
             state.loading = false;
             state.error = action.payload;
         });

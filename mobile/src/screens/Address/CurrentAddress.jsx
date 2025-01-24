@@ -17,17 +17,19 @@ const CurrentAddress = ({ navigation }) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        if (user?.deliveryAddress) {
-            const { houseNo, streetName, barangay, city, latitude, longitude } = user.deliveryAddress;
-            setHouseNo(houseNo || "");
-            setStreetName(streetName || "");
-            setBarangay(barangay || "");
-            setCity(city || "");
-            setLatitude(latitude?.toString() || "14.5995");
-            setLongitude(longitude?.toString() || "120.9842");
-        }
-        setLoading(false);
-    }, [user]);
+    if (user?.deliveryAddress?.length > 0) {
+        // Select the most recent address (last one in the array)
+        const latestAddress = user.deliveryAddress[user.deliveryAddress.length - 1];
+
+        setHouseNo(latestAddress?.houseNo?.toString() || "");
+        setStreetName(latestAddress?.streetName?.toString() || "");
+        setBarangay(latestAddress?.barangay?.toString() || "");
+        setCity(latestAddress?.city?.toString() || "");
+        setLatitude(latestAddress?.latitude?.toString() || "14.5995");
+        setLongitude(latestAddress?.longitude?.toString() || "120.9842");
+    }
+    setLoading(false);
+}, [user]);
 
     const mapHtml = `
     <!DOCTYPE html>

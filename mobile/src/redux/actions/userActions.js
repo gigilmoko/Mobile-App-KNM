@@ -202,23 +202,33 @@ export const updateProfile = (userData) => async (dispatch, getState) => {
 };
 
 export const getUserDetails = (id) => async (dispatch) => {
+    console.log('getUserDetails touched');
     try {
-        const { data } = await axios.get(`${server}/get-user/${id}`)
+        dispatch({ type: "getUserDetailsRequest" });
+
+        const token = await AsyncStorage.getItem('token');
+        const { data } = await axios.get(`${server}/get-user/${id}`, {
+            headers: {
+                "Authorization": `Bearer ${token}`, 
+            },
+            withCredentials: true,
+        });
 
         if (data.success) {
             dispatch({
-                type: 'USER_DETAILS_SUCCESS',
+                type: 'getUserDetailsSuccess',
                 payload: data.user, 
             });
+            console.log("data user: ", data.user);
         } else {
             dispatch({
-                type: 'USER_DETAILS_FAIL',
+                type: 'getUserDetailsFail',
                 payload: data.message,
             });
         }
     } catch (error) {
         dispatch({
-            type: 'USER_DETAILS_FAIL',
+            type: 'getUserDetailsFail',
             payload: error.message,
         });
     }

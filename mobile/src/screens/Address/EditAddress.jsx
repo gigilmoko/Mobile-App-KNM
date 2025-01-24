@@ -26,21 +26,17 @@ const EditAddress = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showMap, setShowMap] = useState(false);
 
+    console.log("User:", user); 
     // Current Address
-    const currentAddress = {
-        houseNo: user?.deliveryAddress?.houseNo || "",
-        streetName: user?.deliveryAddress?.streetName || "",
-        barangay: user?.deliveryAddress?.barangay || "",
-        city: user?.deliveryAddress?.city || "",
-    };
+    const currentAddress = user?.deliveryAddress?.[0] || {};
 
-  // Form states
-    const [houseNo, setHouseNo] = useState(currentAddress.houseNo);
-    const [street, setStreet] = useState(currentAddress.streetName);
+    // Form states
+    const [houseNo, setHouseNo] = useState(currentAddress.houseNo?.toString() || "");
+    const [street, setStreet] = useState(currentAddress.streetName?.toString() || "");
 
     // City states
     const [cities, setCities] = useState([]);
-    const [citySearch, setCitySearch] = useState(currentAddress.city);
+    const [citySearch, setCitySearch] = useState(currentAddress.city?.toString() || "");
     const [selectedCity, setSelectedCity] = useState(null);
 
     // Barangay states
@@ -49,8 +45,8 @@ const EditAddress = () => {
 
     // Location states
     const [coordinates, setCoordinates] = useState({
-        latitude: 14.5995,
-        longitude: 120.9842,
+        latitude: currentAddress.latitude || 14.5995,
+        longitude: currentAddress.longitude || 120.9842,
         zoom: 15,
     });
 

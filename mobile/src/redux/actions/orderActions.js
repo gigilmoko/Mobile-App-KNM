@@ -26,7 +26,7 @@ export const placeOrder = (
             `${server}/neworder`,
             {
                 orderProducts,
-                paymentInfo,
+                paymentInfo:  paymentInfo , 
                 itemsPrice,
                 shippingCharges,
                 totalPrice,

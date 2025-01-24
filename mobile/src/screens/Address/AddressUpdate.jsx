@@ -25,8 +25,12 @@ const AddressUpdate = ({ navigation }) => {
     const { user } = useSelector((state) => state.user);
 
     // Form States
-    const [houseNo, setHouseNo] = useState(user?.deliveryAddress?.houseNo || "");
-    const [streetName, setStreetName] = useState(user?.deliveryAddress?.streetName || "");
+    const [houseNo, setHouseNo] = useState("");
+    const [streetName, setStreetName] = useState("");
+    const [barangay, setBarangay] = useState("");
+    const [city, setCity] = useState("");
+    const [latitude, setLatitude] = useState("");
+    const [longitude, setLongitude] = useState("");
     
     // City and Barangay States
     const [cities, setCities] = useState([]);
@@ -37,8 +41,6 @@ const AddressUpdate = ({ navigation }) => {
     const [isLoadingBarangays, setIsLoadingBarangays] = useState(false);
 
     // Location States
-    const [latitude, setLatitude] = useState(user?.deliveryAddress?.latitude || "");
-    const [longitude, setLongitude] = useState(user?.deliveryAddress?.longitude || "");
     const [currentLocation, setCurrentLocation] = useState(null);
     const [region, setRegion] = useState({
         latitude: 14.5995,
@@ -53,70 +55,82 @@ const AddressUpdate = ({ navigation }) => {
 
     useEffect(() => {
         if (isFocused) {
-        dispatch(loadUser());
-        loadCities();
-        getCurrentLocation();
+            dispatch(loadUser());
+            loadCities();
+            getCurrentLocation();
         }
     }, [dispatch, isFocused]);
 
     useEffect(() => {
+        if (user?.deliveryAddress?.length > 0) {
+            const latestAddress = user.deliveryAddress[0];
+            setHouseNo(latestAddress?.houseNo?.toString() || "");
+            setStreetName(latestAddress?.streetName?.toString() || "");
+            setBarangay(latestAddress?.barangay?.toString() || "");
+            setCity(latestAddress?.city?.toString() || "");
+            setLatitude(latestAddress?.latitude?.toString() || "14.5995");
+            setLongitude(latestAddress?.longitude?.toString() || "120.9842");
+        }
+    }, [user]);
+
+    useEffect(() => {
         if (isProfileChanged) {
-        navigation.replace("myaccount");
+            navigation.replace("myaccount");
         }
     }, [isProfileChanged, navigation]);
 
     const getCurrentLocation = async () => {
         try {
-        const { status } = await Location.requestForegroundPermissionsAsync();
-        if (status !== "granted") {
-            Toast.show({
-            type: "error",
-            text1: "Location permission denied"
-            });
-            return;
-        }
+            const { status } = await Location.requestForegroundPermissionsAsync();
+            if (status !== "granted") {
+                Toast.show({
+                    type: "error",
+                    text1: "Location permission denied"
+                });
+                return;
+            }
 
-        const location = await Location.getCurrentPositionAsync({});
-        const { latitude, longitude } = location.coords;
-        
-        setCurrentLocation({ latitude, longitude });
-        setLatitude(latitude.toString());
-        setLongitude(longitude.toString());
-        setRegion({
-            latitude,
-            longitude,
-            zoom: 15
-        });
+            const location = await Location.getCurrentPositionAsync({});
+            const { latitude, longitude } = location.coords;
+            
+            setCurrentLocation({ latitude, longitude });
+            setLatitude(latitude.toString());
+            setLongitude(longitude.toString());
+            setRegion({
+                latitude,
+                longitude,
+                zoom: 15
+            });
         } catch (error) {
-        Toast.show({
-            type: "error",
-            text1: "Failed to get current location"
-        });
+            Toast.show({
+                type: "error",
+                text1: "Failed to get current location"
+            });
         }
     };
 
     const loadCities = async () => {
         setIsLoadingCities(true);
         try {
-        const citiesData = await addressService.getCities();
-        setCities(citiesData);
+            const citiesData = await addressService.getCities();
+            setCities(citiesData);
 
-        if (user?.deliveryAddress?.city) {
-            const currentCity = citiesData.find(
-            city => city.label === user.deliveryAddress.city
-            );
-            if (currentCity) {
-            setSelectedCity(currentCity);
-            await handleCitySelect(currentCity);
+            if (user?.deliveryAddress?.city) {
+                const currentCity = citiesData.find(
+                    city => city.label === user.deliveryAddress.city
+                );
+                if (currentCity) {
+                    setSelectedCity(currentCity);
+                    await handleCitySelect(currentCity);
+                }
             }
-        }
         } catch (error) {
-        Toast.show({
-            type: "error",
-            text1: "Failed to load cities"
-        });
+            Toast.show({
+                type: "error",
+                text1: "Failed to load cities"
+            });
         } finally {
-        setIsLoadingCities(false);
+            setIsLoadingCities(false);
         }
     };
 
@@ -124,36 +138,36 @@ const AddressUpdate = ({ navigation }) => {
         setSelectedCity(city);
         setIsLoadingBarangays(true);
         try {
-        const barangaysData = await addressService.getBarangays(city.value);
-        setBarangays(barangaysData);
+            const barangaysData = await addressService.getBarangays(city.value);
+            setBarangays(barangaysData);
 
-        if (user?.deliveryAddress?.barangay) {
-            const currentBarangay = barangaysData.find(
-            b => b.label === user.deliveryAddress.barangay
-            );
-            if (currentBarangay) {
-            setSelectedBarangay(currentBarangay);
+            if (user?.deliveryAddress?.barangay) {
+                const currentBarangay = barangaysData.find(
+                    b => b.label === user.deliveryAddress.barangay
+                );
+                if (currentBarangay) {
+                    setSelectedBarangay(currentBarangay);
+                }
             }
-        }
         } catch (error) {
-        Toast.show({
-            type: "error",
-            text1: "Failed to load barangays"
-        });
+            Toast.show({
+                type: "error",
+                text1: "Failed to load barangays"
+            });
         } finally {
-        setIsLoadingBarangays(false);
+            setIsLoadingBarangays(false);
         }
     };
 
     const handleMapMessage = (event) => {
         const data = JSON.parse(event.nativeEvent.data);
         if (data.type === 'markerDrag' || data.type === 'mapClick') {
-        setLatitude(data.latitude.toString());
-        setLongitude(data.longitude.toString());
-        setCurrentLocation({
-            latitude: data.latitude,
-            longitude: data.longitude
-        });
+            setLatitude(data.latitude.toString());
+            setLongitude(data.longitude.toString());
+            setCurrentLocation({
+                latitude: data.latitude,
+                longitude: data.longitude
+            });
         }
     };
 
@@ -211,206 +225,205 @@ const AddressUpdate = ({ navigation }) => {
     const submitHandler = async () => {
         setLoading(true);
         try {
-        if (!houseNo || !streetName || !selectedCity || !selectedBarangay) {
-            Toast.show({
-            type: "error",
-            text1: "Please fill all required fields"
-            });
-            return;
-        }
-
-        const addressData = {
-            deliveryAddress: {
-            houseNo,
-            streetName,
-            barangay: selectedBarangay.label,
-            city: selectedCity.label,
-            latitude: parseFloat(latitude),
-            longitude: parseFloat(longitude)
+            if (!houseNo || !streetName || !selectedCity || !selectedBarangay) {
+                Toast.show({
+                    type: "error",
+                    text1: "Please fill all required fields"
+                });
+                return;
             }
-        };
 
-        await dispatch(updateAddress(addressData));
-        setIsProfileChanged(true);
-        Toast.show({
-            type: "success",
-            text1: "Address updated successfully!"
-        });
+            const addressData = {
+                deliveryAddress: {
+                    houseNo,
+                    streetName,
+                    barangay: selectedBarangay.label,
+                    city: selectedCity.label,
+                    latitude: parseFloat(latitude),
+                    longitude: parseFloat(longitude)
+                }
+            };
+
+            await dispatch(updateAddress(addressData));
+            setIsProfileChanged(true);
+            Toast.show({
+                type: "success",
+                text1: "Address updated successfully!"
+            });
         } catch (error) {
-        Toast.show({
-            type: "error",
-            text1: error.message || "Failed to update address"
-        });
+            Toast.show({
+                type: "error",
+                text1: error.message || "Failed to update address"
+            });
         } finally {
-        setLoading(false);
+            setLoading(false);
         }
     };
 
     return (
         <View style={{ flex: 1, backgroundColor: "#ffb703" }}>
-        <Header back={true} />
-        <ScrollView style={{ flex: 1 }}>
-            <View style={{ alignItems: 'center', marginTop: -40 }}>
-            <Image
-                source={require("../../assets/images/logo.png")}
-                style={{ width: 100, height: 100, marginTop: 30 }}
-            />
-            </View>
-            
-            <View style={styles.formContainer}>
-            <Text style={styles.title}>Update Address</Text>
-
-            <TouchableOpacity
-                style={styles.mapToggleButton}
-                onPress={() => setShowMapAndSearch(!showMapAndSearch)}
-            >
-                <Text style={styles.buttonText}>
-                {showMapAndSearch ? "Hide Map" : "Choose Location on Map"}
-                </Text>
-            </TouchableOpacity>
-
-            {showMapAndSearch && (
-                <View style={styles.mapContainer}>
-                <WebView
-                    source={{ html: mapHtml }}
-                    style={styles.map}
-                    onMessage={handleMapMessage}
-                    scrollEnabled={false}
-                    javaScriptEnabled={true}
-                    domStorageEnabled={true}
-                    geolocationEnabled={true}
-                />
+            <Header back={true} />
+            <ScrollView style={{ flex: 1 }}>
+                <View style={{ alignItems: 'center', marginTop: -40 }}>
+                    <Image
+                        source={require("../../assets/images/logo.png")}
+                        style={{ width: 100, height: 100, marginTop: 30 }}
+                    />
                 </View>
-            )}
+                
+                <View style={styles.formContainer}>
+                    <Text style={styles.title}>Update Address</Text>
 
-            <View style={styles.coordinatesContainer}>
-                <Text style={styles.coordinatesText}>
-                Latitude: {latitude ? parseFloat(latitude).toFixed(6) : ''}
-                </Text>
-                <Text style={styles.coordinatesText}>
-                Longitude: {longitude ? parseFloat(longitude).toFixed(6) : ''}
-                </Text>
-            </View>
+                    <TouchableOpacity
+                        style={styles.mapToggleButton}
+                        onPress={() => setShowMapAndSearch(!showMapAndSearch)}
+                    >
+                        <Text style={styles.buttonText}>
+                            {showMapAndSearch ? "Hide Map" : "Choose Location on Map"}
+                        </Text>
+                    </TouchableOpacity>
 
-            <View style={styles.inputContainer}>
-                <Text style={styles.label}>House Number</Text>
-                <TextInput
-                placeholder="Enter house number"
-                value={houseNo}
-                onChangeText={setHouseNo}
-                style={styles.input}
-                />
-            </View>
+                    {showMapAndSearch && (
+                        <View style={styles.mapContainer}>
+                            <WebView
+                                source={{ html: mapHtml }}
+                                style={styles.map}
+                                onMessage={handleMapMessage}
+                                scrollEnabled={false}
+                                javaScriptEnabled={true}
+                                domStorageEnabled={true}
+                                geolocationEnabled={true}
+                            />
+                        </View>
+                    )}
 
-            <View style={styles.inputContainer}>
-                <Text style={styles.label}>Street Name</Text>
-                <TextInput
-                placeholder="Enter street name"
-                value={streetName}
-                onChangeText={setStreetName}
-                style={styles.input}
-                />
-            </View>
+                    <View style={styles.coordinatesContainer}>
+                        <Text style={styles.coordinatesText}>
+                            Latitude: {latitude ? parseFloat(latitude).toFixed(6) : ''}
+                        </Text>
+                        <Text style={styles.coordinatesText}>
+                            Longitude: {longitude ? parseFloat(longitude).toFixed(6) : ''}
+                        </Text>
+                    </View>
 
-            <View style={styles.inputContainer}>
-                <Text style={styles.label}>City</Text>
-                <View style={styles.pickerContainer}>
-                <Picker
-                    selectedValue={selectedCity?.value}
-                    onValueChange={(itemValue) => {
-                    const city = cities.find(c => c.value === itemValue);
-                    if (city) handleCitySelect(city);
-                    }}
-                    enabled={!isLoadingCities}
-                >
-                    <Picker.Item 
-                    label={isLoadingCities ? "Loading Cities..." : "Select City"} 
-                    value="" 
-                    />
-                    {cities.map(city => (
-                    <Picker.Item
-                        key={city.value}
-                        label={city.label}
-                        value={city.value}
-                    />
-                    ))}
-                </Picker>
+                    <View style={styles.inputContainer}>
+                        <Text style={styles.label}>House Number</Text>
+                        <TextInput
+                            placeholder="Enter house number"
+                            value={houseNo}
+                            onChangeText={setHouseNo}
+                            style={styles.input}
+                        />
+                    </View>
+
+                    <View style={styles.inputContainer}>
+                        <Text style={styles.label}>Street Name</Text>
+                        <TextInput
+                            placeholder="Enter street name"
+                            value={streetName}
+                            onChangeText={setStreetName}
+                            style={styles.input}
+                        />
+                    </View>
+
+                    <View style={styles.inputContainer}>
+                        <Text style={styles.label}>City</Text>
+                        <View style={styles.pickerContainer}>
+                            <Picker
+                                selectedValue={selectedCity?.value}
+                                onValueChange={(itemValue) => {
+                                    const city = cities.find(c => c.value === itemValue);
+                                    if (city) handleCitySelect(city);
+                                }}
+                                enabled={!isLoadingCities}
+                            >
+                                <Picker.Item 
+                                    label={isLoadingCities ? "Loading Cities..." : "Select City"} 
+                                    value="" 
+                                />
+                                {cities.map(city => (
+                                    <Picker.Item
+                                        key={city.value}
+                                        label={city.label}
+                                        value={city.value}
+                                    />
+                                ))}
+                            </Picker>
+                        </View>
+                    </View>
+
+                    <View style={styles.inputContainer}>
+                        <Text style={styles.label}>Barangay</Text>
+                        <View style={styles.pickerContainer}>
+                            <Picker
+                                selectedValue={selectedBarangay?.value}
+                                onValueChange={async (itemValue) => {
+                                    const barangay = barangays.find(b => b.value === itemValue);
+                                    setSelectedBarangay(barangay);
+                                    
+                                    if (barangay && selectedCity) {
+                                        try {
+                                            const addressData = {
+                                                streetName,
+                                                barangay: barangay.label,
+                                                city: selectedCity.label
+                                            };
+                                            
+                                            const location = await addressService.getGeoLocation(addressData);
+                                            setLatitude(location.latitude.toString());
+                                            setLongitude(location.longitude.toString());
+                                            setRegion({
+                                                latitude: location.latitude,
+                                                longitude: location.longitude,
+                                                zoom: 15
+                                            });
+                                        } catch (error) {
+                                            Toast.show({
+                                                type: "error",
+                                                text1: "Failed to get location for selected barangay"
+                                            });
+                                        }
+                                    }
+                                }}
+                                enabled={!!selectedCity && !isLoadingBarangays}
+                            >
+                                <Picker.Item
+                                    label={
+                                        isLoadingBarangays
+                                            ? "Loading Barangays..."
+                                            : !selectedCity
+                                            ? "Select a city first"
+                                            : "Select Barangay"
+                                    }
+                                    value=""
+                                />
+                                {barangays.map(barangay => (
+                                    <Picker.Item
+                                        key={barangay.value}
+                                        label={barangay.label}
+                                        value={barangay.value}
+                                    />
+                                ))}
+                            </Picker>
+                        </View>
+                    </View>
+
+                    <TouchableOpacity
+                        style={[styles.submitButton, loading && styles.disabledButton]}
+                        onPress={submitHandler}
+                        disabled={loading}
+                    >
+                        {loading ? (
+                            <ActivityIndicator color="#fff" />
+                        ) : (
+                            <Text style={styles.submitButtonText}>Update Address</Text>
+                        )}
+                    </TouchableOpacity>
                 </View>
-            </View>
-
-            <View style={styles.inputContainer}>
-                <Text style={styles.label}>Barangay</Text>
-                <View style={styles.pickerContainer}>
-                <Picker
-                    selectedValue={selectedBarangay?.value}
-                    onValueChange={async (itemValue) => {
-                    const barangay = barangays.find(b => b.value === itemValue);
-                    setSelectedBarangay(barangay);
-                    
-                    if (barangay && selectedCity) {
-                        try {
-                        const addressData = {
-                            streetName,
-                            barangay: barangay.label,
-                            city: selectedCity.label
-                        };
-                        
-                        const location = await addressService.getGeoLocation(addressData);
-                        setLatitude(location.latitude.toString());
-                        setLongitude(location.longitude.toString());
-                        setRegion({
-                            latitude: location.latitude,
-                            longitude: location.longitude,
-                            zoom: 15
-                        });
-                        } catch (error) {
-                        Toast.show({
-                            type: "error",
-                            text1: "Failed to get location for selected barangay"
-                        });
-                        }
-                    }
-                    }}
-                    enabled={!!selectedCity && !isLoadingBarangays}
-                >
-                    <Picker.Item
-                    label={
-                        isLoadingBarangays
-                        ? "Loading Barangays..."
-                        : !selectedCity
-                        ? "Select a city first"
-                        : "Select Barangay"
-                    }
-                    value=""
-                    />
-                    {barangays.map(barangay => (
-                    <Picker.Item
-                        key={barangay.value}
-                        label={barangay.label}
-                        value={barangay.value}
-                    />
-                    ))}
-                </Picker>
-                </View>
-            </View>
-
-            <TouchableOpacity
-                style={[styles.submitButton, loading && styles.disabledButton]}
-                onPress={submitHandler}
-                disabled={loading}
-            >
-                {loading ? (
-                <ActivityIndicator color="#fff" />
-                ) : (
-                <Text style={styles.submitButtonText}>Update Address</Text>
-                )}
-            </TouchableOpacity>
-            </View>
-        </ScrollView>
+            </ScrollView>
         </View>
     );
 };
-
 
 const styles = StyleSheet.create({
     formContainer: {

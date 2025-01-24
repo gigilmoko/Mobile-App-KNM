@@ -5,19 +5,29 @@ import { useDispatch, useSelector } from "react-redux";
 import Header from "../../components/Layout/Header";
 import OrderList from "../../components/OrderList";
 import { getUserOrders } from "../../redux/actions/orderActions";
+import { getUserDetails } from "../../redux/actions/userActions"; // Import getUserDetails action
 
 const MyOrders = () => {
     const isFocused = useIsFocused();
     const dispatch = useDispatch();
     const navigate = useNavigation();
     const { loading, orders } = useSelector((state) => state.order);
+    const { user } = useSelector((state) => state.user); // Assuming user details are in the 'user' slice
     const [selectedTab, setSelectedTab] = useState("Preparing");
 
     useEffect(() => {
         if (isFocused) {
             dispatch(getUserOrders());
+            if (user) {
+                dispatch(getUserDetails(user._id)); // Fetch user details including address
+                // console.log("User details fetched:", user);
+            }
         }
-    }, [isFocused, dispatch]);
+    }, [isFocused, dispatch, user]);
+
+    useEffect(() => {
+        // console.log("Fetched Orders:", orders); // Log fetched orders
+    }, [orders]);
 
     const getStatusColor = (status) => {
         if (!status) return 'gray';
@@ -74,8 +84,11 @@ const MyOrders = () => {
                                     statusColor={getStatusColor(item.status)}
                                     paymentInfo={item.paymentInfo}
                                     orderedOn={item.createdAt.split("T")[0]}
-                                    address={`${item.deliveryAddress.address}`}
-                                    navigate={navigate}
+                                    address={
+                                        item.user?.deliveryAddress?.[0]
+                                            ? `${item.user.deliveryAddress[0].houseNo}, ${item.user.deliveryAddress[0].streetName}, ${item.user.deliveryAddress[0].barangay}, ${item.user.deliveryAddress[0].city}`
+                                            : 'Address not available'
+                                    }
                                 />
                                 {selectedTab === "Delivered" && (
                                     <TouchableOpacity
