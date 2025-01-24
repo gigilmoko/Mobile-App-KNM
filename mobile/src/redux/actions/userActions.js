@@ -27,6 +27,26 @@ export const register = (registrationData) => async (dispatch) => {
     }
 };
 
+export const registerUserMember = (userData) => async (dispatch) => {
+    try {
+        dispatch({ type: "registerUserMemberRequest" });
+
+        const { data } = await axios.post(`${server}/register-member`, userData, {
+            headers: { "Content-Type": "application/json" },
+            withCredentials: true,
+        });
+
+        dispatch({ type: "registerUserMemberSuccess", payload: data.message });
+        return 'success';
+    } catch (error) {
+        dispatch({
+            type: "registerUserMemberFail",
+            payload: error.response ? error.response.data.message : 'Network error',
+        });
+        return 'fail';
+    }
+};
+
 export const userLogin = (email, password, playerId) => async (dispatch) => {
     try {
         dispatch({ type: "loginRequest" });

@@ -37,6 +37,9 @@ export const userReducer = createReducer(initialState, (builder) => {
         .addCase("UPDATE_ADDRESS_REQUEST", (state) => {
             state.loading = true; // Start loading for address update
         })
+        .addCase("registerUserMemberRequest", (state) => {
+            state.loading = true;
+        })
         
         // Success cases
         .addCase("loginSuccess", (state, action) => {
@@ -65,6 +68,10 @@ export const userReducer = createReducer(initialState, (builder) => {
             state.user = action.payload; // Update the user data with the new address
             state.message = "Address updated successfully";
         })
+        .addCase("registerUserMemberSuccess", (state, action) => {
+            state.loading = false;
+            state.message = action.payload;
+        })
 
         // Fail cases
         .addCase("loginFail", (state, action) => {
@@ -83,5 +90,9 @@ export const userReducer = createReducer(initialState, (builder) => {
         .addCase("UPDATE_ADDRESS_FAIL", (state, action) => {
             state.loading = false;
             state.error = action.payload; 
+        })
+        .addCase("registerUserMemberFail", (state, action) => {
+            state.loading = false;
+            state.error = action.payload;
         });
 });
