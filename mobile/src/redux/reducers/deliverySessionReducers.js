@@ -5,6 +5,7 @@ const initialState = {
     startedSession: null,
     completedSession: null,
     ongoingSessions: [],
+    historySessions: [],  // New state property for session history
     error: null,
 };
 
@@ -21,6 +22,11 @@ export const deliveryReducer = (state = initialState, action) => {
             return {
                 ...state,
                 pendingSessions: action.pendingSessions,
+            };
+        case 'GET_HISTORY_BY_RIDER':  // New case to handle session history
+            return {
+                ...state,
+                historySessions: action.sessions,
             };
         case 'ACCEPT_WORK':
             return {

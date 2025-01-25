@@ -1,47 +1,94 @@
+import { createReducer } from "@reduxjs/toolkit";
+
 const initialState = {
-  riders: [],
-  rider: null,
-  token: null,
-  pendingTruck: null, // Add a new state field for the pending truck
-  loading: false, // Track the loading state
-  error: null, // Track errors
+    riders: [],
+    rider: {},
+    loading: false,
+    error: null,
+    message: null,
+    token: null,
 };
 
-export const riderReducer = (state = initialState, action) => {
-  switch (action.type) {
-    case "GET_RIDERS":
-      return { ...state, riders: action.payload.riders };
-    case "NEW_RIDER":
-      return { ...state, riders: [...state.riders, action.payload.rider] };
-    case "GET_SINGLE_RIDER":
-      return { ...state, rider: action.payload.rider };
-    case "UPDATE_RIDER":
-      return {
-        ...state,
-        riders: state.riders.map((r) =>
-          r._id === action.payload.rider._id ? action.payload.rider : r
-        ),
-      };
-    case "DELETE_RIDER":
-      return {
-        ...state,
-        riders: state.riders.filter((r) => r._id !== action.payload),
-      };
-    case "RIDER_LOGIN":
-      return { ...state, token: action.payload.token, rider: action.payload.rider };
-    case "RIDER_LOGOUT":
-      return { ...state, token: null, rider: null };
-    case "RIDER_PROFILE":
-      return { ...state, rider: action.payload.rider };
-    case "UPDATE_PASSWORD":
-      return { ...state, rider: { ...state.rider, ...action.payload } };
-    case "GET_PENDING_TRUCK_REQUEST":
-      return { ...state, loading: true, error: null };
-    case "GET_PENDING_TRUCK_SUCCESS":
-      return { ...state, loading: false, pendingTruck: action.payload };
-    case "GET_PENDING_TRUCK_FAIL":
-      return { ...state, loading: false, error: action.payload };
-    default:
-      return state;
-  }
-};
+export const riderReducer = createReducer(initialState, (builder) => {
+    builder
+        .addCase("GET_RIDERS", (state, action) => {
+            state.riders = action.payload.riders;
+        })
+        .addCase("NEW_RIDER", (state, action) => {
+            state.riders = [...state.riders, action.payload.rider];
+        })
+        .addCase("GET_SINGLE_RIDER", (state, action) => {
+            state.rider = action.payload.rider;
+        })
+        .addCase("UPDATE_RIDER", (state, action) => {
+            state.riders = state.riders.map((r) =>
+                r._id === action.payload.rider._id ? action.payload.rider : r
+            );
+        })
+        .addCase("DELETE_RIDER", (state, action) => {
+            state.riders = state.riders.filter((r) => r._id !== action.payload);
+        })
+        .addCase("RIDER_LOGIN", (state, action) => {
+            state.token = action.payload.token;
+            state.rider = action.payload.rider;
+        })
+        .addCase("RIDER_LOGOUT", (state) => {
+            state.token = null;
+            state.rider = null;
+        })
+        .addCase("RIDER_PROFILE", (state, action) => {
+            state.rider = action.payload.rider;
+        })
+        .addCase("UPDATE_PASSWORD", (state, action) => {
+            state.rider = { ...state.rider, ...action.payload };
+            state.message = "Password updated successfully";
+        })
+        .addCase("UPDATE_PASSWORD_FAIL", (state, action) => {
+            state.error = action.payload;
+            state.message = "Password update failed";
+        })
+        .addCase("GET_PENDING_TRUCK_REQUEST", (state) => {
+            state.loading = true;
+            state.error = null;
+        })
+        .addCase("GET_PENDING_TRUCK_SUCCESS", (state, action) => {
+            state.loading = false;
+            state.pendingTruck = action.payload;
+        })
+        .addCase("GET_PENDING_TRUCK_FAIL", (state, action) => {
+            state.loading = false;
+            state.error = action.payload;
+        })
+        .addCase("riderLogoutRequest", (state) => {
+            state.loading = true;
+        })
+        .addCase("riderLogoutSuccess", (state) => {
+            state.loading = false;
+            state.rider = {};
+            state.message = "Logout successful";
+        })
+        .addCase("riderLogoutFail", (state, action) => {
+            state.loading = false;
+            state.error = action.payload;
+        })
+        .addCase("RIDER_AVATAR_SUCCESS", (state, action) => {
+            state.loading = false;
+            state.rider.avatar = action.payload.avatar;
+            state.message = "Avatar updated successfully";
+        })
+        .addCase("RIDER_AVATAR_FAIL", (state, action) => {
+            state.loading = false;
+            state.error = action.payload;
+        })
+        .addCase("GET_RIDER_PROFILE_REQUEST", (state) => {
+            state.loading = true;
+        })
+        .addCase("GET_RIDER_PROFILE_SUCCESS", (state, action) => {
+            state.loading = false;
+            state.rider = action.payload;
+        })
+        .addCase("GET_RIDER_PROFILE_FAIL", (state, action) => {
+            state.loading = false;
+            state.error = action.payload;
+        });
+});

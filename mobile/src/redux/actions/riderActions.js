@@ -95,7 +95,7 @@ export const riderLogin = (email, password, playerId) => async (dispatch) => {
       const riderId = data.user._id;
       console.log('Rider data:', data);
       console.log('Rider ID:', riderId);
-      console.log('Rider playerId:', playerId);
+      
 
       // Store rider ID and token
       await AsyncStorage.setItem('riderId', riderId);
@@ -117,58 +117,105 @@ export const riderLogin = (email, password, playerId) => async (dispatch) => {
 };
 
 export const riderLogout = () => async (dispatch) => {
-  try {
-      const token = await AsyncStorage.getItem('riderToken');
-      await axios.post(`${server}/rider/logout`, {}, {
-          headers: {
-              "Authorization": `Bearer ${token}`, // Send token in the headers
-          },
-          withCredentials: true,
-      });
+    // const riderId = await AsyncStorage.getItem('riderId');
+    // console.log('Rider IDsss:', riderId);
+    try {
+        dispatch({ type: "riderLogoutRequest" });
 
-      // Remove rider ID and token from AsyncStorage
-      await AsyncStorage.removeItem('riderId');
-      await AsyncStorage.removeItem('riderToken');
+        const token = await AsyncStorage.getItem('riderToken');
+        if (!token) {
+            throw new Error("No token found");
+        }
+        console.log("Token retrieved:", token);
 
-      dispatch({ type: "riderLogoutSuccess" });
-  } catch (error) {
-      dispatch({
-          type: "riderLogoutFail",
-          payload: error.response?.data.message || 'Logout failed',
-      });
-      console.error('Logout error:', error);
-  }
+        const { data } = await axios.get(`${server}/rider/logout`, {
+            headers: {
+                "Authorization": `Bearer ${token}`, // Send token in the headers
+            },
+            withCredentials: true,
+        });
+
+        await AsyncStorage.removeItem('riderToken');
+        await AsyncStorage.removeItem('riderId');
+
+        dispatch({ type: "riderLogoutSuccess", payload: data.message });
+    } catch (error) {
+        dispatch({
+            type: "riderLogoutFail",
+            payload: error.response?.data?.message || 'Logout failed',
+        });
+    }
 };
 
 export const getRiderProfile = () => async (dispatch) => {
   try {
-    const token = await AsyncStorage.getItem('token');
-    const { data } = await axios.get(`${server}riders/profile`, {
+    dispatch({ type: "GET_RIDER_PROFILE_REQUEST" });
+
+    const token = await AsyncStorage.getItem('riderToken');
+    
+    if (!token) {
+      throw new Error("No token found");
+    }
+    console.log("Token retrieved:", token);
+
+    const { data } = await axios.get(`${server}rider/profile`, {
       headers: {
         "Authorization": `Bearer ${token}`, // Send token in the headers
       },
       withCredentials: true,
     });
-    dispatch({ type: "RIDER_PROFILE", payload: data });
+    console.log('Rider profile data:', data.rider);
+    dispatch({ type: "GET_RIDER_PROFILE_SUCCESS", payload: data.rider });
   } catch (error) {
-    console.error(error);
+    console.error("Error fetching rider profile:", error.response?.data || error.message);
+
+    // Handle specific error for invalid token
+    if (error.response && error.response.status === 401) {
+      // Handle token expiration or invalid token (e.g., redirect to login page)
+      console.log("Token is invalid or expired. Please log in again.");
+      // Redirect to login page or perform logout action
+    }
+
+    dispatch({
+      type: "GET_RIDER_PROFILE_FAIL",
+      payload: error.response?.data.message || 'Network error',
+    });
   }
 };
 
 export const updatePassword = (id, passwordData) => async (dispatch) => {
   try {
-    const token = await AsyncStorage.getItem('token');
-    const { data } = await axios.put(`${server}riders/${id}/update-password`, passwordData, {
-      headers: {
-        "Authorization": `Bearer ${token}`, // Send token in the headers
-      },
-      withCredentials: true,
+    const token = await AsyncStorage.getItem('riderToken'); // Make sure to fetch the correct token
+
+    if (!token) {
+      throw new Error('No token found');
+    }
+
+    console.log('Password update data:', passwordData); // This should log oldPassword and newPassword
+    const { data } = await axios.put(
+      `${server}/rider/update/password/${id}`,  // Your API endpoint for updating the password
+      passwordData,  // This should send oldPassword and newPassword in the request body
+      {
+        headers: {
+          "Authorization": `Bearer ${token}`,  // Attach token to headers
+        },
+        withCredentials: true,  // Ensure credentials are sent with the request if needed
+      }
+    );
+    
+    dispatch({
+      type: "UPDATE_PASSWORD_SUCCESS",
+      payload: data.message,  // Assuming the response contains a message or success data
     });
-    dispatch({ type: "UPDATE_PASSWORD", payload: data });
   } catch (error) {
-    console.error(error);
+    console.error("Error updating password:", error);
+    dispatch({
+      type: "UPDATE_PASSWORD_FAIL",
+      payload: error.response?.data?.message || error.message,
+    });
   }
 };
+
 
 export const getPendingTruck = (riderId) => async (dispatch) => {
   try {
@@ -201,4 +248,83 @@ export const getPendingTruck = (riderId) => async (dispatch) => {
     });
     console.error('Error fetching pending truck:', error);
   }
+};
+
+export const updateAvatar = (imageUrl) => async (dispatch, getState) => {
+
+  try {
+      const { user } = getState().user;
+      if (!user || !user._id) {
+          throw new Error('User ID is missing');
+      }
+
+      const response = await axios.put(`${server}/avatar-update/${user._id}`, 
+          { avatar: imageUrl },
+          {
+              withCredentials: true,
+              headers: {
+                  "Content-Type": "application/json",
+              },
+          }
+      );
+
+      dispatch({
+          type: 'USER_AVATAR_SUCCESS', 
+          payload: response.data, 
+      });
+
+  } catch (error) {
+      console.error('Error updating avatar:', error.response ? error.response.data : error.message);
+
+      if (error.response) {
+          dispatch({
+              type: 'USER_AVATAR_FAIL', 
+              payload: error.response.data.message || 'Failed to update avatar',
+          });
+      } else {
+          dispatch({
+              type: 'USER_AVATAR_FAIL', 
+              payload: error.message || 'Network error',
+          });
+      }
+  }
+};
+
+export const updateRiderAvatar = (imageUrl) => async (dispatch, getState) => {
+    try {
+        const { rider } = getState().rider;
+        if (!rider || !rider._id) {
+            throw new Error('Rider ID is missing');
+        }
+
+        const response = await axios.put(`${server}/rider/avatar-update/${rider._id}`, 
+            { avatar: imageUrl },
+            {
+                withCredentials: true,
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            }
+        );
+
+        dispatch({
+            type: 'RIDER_AVATAR_SUCCESS', 
+            payload: response.data, 
+        });
+
+    } catch (error) {
+        console.error('Error updating avatar:', error.response ? error.response.data : error.message);
+
+        if (error.response) {
+            dispatch({
+                type: 'RIDER_AVATAR_FAIL', 
+                payload: error.response.data.message || 'Failed to update avatar',
+            });
+        } else {
+            dispatch({
+                type: 'RIDER_AVATAR_FAIL', 
+                payload: error.message || 'Network error',
+            });
+        }
+    }
 };

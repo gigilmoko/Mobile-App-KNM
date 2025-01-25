@@ -122,3 +122,25 @@ export const completeDeliverySession = (id) => async (dispatch) => {
     }
 };
 
+export const getHistoryByRider = (riderId) => async (dispatch) => {
+    try {
+        const token = await AsyncStorage.getItem('riderToken');
+        const { data } = await axios.get(`${server}/delivery-session/history/${riderId}`, {
+            headers: {
+                "Authorization": `Bearer ${token}`,
+            },
+            withCredentials: true,
+        });
+
+        dispatch({
+            type: 'GET_HISTORY_BY_RIDER',
+            sessions: data.sessions,
+        });
+
+        console.log('Fetched history sessions:', data);
+    } catch (error) {
+        console.error('Error fetching history sessions:', error);
+        dispatch({ type: 'DELIVERY_SESSION_ERROR', error: error.response?.data?.message || error.message });
+    }
+};
+

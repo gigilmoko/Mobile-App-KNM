@@ -21,7 +21,7 @@ const Footer = () => {
                 <Icon name="history" style={styles.icon} />
                 <Text style={styles.label}>History</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.tab} onPress={() => navigationHandler('')}>
+            <TouchableOpacity style={styles.tab} onPress={() => navigationHandler('account')}>
                 <Icon name="account" style={styles.icon} />
                 <Text style={styles.label}>My Account</Text>
             </TouchableOpacity>
