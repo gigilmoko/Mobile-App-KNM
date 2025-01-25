@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { OneSignal } from "react-native-onesignal";
 import { View, Text, Image, TextInput, TouchableOpacity, ScrollView, StyleSheet } from "react-native";
 import { useDispatch } from "react-redux";
 import { userLogin } from "../../redux/actions/userActions";
@@ -6,7 +7,6 @@ import { riderLogin } from "../../redux/actions/riderActions";
 import { useMessageAndErrorUser } from "../../../utils/hooks";
 import Toast from "react-native-toast-message";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import OneSignal from "react-native-onesignal";
 
 const Login = ({ navigation }) => {
   const [email, setEmail] = useState("");
@@ -18,17 +18,21 @@ const Login = ({ navigation }) => {
   useEffect(() => {
     const getPlayerId = async () => {
       try {
-        const deviceState = await OneSignal.getDeviceState();
+        const deviceState = await OneSignal.User.pushSubscription.getPushSubscriptionId();
         if (deviceState) {
-          setPlayerId(deviceState.userId);
+          setPlayerId(deviceState);
         }
-        console.log("Device State:", deviceState);
       } catch (error) {
-        console.error("OneSignal Error:", error);
+        console.error('OneSignal Error:', error);
       }
     };
 
+    // Initial fetch
     getPlayerId();
+
+    // Subscription listener
+    const subscription = OneSignal.User.pushSubscription.addEventListener('change', getPlayerId);
+    return () => subscription?.remove();
   }, []);
 
   const userSubmitHandler = () => {
@@ -207,4 +211,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Login;
+export default Login; 

@@ -97,7 +97,7 @@ const MyAccount = ({ navigation, route }) => {
 
     return (
         <View style={{ flex: 1, backgroundColor: "#fff" }}>
-            <Header back={true} />
+            {/* <Header back={true} /> */}
 
             <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
                 <View style={styles.boxContainer}>
@@ -191,8 +191,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
     },
     screenNameContainer: {
-        marginTop: 20,
-        padding: 16,
+        padding: 10,
         alignItems: 'center',
     },
     screenNameText: {

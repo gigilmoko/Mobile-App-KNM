@@ -294,3 +294,36 @@ export const updateAddress = (userData) => async (dispatch, getState) => {
         });
     }
 };
+
+export const forgotPassword = (email) => async (dispatch) => {
+    try {
+        dispatch({ type: 'FORGOT_PASSWORD_REQUEST' });
+
+        // Make the API request to send the reset password email
+        const { data } = await axios.post(`${server}/password/forgot`, { email });
+
+        dispatch({
+            type: 'FORGOT_PASSWORD_SUCCESS',
+            payload: data.message,  // The success message returned by the API
+        });
+
+        Toast.show({
+            type: 'success',
+            text1: 'Password reset email sent!',
+            text2: data.message,
+        });
+    } catch (error) {
+        dispatch({
+            type: 'FORGOT_PASSWORD_FAIL',
+            payload: error.response && error.response.data.message
+                ? error.response.data.message
+                : error.message,
+        });
+
+        Toast.show({
+            type: 'error',
+            text1: 'Failed to send reset password email',
+            text2: error.response?.data.message || error.message,
+        });
+    }
+};
