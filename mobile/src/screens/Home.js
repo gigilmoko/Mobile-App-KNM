@@ -200,14 +200,7 @@ const Home = ({ navigation }) => {
                 <Text style={styles.headerText}>
                     Hello, {user?.fname} {user?.lname || "Guest"}!
                 </Text>
-                <View style={styles.locationContainer}>
-                    <Icon name="location-outline" size={20} color="#000" />
-                    <Text style={styles.locationText}>
-                    {user?.deliveryAddress.barangay} {user?.deliveryAddress.city}
-                    </Text>
-                </View>
             </View>
-
             {/* Search Bar */}
             <View style={styles.searchContainer}>
                 <TextInput
