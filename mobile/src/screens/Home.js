@@ -203,7 +203,7 @@ const Home = ({ navigation }) => {
                 <View style={styles.locationContainer}>
                     <Icon name="location-outline" size={20} color="#000" />
                     <Text style={styles.locationText}>
-                        {user?.DeliveryAddress || "Location not set"}
+                    {user?.deliveryAddress.barangay} {user?.deliveryAddress.city}
                     </Text>
                 </View>
             </View>

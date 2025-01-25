@@ -1,13 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from "react-native";
 import Footer from "../../../components/Layout/Footer";
-
 import { useDispatch, useSelector } from "react-redux";
 import { getAdminOrders } from "../../../redux/actions/orderActions";
 import Toast from "react-native-toast-message";
 import { useNavigation } from "@react-navigation/native";
 import Entypo from 'react-native-vector-icons/Entypo';
-
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 const AdminOrders = () => {
     const dispatch = useDispatch();
@@ -32,77 +31,132 @@ const AdminOrders = () => {
     const filteredOrders = adminOrders.filter(order => order.status === selectedTab);
 
     return (
-        <View style={{ flex: 1 }}>
-            
-            <ScrollView contentContainerStyle={{ flexGrow: 1, paddingBottom: 50 }}>
-                <View style={{ backgroundColor: "#ffffff", borderTopLeftRadius: 30, borderTopRightRadius: 30, marginTop: 0, padding: 20, shadowColor: "#000", shadowOpacity: 0.1, shadowRadius: 5, shadowOffset: { width: 0, height: 3 }, elevation: 2 }}>
-                    <Text style={{ fontSize: 24, fontWeight: "bold", textAlign: "center", marginBottom: 20 }}>Orders List</Text>
-                    
-                    <View style={{ flexDirection: "row", justifyContent: "space-around", padding: 10, marginBottom: 10,  backgroundColor: "#ffb703", borderRadius: 10 }}>
-                        <TouchableOpacity onPress={() => setSelectedTab("Preparing")}>
-                            <Text style={{ fontSize: 18, fontWeight: selectedTab === "Preparing" ? "bold" : "normal" }}>Preparing</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity onPress={() => setSelectedTab("Shipped")}>
-                            <Text style={{ fontSize: 18, fontWeight: selectedTab === "Shipped" ? "bold" : "normal" }}>Shipped</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity onPress={() => setSelectedTab("Delivered")}>
-                            <Text style={{ fontSize: 18, fontWeight: selectedTab === "Delivered" ? "bold" : "normal" }}>Delivered</Text>
-                        </TouchableOpacity>
-                    </View>
-
-                    {loading ? (
-                        <Text style={{ textAlign: "center", color: "#666666" }}>Loading...</Text>
-                    ) : Array.isArray(filteredOrders) && filteredOrders.length > 0 ? (
-                        filteredOrders.map((order) => (
-                            <TouchableOpacity
-                                key={order._id}
-                                style={{
-                                    padding: 15,
-                                    borderRadius: 10,
-                                    marginBottom: 10,
-                                    shadowColor: "#000",
-                                    shadowOpacity: 0.1,
-                                    shadowRadius: 5,
-                                    shadowOffset: { width: 0, height: 3 },
-                                    elevation: 2,
-                                    backgroundColor:
-                                        order.status === "Preparing"
-                                            ? "#FA9E03"
-                                            : order.status === "Shipped"
-                                            ? "#DF9755"
-                                            : order.status === "Delivered"
-                                            ? "#EB5A3C"
-                                            : "#f9f9f9",
-                                }}
-                                onPress={() =>
-                                    navigation.navigate("adminordersdetails", { orderId: order._id })
-                                }
-                            >
-                                <Text style={{ fontWeight: "bold", color: "#000" }}>
-                                    Order ID: {order._id}
-                                </Text>
-                                <Text style={{ color: "#000" }}>
-                                    Status: {order.status}
-                                </Text>
-                                <Text style={{ color: "#000" }}>
-                                    Items: {order.orderProducts.length}
-                                </Text>
-                                <Text style={{ color: "#000" }}>
-                                    Total: ₱{order.totalPrice.toFixed(2)}
-                                </Text>
-                            </TouchableOpacity>
-                        ))
-                    ) : (
-                        <Text style={{ textAlign: "center", color: "#666666" }}>No orders found</Text>
-                    )}
-                </View>
-            </ScrollView>
-
-            <View style={{ position: "absolute", bottom: 0, width: "100%" }}>
-                <Footer activeRoute={"home"} />
+        <View style={styles.container}>
+            <View style={styles.headerContainer}>
+                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+                    <MaterialCommunityIcons name="arrow-left" size={24} color="#000" />
+                </TouchableOpacity>
+                <Text style={styles.headerText}>Order Summary</Text>
             </View>
+            <ScrollView contentContainerStyle={styles.scrollViewContent}>
+                <View style={styles.tabContainer}>
+                    <TouchableOpacity onPress={() => setSelectedTab("Preparing")}>
+                        <Text style={[styles.tabText, selectedTab === "Preparing" && styles.activeTabText]}>Preparing</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => setSelectedTab("Shipped")}>
+                        <Text style={[styles.tabText, selectedTab === "Shipped" && styles.activeTabText]}>Shipped</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => setSelectedTab("Delivered")}>
+                        <Text style={[styles.tabText, selectedTab === "Delivered" && styles.activeTabText]}>Delivered</Text>
+                    </TouchableOpacity>
+                </View>
+
+                {loading ? (
+                    <Text style={styles.loadingText}>Loading...</Text>
+                ) : filteredOrders.length > 0 ? (
+                    filteredOrders.map((order) => (
+                        <View key={order._id} style={styles.orderCard}>
+                            <Text style={styles.orderText}>Order ID: {order._id}</Text>
+                            <Text style={styles.orderText}>Status: {order.status}</Text>
+                            <Text style={styles.orderText}>Total Price: ₱{order.totalPrice}</Text>
+                            <Text style={styles.orderText}>Ordered On: {new Date(order.createdAt).toLocaleDateString()}</Text>
+                            <TouchableOpacity
+                                style={styles.detailsButton}
+                                onPress={() => navigation.navigate("adminordersdetails", { orderId: order._id })}
+                            >
+                                <Text style={styles.detailsButtonText}>View Details</Text>
+                            </TouchableOpacity>
+                        </View>
+                    ))
+                ) : (
+                    <Text style={styles.noOrdersText}>No orders available.</Text>
+                )}
+            </ScrollView>
+            <Footer activeRoute={"home"} />
         </View>
     );
 };
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: "#fff",
+    },
+    headerContainer: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: 10,
+        backgroundColor: "#fff",
+        borderBottomWidth: 1,
+        borderBottomColor: "#ccc",
+    },
+    backButton: {
+        position: "absolute",
+        left: 10,
+    },
+    headerText: {
+        fontSize: 20,
+        fontWeight: "bold",
+    },
+    scrollViewContent: {
+        flexGrow: 1,
+        paddingBottom: 50,
+    },
+    tabContainer: {
+        flexDirection: "row",
+        justifyContent: "space-around",
+        padding: 10,
+        marginBottom: 10,
+        backgroundColor: "#ffb703",
+        borderRadius: 10,
+        margin: 20,
+    },
+    tabText: {
+        fontSize: 18,
+    },
+    activeTabText: {
+        fontWeight: "bold",
+    },
+    loadingText: {
+        textAlign: "center",
+        marginTop: 20,
+        fontSize: 18,
+        color: "#666",
+    },
+    noOrdersText: {
+        textAlign: "center",
+        marginTop: 20,
+        fontSize: 18,
+        color: "#666",
+    },
+    orderCard: {
+        backgroundColor: "#f5f5f5",
+        padding: 15,
+        borderRadius: 10,
+        marginBottom: 10,
+        marginHorizontal: 20,
+        shadowColor: "#000",
+        shadowOpacity: 0.1,
+        shadowRadius: 5,
+        shadowOffset: { width: 0, height: 3 },
+        elevation: 2,
+    },
+    orderText: {
+        fontSize: 16,
+        marginBottom: 5,
+    },
+    detailsButton: {
+        backgroundColor: "#ffb703",
+        padding: 10,
+        borderRadius: 5,
+        alignItems: "center",
+        marginTop: 10,
+    },
+    detailsButtonText: {
+        color: "#fff",
+        fontWeight: "bold",
+    },
+});
 
 export default AdminOrders;

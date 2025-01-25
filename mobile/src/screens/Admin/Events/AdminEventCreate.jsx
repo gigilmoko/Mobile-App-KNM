@@ -362,7 +362,7 @@ const AdminCreateEvent = () => {
             }}
             disabled={isUpdating}
           >
-            <Text style={{ color: "#000", fontWeight: "bold" }}>
+            <Text style={{ color:"#fff",fontWeight: "bold" }}>
               {isUpdating ? 'Creating...' : 'Create Event'}
             </Text>
           </TouchableOpacity>

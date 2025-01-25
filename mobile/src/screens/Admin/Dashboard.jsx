@@ -2,9 +2,9 @@ import React, { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Dimensions } from "react-native";
 import Footer from "../../components/Layout/Footer";
 import { useDispatch, useSelector } from "react-redux";
-import { Ionicons } from "@expo/vector-icons"; // Use Ionicons for the icons
+import { Ionicons } from "@expo/vector-icons"; 
 import OptionList from "../../components/User/OptionList";
-
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons'; 
 import { loadUser } from "../../redux/actions/userActions";
 import { useIsFocused } from "@react-navigation/native";
 import mime from "mime";
@@ -36,46 +36,45 @@ const Dashboard = ({ navigation, route }) => {
     }, [user]);
 
     return (
-        <View className="flex-1" style={{ backgroundColor: "#ffb703" }}>
-            <Header back={true} />
-    
+        <View style={{ flex: 1, backgroundColor: "#fff" }}>
             <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-                <View style={styles.boxContainer}>
-                    <View style={styles.UserContainer}>
-                        <Text style={styles.usernameText}>
-                            Dashboard
-                        </Text>
-                    </View>
-    
-                    <View style={styles.OptionsContainer}>
-                        {/* Conditionally Render "My Orders" or "Manage Orders" */}
+                <View style={styles.headerContainer}>
+                    <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+                    <MaterialCommunityIcons name="arrow-left" size={24} color="#000" />
+                    </TouchableOpacity>
+                    <Text style={styles.headerText}>Order Summary</Text>
+                </View>
+                <View style={styles.OptionsContainer}>
+                    <View style={styles.optionRow}>
                         <OptionList
                             text={"Orders"}
                             Icon={Ionicons}
-                            iconName={"bag-check-outline" /* Change Icon */}
+                            iconName={"bag-check-outline"}
                             onPress={() => navigation.navigate("adminorders")}
+                            style={styles.optionBox}
                         />
                         <OptionList
                             text={"Products"}
                             Icon={Ionicons}
-                            iconName={"bag-outline" /* Change Icon */}
+                            iconName={"bag-outline"}
                             onPress={() => navigation.navigate("adminproducts")}
+                            style={styles.optionBox}
                         />
                         <OptionList
                             text={"Category"}
                             Icon={Ionicons}
-                            iconName={"file-tray-full-outline" /* Change Icon */}
+                            iconName={"file-tray-full-outline"}
                             onPress={() => navigation.navigate("admincategory")}
+                            style={styles.optionBox}
                         />
                         <OptionList
                             text={"Events"}
                             Icon={Ionicons}
-                            iconName={"calendar-outline" /* Change Icon */}
+                            iconName={"calendar-outline"}
                             onPress={() => navigation.navigate("adminevents")}
+                            style={styles.optionBox}
                         />
                     </View>
-    
-            
                 </View>
               
                 <View style={styles.footer}>
@@ -93,6 +92,23 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#fff',
     },
+    headerContainer: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: 10,
+        backgroundColor: "#fff",
+        borderBottomWidth: 1,
+        borderBottomColor: "#ccc",
+    },
+    backButton: {
+        position: "absolute",
+        left: 10,
+    },
+    headerText: {
+        fontSize: 20,
+        fontWeight: "bold",
+    },
     screenNameContainer: {
         padding: 16,
         alignItems: 'center',
@@ -101,20 +117,6 @@ const styles = StyleSheet.create({
         fontSize: 24,
         fontWeight: 'bold',
         paddingTop: 20,
-    },
-    boxContainer: {
-        backgroundColor: '#fff',
-        borderTopLeftRadius: 30,
-        borderTopRightRadius: 30,
-        paddingTop: 0,
-        marginTop: 0,
-        height: '100%',
-        paddingHorizontal: 16,
-        elevation: 5, // For shadow (Android)
-        shadowColor: "#000", // For shadow (iOS)
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 4,
     },
     UserContainer: {
         alignItems: 'center',
@@ -127,6 +129,25 @@ const styles = StyleSheet.create({
     },
     OptionsContainer: {
         marginTop: 10,
+        padding: 20,
+    },
+    optionRow: {
+        justifyContent: 'space-between',
+        marginBottom: 20,
+    },
+    optionBox: {
+        flex: 1,
+        marginHorizontal: 10,
+        padding: 20,
+        backgroundColor: '#f5f5f5',
+        borderRadius: 10,
+        alignItems: 'center',
+        justifyContent: 'center',
+        elevation: 5, // For shadow (Android)
+        shadowColor: "#000", // For shadow (iOS)
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
     },
     footer: {
         position: "absolute",
