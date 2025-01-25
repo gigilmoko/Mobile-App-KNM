@@ -188,7 +188,7 @@ const styles = StyleSheet.create({
         color: "#888",
     },
     flatListContent: {
-        marginHorizontal: 10,
+        margin: 20,
     },
     notificationItem: {
         flexDirection: 'row',

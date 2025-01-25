@@ -38,7 +38,7 @@ export const getSingleRider = (id) => async (dispatch) => {
     const token = await AsyncStorage.getItem('token');
     const { data } = await axios.get(`${server}rider/${id}`, {
       headers: {
-        "Authorization": `Bearer ${token}`, // Send token in the headers
+        "Authorization": `Bearer ${token}`, 
       },
       withCredentials: true,
     });
@@ -92,14 +92,14 @@ export const riderLogin = (email, password, playerId) => async (dispatch) => {
       );
 
       // Correctly access the rider ID from the response
-      const riderId = data.user._id; 
-      console.log('Rider data:', data); 
-      console.log('Rider ID:', riderId); 
+      const riderId = data.user._id;
+      console.log('Rider data:', data);
+      console.log('Rider ID:', riderId);
       console.log('Rider playerId:', playerId);
 
       // Store rider ID and token
-      await AsyncStorage.setItem('riderId', riderId); 
-      await AsyncStorage.setItem('riderToken', data.token); 
+      await AsyncStorage.setItem('riderId', riderId);
+      await AsyncStorage.setItem('riderToken', data.token);
 
       dispatch({
           type: "riderLoginSuccess",
@@ -118,16 +118,25 @@ export const riderLogin = (email, password, playerId) => async (dispatch) => {
 
 export const riderLogout = () => async (dispatch) => {
   try {
-    const token = await AsyncStorage.getItem('token');
-    await axios.post(`${server}riders/logout`, {}, {
-      headers: {
-        "Authorization": `Bearer ${token}`, // Send token in the headers
-      },
-      withCredentials: true,
-    });
-    dispatch({ type: "RIDER_LOGOUT" });
+      const token = await AsyncStorage.getItem('riderToken');
+      await axios.post(`${server}/rider/logout`, {}, {
+          headers: {
+              "Authorization": `Bearer ${token}`, // Send token in the headers
+          },
+          withCredentials: true,
+      });
+
+      // Remove rider ID and token from AsyncStorage
+      await AsyncStorage.removeItem('riderId');
+      await AsyncStorage.removeItem('riderToken');
+
+      dispatch({ type: "riderLogoutSuccess" });
   } catch (error) {
-    console.error(error);
+      dispatch({
+          type: "riderLogoutFail",
+          payload: error.response?.data.message || 'Logout failed',
+      });
+      console.error('Logout error:', error);
   }
 };
 

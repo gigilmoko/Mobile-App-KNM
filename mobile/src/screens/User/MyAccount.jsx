@@ -18,13 +18,11 @@ const { height } = Dimensions.get("window"); // Get the screen height
 
 const MyAccount = ({ navigation, route }) => {
     const { user } = useSelector((state) => state.user);
-    const defaultAvatar = require("../../assets/images/default-user-icon.jpg");
-    const [avatar, setAvatar] = useState(user?.avatar || defaultAvatar);
-    const [isAvatarChanged, setIsAvatarChanged] = useState(false);
-    const [isUpdating, setIsUpdating] = useState(false);
-
     const dispatch = useDispatch();
     const isFocused = useIsFocused();
+    const [avatar, setAvatar] = useState(user?.avatar || "");
+    const [isAvatarChanged, setIsAvatarChanged] = useState(false);
+    const [isUpdating, setIsUpdating] = useState(false);
 
     useEffect(() => {
         dispatch(loadUser());
@@ -98,7 +96,7 @@ const MyAccount = ({ navigation, route }) => {
     };
 
     return (
-        <View style={{ flex: 1, backgroundColor: "#ffb703" }}>
+        <View style={{ flex: 1, backgroundColor: "#fff" }}>
             <Header back={true} />
 
             <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
@@ -187,8 +185,6 @@ const MyAccount = ({ navigation, route }) => {
     );
 };
 
-export default MyAccount;
-
 const styles = StyleSheet.create({
     container: {
         flex: 1,
@@ -202,19 +198,6 @@ const styles = StyleSheet.create({
     screenNameText: {
         fontSize: 24,
         fontWeight: 'bold',
-    },
-    boxContainer: {
-        backgroundColor: '#fff',
-        borderTopLeftRadius: 50,
-        borderTopRightRadius: 50,
-        paddingTop: 0,
-        height: '100%',
-        paddingHorizontal: 16,
-        elevation: 5, // For shadow (Android)
-        shadowColor: "#000", // For shadow (iOS)
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 4,
     },
     UserContainer: {
         alignItems: 'center',
@@ -258,10 +241,12 @@ const styles = StyleSheet.create({
     },
     OptionsContainer: {
         marginTop: 30,
+        paddingHorizontal: 20,
     },
     logoutButton: {
         backgroundColor: "#bc430b",
-        borderRadius: 5,
+        borderRadius: 10,
+        margin: 20,
     },
     footer: {
         position: "absolute",
@@ -270,3 +255,5 @@ const styles = StyleSheet.create({
         paddingTop: 0,
     },
 });
+
+export default MyAccount;

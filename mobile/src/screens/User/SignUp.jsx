@@ -177,37 +177,15 @@ const SignUp = ({ navigation, route }) => {
     }, [route.params]);
 
     return (
-        <View className="flex-1" style={{ backgroundColor: "#ffb703" }}>
-            <View className="flex">
-                <View
-                    style={{
-                        width: '100%',
-                        flexDirection: 'row',
-                        justifyContent: 'space-between',
-                    }}>
-                    <TouchableOpacity onPress={() => navigation.goBack('home')}>
-                        <Entypo
-                            name="chevron-left"
-                            style={{
-                                fontSize: 30,
-                                color: '#bc430b',
-                                padding: 12,
-                                borderRadius: 10,
-                                marginTop: 30,
-                            }}
+        <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+            <View style={styles.container}>
+                <View style={styles.box}>
+                    {/* <View style={styles.logoContainer}>
+                        <Image
+                            source={require("../../assets/images/logo.png")}
+                            style={styles.logo}
                         />
-                    </TouchableOpacity>
-                </View>
-                <View className="flex-row justify-center mt-[-40px]">
-                    <Image source={require("../../assets/images/logo.png")}
-                        style={{ width: 200, height: 200, marginTop: 50 }}
-                    />
-                </View>
-            </View>
-            <ScrollView showsVerticalScrollIndicator={false} className="flex-1 bg-white" style={{
-                elevation: 10, borderTopLeftRadius: 50, borderTopRightRadius: 50
-            }}>
-                <View className="flex-1 bg-white px-8 pt-8" style={{ borderTopLeftRadius: 50, borderTopRightRadius: 50 }}>
+                    </View> */}
                     <View className="form space-y-2">
                         <Avatar.Image
                             style={{
@@ -218,9 +196,9 @@ const SignUp = ({ navigation, route }) => {
                             source={avatar ? { uri: avatar } : require("../../assets/images/default-user-icon.jpg")}
                         />
                         <TouchableOpacity onPress={openImagePicker}>
-                            <Button textColor="gray">Change Photo</Button>
+                            <Button textColor="gray">Add Photo</Button>
                         </TouchableOpacity>
-                                
+
                         <Text className="text-gray-700 ml-4">First Name</Text>
                         <TextInput
                             placeholder="Enter first name"
@@ -314,58 +292,88 @@ const SignUp = ({ navigation, route }) => {
                         </TouchableOpacity>
                     </View>
                 </View>
-            </ScrollView>
 
-            <Modal
-                visible={showMemberModal}
-                transparent={true}
-                animationType="slide"
-                onRequestClose={() => setShowMemberModal(false)}
-            >
-                <View style={styles.modalContainer}>
-                    <View style={styles.modalContent}>
-                        <Text style={styles.modalTitle}>Are you a member of KNM?</Text>
-                        <View style={styles.modalButtonContainer}>
-                            <Button onPress={() => {
-                                setShowMemberModal(false);
-                                setShowMemberIdModal(true);
-                            }}>Yes</Button>
-                            <Button onPress={() => {
-                                setShowMemberModal(false);
-                                submitHandler(false);
-                            }}>No</Button>
+                <Modal
+                    visible={showMemberModal}
+                    transparent={true}
+                    animationType="slide"
+                    onRequestClose={() => setShowMemberModal(false)}
+                >
+                    <View style={styles.modalContainer}>
+                        <View style={styles.modalContent}>
+                            <Text style={styles.modalTitle}>Are you a member of KNM?</Text>
+                            <View style={styles.modalButtonContainer}>
+                                <Button onPress={() => {
+                                    setShowMemberModal(false);
+                                    setShowMemberIdModal(true);
+                                }}>Yes</Button>
+                                <Button onPress={() => {
+                                    setShowMemberModal(false);
+                                    submitHandler(false);
+                                }}>No</Button>
+                            </View>
                         </View>
                     </View>
-                </View>
-            </Modal>
+                </Modal>
 
-            <Modal
-                visible={showMemberIdModal}
-                transparent={true}
-                animationType="slide"
-                onRequestClose={() => setShowMemberIdModal(false)}
-            >
-                <View style={styles.modalContainer}>
-                    <View style={styles.modalContent}>
-                        <Text style={styles.modalTitle}>Enter your Member ID</Text>
-                        <TextInput
-                            placeholder="Enter Member ID"
-                            value={memberId}
-                            onChangeText={setMemberId}
-                            style={styles.modalInput}
-                        />
-                        <Button onPress={() => {
-                            setShowMemberIdModal(false);
-                            submitHandler(true);
-                        }}>Submit</Button>
+                <Modal
+                    visible={showMemberIdModal}
+                    transparent={true}
+                    animationType="slide"
+                    onRequestClose={() => setShowMemberIdModal(false)}
+                >
+                    <View style={styles.modalContainer}>
+                        <View style={styles.modalContent}>
+                            <Text style={styles.modalTitle}>Enter your Member ID</Text>
+                            <TextInput
+                                placeholder="Enter Member ID"
+                                value={memberId}
+                                onChangeText={setMemberId}
+                                style={styles.modalInput}
+                            />
+                            <Button onPress={() => {
+                                setShowMemberIdModal(false);
+                                submitHandler(true);
+                            }}>Submit</Button>
+                        </View>
                     </View>
-                </View>
-            </Modal>
-        </View>
+                </Modal>
+            </View>
+        </ScrollView>
     );
 };
 
 const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: "#fff",
+        padding: 20,
+        marginVertical: 20,
+    },
+    box: {
+        width: "100%",
+        backgroundColor: "#fff",
+        borderRadius: 10,
+        padding: 20,
+        elevation: 5, // For Android shadow
+        shadowColor: "#000", // For iOS shadow
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 5,
+    },
+    logoContainer: {
+        alignItems: "center",
+        marginBottom: 20,
+    },
+    logo: {
+        width: 100,
+        height: 100,
+    },
+    form: {
+        width: "100%",
+    },
     modalContainer: {
         flex: 1,
         justifyContent: 'center',

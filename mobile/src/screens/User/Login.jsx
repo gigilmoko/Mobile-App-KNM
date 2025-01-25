@@ -1,20 +1,12 @@
-import {
-  View,
-  Text,
-  Image,
-  TextInput,
-  TouchableOpacity,
-  ScrollView,
-} from "react-native";
 import React, { useState, useEffect } from "react";
-import { OneSignal } from "react-native-onesignal";
-import Entypo from "react-native-vector-icons/Entypo";
-import { useDispatch, useSelector } from "react-redux";
+import { View, Text, Image, TextInput, TouchableOpacity, ScrollView, StyleSheet } from "react-native";
+import { useDispatch } from "react-redux";
 import { userLogin } from "../../redux/actions/userActions";
-import { riderLogin } from "../../redux/actions/riderActions"; // Import the riderLogin action
+import { riderLogin } from "../../redux/actions/riderActions";
 import { useMessageAndErrorUser } from "../../../utils/hooks";
-import Toast from "react-native-toast-message"; // Import the toast message
+import Toast from "react-native-toast-message";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import OneSignal from "react-native-onesignal";
 
 const Login = ({ navigation }) => {
   const [email, setEmail] = useState("");
@@ -26,10 +18,9 @@ const Login = ({ navigation }) => {
   useEffect(() => {
     const getPlayerId = async () => {
       try {
-        const deviceState =
-          await OneSignal.User.pushSubscription.getPushSubscriptionId();
+        const deviceState = await OneSignal.getDeviceState();
         if (deviceState) {
-          setPlayerId(deviceState);
+          setPlayerId(deviceState.userId);
         }
         console.log("Device State:", deviceState);
       } catch (error) {
@@ -37,19 +28,11 @@ const Login = ({ navigation }) => {
       }
     };
 
-    // Initial fetch
     getPlayerId();
-
-    // Subscription listener
-    const subscription = OneSignal.User.pushSubscription.addEventListener(
-      "change",
-      getPlayerId
-    );
-    return () => subscription?.remove();
   }, []);
-  // Handler for user login
+
   const userSubmitHandler = () => {
-    dispatch(userLogin(email, password, playerId)) // Pass playerId as third parameter
+    dispatch(userLogin(email, password, playerId))
       .then(() => {
         Toast.show({
           type: "success",
@@ -66,9 +49,7 @@ const Login = ({ navigation }) => {
       });
   };
 
-  // Handler for rider login
   const riderSubmitHandler = () => {
-    console.log("Rider Login triggered");
     dispatch(riderLogin(email, password, playerId))
       .then(async () => {
         Toast.show({
@@ -78,7 +59,6 @@ const Login = ({ navigation }) => {
         navigation.navigate("loadingrider");
       })
       .catch((error) => {
-        console.log("Rider login failed", error);
         Toast.show({
           type: "error",
           text1: "Rider Login Failed",
@@ -87,102 +67,54 @@ const Login = ({ navigation }) => {
       });
   };
 
-  // Check if the email starts with "newrider"
   const isRiderLogin = email.startsWith("newrider");
 
   return (
     <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-      <View className="flex-1" style={{ backgroundColor: "#ffb703" }}>
-        <View className="flex">
-          <View
-            style={{
-              width: "100%",
-              flexDirection: "row",
-              justifyContent: "space-between",
-            }}
-          >
-            <TouchableOpacity onPress={() => navigation.goBack("home")}>
-              <Entypo
-                name="chevron-left"
-                style={{
-                  fontSize: 30,
-                  color: "#bc430b",
-                  padding: 12,
-                  borderRadius: 10,
-                  marginTop: 30,
-                }}
-              />
-            </TouchableOpacity>
-          </View>
-          <View className="flex-row justify-center mt-[-40px]">
+      <View style={styles.container}>
+        <View style={styles.box}>
+          <View style={styles.logoContainer}>
             <Image
               source={require("../../assets/images/logo.png")}
-              style={{ width: 200, height: 200, marginTop: 50 }}
+              style={styles.logo}
             />
           </View>
-        </View>
-
-        <View
-          className="flex-1 bg-white px-8 pt-8"
-          style={{
-            elevation: 10,
-            borderTopLeftRadius: 50,
-            borderTopRightRadius: 50,
-          }}
-        >
-          <View className="form space-y-2">
-            <Text className="text-gray-700 ml-4">Email Address</Text>
-            <TextInput
-              keyboardType="email-address"
-              value={email}
-              onChangeText={setEmail}
-              placeholder="Enter email address"
-              className="p-4 bg-gray-100 text-gray-700 rounded-2xl mb-3"
-            />
-            <Text className="text-gray-700 ml-4">Password</Text>
-            <TextInput
-              secureTextEntry={true}
-              value={password}
-              onChangeText={setPassword}
-              placeholder="Enter password"
-              className="p-4 bg-gray-100 text-gray-700 rounded-2xl"
-            />
-            <TouchableOpacity
-              className="flex items-end mb-5"
-              onPress={() => navigation.navigate("forgetpassword")}
-            >
-              <Text className="text-gray-700">Forgot Password?</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={{ backgroundColor: "#bc430b" }}
-              className="py-2 rounded-xl"
-              loading={loading}
-              disabled={email === "" || password === ""}
-              onPress={isRiderLogin ? riderSubmitHandler : userSubmitHandler} // Use the appropriate handler
-            >
-              <Text
-                style={{ color: "#fff" }}
-                className="text-white-700 font-bold text-center"
-              >
-                {isRiderLogin ? "Login as Rider" : "Login"}{" "}
-                {/* Button text changes dynamically */}
-              </Text>
-            </TouchableOpacity>
-          </View>
-          <Text className="text-xl text-gray-700 text-center font-bold py-2">
-            Or
-          </Text>
-          <View className="flex-row justify-center py-2">
-            <Text className="text-gray-500 font-semibold">
-              Don't have an account?
+          <Text style={styles.title}>Login</Text>
+          <TextInput
+            keyboardType="email-address"
+            value={email}
+            onChangeText={setEmail}
+            placeholder="Enter email address"
+            style={styles.input}
+          />
+          <TextInput
+            secureTextEntry={true}
+            value={password}
+            onChangeText={setPassword}
+            placeholder="Enter password"
+            style={styles.input}
+          />
+          <TouchableOpacity
+            style={styles.forgotPassword}
+            onPress={() => navigation.navigate("forgetpassword")}
+          >
+            <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.loginButton}
+            loading={loading}
+            disabled={email === "" || password === ""}
+            onPress={isRiderLogin ? riderSubmitHandler : userSubmitHandler}
+          >
+            <Text style={styles.loginButtonText}>
+              {isRiderLogin ? "Login as Rider" : "Login"}
             </Text>
+          </TouchableOpacity>
+          <Text style={styles.orText}>Or</Text>
+          <View style={styles.signupContainer}>
+            <Text style={styles.signupText}>Don't have an account?</Text>
             <TouchableOpacity onPress={() => navigation.navigate("signup")}>
-              <Text
-                style={{ color: "#bc430b" }}
-                className="text-yellow-400 font-semibold ml-2"
-              >
-                Sign Up
-              </Text>
+              <Text style={styles.signupLink}>Sign Up</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -190,5 +122,89 @@ const Login = ({ navigation }) => {
     </ScrollView>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    padding: 20,
+  },
+  box: {
+    width: "100%",
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    padding: 20,
+    elevation: 5,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    alignItems: "center",
+  },
+  logoContainer: {
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  logo: {
+    width: 100,
+    height: 100,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 20,
+    textAlign: "center",
+  },
+  input: {
+    backgroundColor: "#f5f5f5",
+    borderRadius: 10,
+    padding: 15,
+    marginBottom: 15,
+    fontSize: 16,
+    width: "100%",
+  },
+  forgotPassword: {
+    alignItems: "flex-end",
+    marginBottom: 20,
+    width: "100%",
+  },
+  forgotPasswordText: {
+    color: "#bc430b",
+    fontWeight: "bold",
+  },
+  loginButton: {
+    backgroundColor: "#bc430b",
+    padding: 10,
+    borderRadius: 10,
+    alignItems: "center",
+    width: "100%",
+  },
+  loginButtonText: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 16,
+  },
+  orText: {
+    textAlign: "center",
+    margin: 15,
+    fontSize: 16,
+    color: "#888",
+  },
+  signupContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+  },
+  signupText: {
+    color: "#888",
+    fontSize: 16,
+  },
+  signupLink: {
+    color: "#bc430b",
+    fontWeight: "bold",
+    marginLeft: 5,
+  },
+});
 
 export default Login;
