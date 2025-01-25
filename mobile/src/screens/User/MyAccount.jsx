@@ -164,12 +164,6 @@ const MyAccount = ({ navigation, route }) => {
                             iconName={"person"}
                             onPress={() => navigation.navigate("updateprofile")}
                         />
-                         <OptionList
-                            text={"Address"}
-                            Icon={Ionicons}
-                            iconName={"person"}
-                            onPress={() => navigation.navigate("currentaddress")}
-                        />
                         <OptionList
                             text={"Contact and Feedback"}
                             Icon={Ionicons}

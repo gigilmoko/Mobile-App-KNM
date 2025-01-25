@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
-  Image,
   TouchableOpacity,
   StyleSheet,
   ScrollView,
@@ -12,6 +11,7 @@ import { TextInput } from "react-native-paper";
 import { Picker } from "@react-native-picker/picker";
 import WebView from 'react-native-webview';
 import Header from "../../components/Layout/Header";
+import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import { useDispatch, useSelector } from "react-redux";
 import { updateAddress, loadUser } from "../../redux/actions/userActions";
 import { useIsFocused } from "@react-navigation/native";
@@ -51,7 +51,6 @@ const AddressUpdate = ({ navigation }) => {
     // UI States
     const [isProfileChanged, setIsProfileChanged] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [showMapAndSearch, setShowMapAndSearch] = useState(false);
 
     useEffect(() => {
         if (isFocused) {
@@ -69,13 +68,13 @@ const AddressUpdate = ({ navigation }) => {
             setBarangay(latestAddress?.barangay?.toString() || "");
             setCity(latestAddress?.city?.toString() || "");
             setLatitude(latestAddress?.latitude?.toString() || "14.5995");
-            setLongitude(latestAddress?.longitude?.toString() || "120.9842");
+            setLongitude(latestAddress?.longitude?.toString() || "");
         }
     }, [user]);
 
     useEffect(() => {
         if (isProfileChanged) {
-            navigation.replace("myaccount");
+            navigation.replace("confirmorder");
         }
     }, [isProfileChanged, navigation]);
 
@@ -261,49 +260,20 @@ const AddressUpdate = ({ navigation }) => {
     };
 
     return (
-        <View style={{ flex: 1, backgroundColor: "#ffb703" }}>
-            <Header back={true} />
+        <View style={{ flex: 1, backgroundColor: "#fff" }}>
+            <View style={styles.headerContainer}>
+                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+                    <MaterialCommunityIcons name="arrow-left" size={24} color="#000" />
+                </TouchableOpacity>
+                <Text style={styles.headerText}>Update Address</Text>
+            </View>
             <ScrollView style={{ flex: 1 }}>
-                <View style={{ alignItems: 'center', marginTop: -40 }}>
-                    <Image
-                        source={require("../../assets/images/logo.png")}
-                        style={{ width: 100, height: 100, marginTop: 30 }}
-                    />
-                </View>
-                
                 <View style={styles.formContainer}>
-                    <Text style={styles.title}>Update Address</Text>
-
-                    <TouchableOpacity
-                        style={styles.mapToggleButton}
-                        onPress={() => setShowMapAndSearch(!showMapAndSearch)}
-                    >
-                        <Text style={styles.buttonText}>
-                            {showMapAndSearch ? "Hide Map" : "Choose Location on Map"}
-                        </Text>
-                    </TouchableOpacity>
-
-                    {showMapAndSearch && (
-                        <View style={styles.mapContainer}>
-                            <WebView
-                                source={{ html: mapHtml }}
-                                style={styles.map}
-                                onMessage={handleMapMessage}
-                                scrollEnabled={false}
-                                javaScriptEnabled={true}
-                                domStorageEnabled={true}
-                                geolocationEnabled={true}
-                            />
-                        </View>
-                    )}
-
-                    <View style={styles.coordinatesContainer}>
-                        <Text style={styles.coordinatesText}>
-                            Latitude: {latitude ? parseFloat(latitude).toFixed(6) : ''}
-                        </Text>
-                        <Text style={styles.coordinatesText}>
-                            Longitude: {longitude ? parseFloat(longitude).toFixed(6) : ''}
-                        </Text>
+                    <View style={styles.addressBox}>
+                        <Text style={styles.label}>House Number: {houseNo}</Text>
+                        <Text style={styles.label}>Street Name: {streetName}</Text>
+                        <Text style={styles.label}>Barangay: {barangay}</Text>
+                        <Text style={styles.label}>City: {city}</Text>
                     </View>
 
                     <View style={styles.inputContainer}>
@@ -408,6 +378,18 @@ const AddressUpdate = ({ navigation }) => {
                         </View>
                     </View>
 
+                    <View style={styles.mapContainer}>
+                        <WebView
+                            source={{ html: mapHtml }}
+                            style={styles.map}
+                            onMessage={handleMapMessage}
+                            scrollEnabled={false}
+                            javaScriptEnabled={true}
+                            domStorageEnabled={true}
+                            geolocationEnabled={true}
+                        />
+                    </View>
+
                     <TouchableOpacity
                         style={[styles.submitButton, loading && styles.disabledButton]}
                         onPress={submitHandler}
@@ -426,13 +408,38 @@ const AddressUpdate = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
+    headerContainer: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: 10,
+        backgroundColor: "#fff",
+        borderBottomWidth: 1,
+        borderBottomColor: "#ccc",
+    },
+    backButton: {
+        position: "absolute",
+        left: 10,
+    },
+    headerText: {
+        fontSize: 20,
+        fontWeight: "bold",
+    },
     formContainer: {
         flex: 1,
         backgroundColor: '#fff',
         borderTopLeftRadius: 30,
         borderTopRightRadius: 30,
         padding: 20,
-        marginTop: 20,
+        // marginTop: 20,
+    },
+    addressBox: {
+        backgroundColor: "#fff",
+        borderRadius: 10,
+        padding: 15,
+        marginBottom: 20,
+        borderWidth: 1,
+        borderColor: "#ddd",
     },
     title: {
         fontSize: 24,
@@ -447,68 +454,44 @@ const styles = StyleSheet.create({
     label: {
         fontSize: 16,
         color: '#333',
-        marginBottom: 5,
         fontWeight: '500',
     },
     input: {
         backgroundColor: '#f5f5f5',
-        height: 45,
+        borderRadius: 10,
+        borderWidth: 1,
+        borderColor: '#ddd',
         borderRadius: 8,
-        paddingHorizontal: 10,
     },
     pickerContainer: {
         borderWidth: 1,
         borderColor: '#ddd',
         borderRadius: 8,
         backgroundColor: '#f5f5f5',
-        marginBottom: 15,
-    },
-    mapToggleButton: {
-        backgroundColor: '#bc430b',
-        padding: 15,
-        borderRadius: 8,
-        alignItems: 'center',
-        marginBottom: 20,
-    },
-    buttonText: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: '600',
+        // marginBottom: 15,
     },
     mapContainer: {
-        height: 300,
+        height: 200,
         borderRadius: 8,
         overflow: 'hidden',
-        marginBottom: 20,
+        marginVertical: 10,
         borderWidth: 1,
         borderColor: '#ddd',
     },
     map: {
         flex: 1,
     },
-    coordinatesContainer: {
-        backgroundColor: '#f5f5f5',
-        padding: 15,
-        borderRadius: 8,
-        marginBottom: 20,
-    },
-    coordinatesText: {
-        fontSize: 14,
-        color: '#666',
-        marginBottom: 5,
-    },
     submitButton: {
         backgroundColor: '#bc430b',
-        padding: 15,
+        padding: 10,
         borderRadius: 8,
         alignItems: 'center',
-        marginTop: 20,
+        marginTop: 10,
         marginBottom: 30,
     },
     submitButtonText: {
         color: '#fff',
         fontSize: 18,
-        fontWeight: '600',
     },
     disabledButton: {
         opacity: 0.7,

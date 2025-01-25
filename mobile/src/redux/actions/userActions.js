@@ -263,7 +263,7 @@ export const updateAddress = (userData) => async (dispatch, getState) => {
         };
         console.log('Request Body:', jsonData);
 
-        const requestUrl = `${server}/me/update/address`;
+        const requestUrl = `${server}me/update/address`;
         console.log('Request URL:', requestUrl);
 
         const { data } = await axios.put(requestUrl, jsonData, config);

@@ -89,7 +89,7 @@ const ConfirmOrder = () => {
       } else {
         Alert.alert('Order Placed Successfully');
         dispatch({ type: "clearCart" });
-        navigation.navigate("My Cart");
+        navigation.navigate("home");
       }
     } catch (err) {
       console.error('Error placing order:', err);
@@ -116,15 +116,15 @@ const ConfirmOrder = () => {
         <View style={styles.card}>
           <View style={styles.customerDetailsHeader}>
             <Text style={styles.subheading}>Customer Details</Text>
-            <TouchableOpacity onPress={() => navigation.navigate("editaddress")}>
+            <TouchableOpacity onPress={() => navigation.navigate("addressupdate")}>
               <MaterialCommunityIcons name="pencil" size={24} color="#000" />
             </TouchableOpacity>
           </View>
           <Text style={styles.text}>Name: {user?.fname} {user?.lname}</Text>
           <Text style={styles.text}>Phone: {user?.phone}</Text>
           <Text style={styles.text}>
-  Address: {user?.deliveryAddress?.[0]?.houseNo}, {user?.deliveryAddress?.[0]?.streetName}, {user?.deliveryAddress?.[0]?.barangay}, {user?.deliveryAddress?.[0]?.city}
-</Text>
+          Address: {user?.deliveryAddress?.[0]?.houseNo}, {user?.deliveryAddress?.[0]?.streetName}, {user?.deliveryAddress?.[0]?.barangay}, {user?.deliveryAddress?.[0]?.city}
+        </Text>
         </View>
 
         <View style={styles.card}>

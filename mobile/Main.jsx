@@ -43,7 +43,6 @@ import AdminCreateEvent from "./src/screens/Admin/Events/AdminEventCreate";
 import AdminEventUpdate from "./src/screens/Admin/Events/AdminEventUpdate";
 import EventFeedback from "./src/screens/User/EventFeedback";
 import AddressUpdate from "./src/screens/Address/AddressUpdate";
-import CurrentAddress from "./src/screens/Address/CurrentAddress";
 import EditAddress from "./src/screens/Address/EditAddress";
 import LoadingRider from "./src/screens/Rider/LoadingRider";
 import RiderStack from "./src/screens/Rider/RiderStack";
@@ -83,7 +82,6 @@ const HomeStack = () => {
             <Stack.Screen name="changepassword" component={ChangePassword} />
             <Stack.Screen name="updateprofile" component={UpdateProfile} />
             <Stack.Screen name="addressupdate" component={AddressUpdate} />
-            <Stack.Screen name="currentaddress" component={CurrentAddress} />
             <Stack.Screen name="editaddress" component={EditAddress} />
 
             {/* Admin Screens */}
