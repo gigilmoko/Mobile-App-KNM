@@ -39,7 +39,7 @@ const UpdateProfile = ({ navigation }) => {
                 email,
                 dateOfBirth,
                 phone,
-                address,
+                
             };
 
             // console.log("Data to be sent:", updatedProfileData); 
@@ -192,18 +192,7 @@ const UpdateProfile = ({ navigation }) => {
                                 />
 
                                 {/* Address */}
-                                <Text style={styles.label}>Address</Text>
-                                <TextInput
-                                    placeholder="Enter address"
-                                    value={address}
-                                    onChangeText={setAddress}
-                                    onFocus={() => handleFocus("address")}
-                                    onBlur={handleBlur}
-                                    style={[
-                                        styles.input,
-                                        focusedField === "address" && { borderColor: "orange" },
-                                    ]}
-                                />
+                                
                             </View>
                             <View className="flex items-center mb-5">
                                 <TouchableOpacity
