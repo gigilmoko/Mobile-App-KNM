@@ -16,6 +16,21 @@ export const userReducer = createReducer(initialState, (builder) => {
         .addCase("loginRequest", (state) => {
             state.loading = true;
         })
+        .addCase("FORGOT_PASSWORD_REQUEST", (state) => {
+            state.loading = true;
+        })
+
+        // Success case
+        .addCase("FORGOT_PASSWORD_SUCCESS", (state, action) => {
+            state.loading = false;
+            state.message = action.payload;  // Store the success message from the API
+        })
+
+        // Fail case
+        .addCase("FORGOT_PASSWORD_FAIL", (state, action) => {
+            state.loading = false;
+            state.error = action.payload;  // Store the error message from the API
+        })
         .addCase("loadUserRequest", (state) => {
             state.loading = true;
         })
