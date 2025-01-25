@@ -54,12 +54,30 @@
                       "group.com.knm.mobile.onesignal"
                     ]
                   }
+                },
+                {
+                  "targetName": "OneSignalNotificationServiceExtension",
+                  "bundleIdentifier": "com.knm.mobile.OneSignalNotificationServiceExtension",
+                  "entitlements": {
+                    "com.apple.security.application-groups": [
+                      "group.com.knm.mobile.onesignal"
+                    ]
+                  }
+                },
+                {
+                  "targetName": "OneSignalNotificationServiceExtension",
+                  "bundleIdentifier": "com.knm.mobile.OneSignalNotificationServiceExtension",
+                  "entitlements": {
+                    "com.apple.security.application-groups": [
+                      "group.com.knm.mobile.onesignal"
+                    ]
+                  }
                 }
               ]
             }
           }
         },
-        "projectId": "12f78e05-4566-4b75-b700-5fd36769d9df"
+        "projectId": "a65c985a-8738-4688-93cb-26885edfe689"
       }
     }
   }
