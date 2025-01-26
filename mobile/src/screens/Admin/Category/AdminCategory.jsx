@@ -59,7 +59,7 @@ const AdminCategory = () => {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <View style={{ flex: 1, backgroundColor: "#ffb703" }}>
+      <View style={{ flex: 1, backgroundColor: "#fff" }}>
         <Header back={true} />
 
         {loading ? (
@@ -67,13 +67,13 @@ const AdminCategory = () => {
             <Text style={{ fontSize: 18 }}>Loading...</Text>
           </View>
         ) : (
-          <ScrollView contentContainerStyle={{ flexGrow: 1, paddingBottom: 100 }}>
+          <ScrollView contentContainerStyle={{ flexGrow: 1, paddingBottom: 30 }}>
             <View style={styles.container}>
               <View style={{ alignItems: "center" }}>
                 <Text style={styles.headerText}>Categories</Text>
               </View>
 
-              <View style={{ marginTop: 20 }}>
+              <View style={styles.categoryListContainer}>
                 {categories.map((category) => (
                   <Swipeable
                     key={category._id}
@@ -101,8 +101,6 @@ const AdminCategory = () => {
         >
           <MaterialCommunityIcons name="plus" size={30} color="#FFF" />
         </TouchableOpacity>
-
-        <Footer activeRoute={"home"} />
       </View>
     </GestureHandlerRootView>
   );
@@ -111,21 +109,29 @@ const AdminCategory = () => {
 const styles = StyleSheet.create({
   container: {
     backgroundColor: "#ffffff",
-    borderTopLeftRadius: 30,
-    borderTopRightRadius: 30,
+    flex: 1,
     padding: 20,
-    justifyContent: "center",
+    borderRadius: 10,
+    margin: 20,
+    elevation: 5, // For Android shadow
+    shadowColor: "#000", // For iOS shadow
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
   },
   headerText: {
     fontSize: 24,
     fontWeight: "bold",
     marginTop: 0,
   },
+  categoryListContainer: {
+    marginTop: 20,
+  },
   categoryCard: {
-    backgroundColor: "#f9f9f9",
+    backgroundColor: "#f5f5f5",
     padding: 15,
     borderRadius: 10,
-    borderColor: "#ffb703",
+    borderColor: "#ccc",
     borderWidth: 1,
     marginBottom: 10,
     shadowColor: "#000",
@@ -133,7 +139,7 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     shadowOffset: { width: 0, height: 3 },
     elevation: 2,
-  },  
+  },
   categoryTitle: {
     fontSize: 16,
     fontWeight: "bold",
@@ -146,7 +152,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 70, // Adjust to stay above the footer
     right: 20,
-    backgroundColor: "#ffb703",
+    backgroundColor: "#bc430b",
     width: 60,
     height: 60,
     borderRadius: 30,
@@ -161,16 +167,15 @@ const styles = StyleSheet.create({
   swipeActionContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#f9f9f9",
     paddingLeft: 10,
     paddingRight: 10,
     borderRadius: 10,
-    height: 70,
+    height: 100,
   },
   swipeActionEdit: {
     padding: 10,
     borderRadius: 5,
-    borderColor: "#ffb703",
+    borderColor: "#ccc",
     borderWidth: 1,
     justifyContent: "center",
     alignItems: "center",
@@ -179,7 +184,7 @@ const styles = StyleSheet.create({
   swipeActionDelete: {
     padding: 10,
     borderRadius: 5,
-    borderColor: "#ffb703",
+    borderColor: "#ccc",
     borderWidth: 1,
     justifyContent: "center",
     alignItems: "center",

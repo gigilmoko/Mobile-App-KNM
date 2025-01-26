@@ -81,7 +81,6 @@ export const getUnreadNotificationsCount = () => async (dispatch) => {
 
         dispatch({ type: "getUnreadNotificationsCountSuccess", payload: data.unreadCount });
     } catch (error) {
-        // console.log("Error getting unread notifications count:", error.message);
         dispatch({
             type: "getUnreadNotificationsCountFail",
             payload: error.response?.data?.message || "Failed to get unread notifications count",

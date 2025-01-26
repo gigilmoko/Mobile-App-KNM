@@ -28,7 +28,7 @@ const Header = ({ back }) => {
                         name="chevron-left"
                         style={{
                             fontSize: 25,
-                            color: '#bc430b',
+                            color: "000",
                         }}
                     />
                 </TouchableOpacity>

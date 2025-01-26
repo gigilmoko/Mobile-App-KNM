@@ -58,7 +58,7 @@ OneSignal.Notifications.requestPermission(true);
 const HomeStack = () => {
     return (
         <Stack.Navigator
-            initialRouteName="login"
+            initialRouteName="home"
             screenOptions={{
                 headerShown: false,
             }}

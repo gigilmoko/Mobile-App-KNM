@@ -41,7 +41,7 @@ const AdminEvents = ({ navigation }) => {
       ...marks[today],
       marked: true,
       selected: true,
-      selectedColor: "#ffb703",
+      selectedColor: "#bc430b",
       textStyle: { color: "#000" },
     };
 
@@ -72,6 +72,7 @@ const AdminEvents = ({ navigation }) => {
   }, [events, activeTab]);
 
   const handleDelete = (eventId) => {
+    // Confirm delete action
     Alert.alert("Delete Event", "Are you sure you want to delete this event?", [
       { text: "Cancel" },
       {
@@ -107,7 +108,6 @@ const AdminEvents = ({ navigation }) => {
       const response = await dispatch(sendPushNotification(pushData));
 
       console.log('Push notification response:', response);
-
       Toast.show({ type: 'success', text1: 'Push notification sent successfully' });
     } catch (error) {
       console.error('Error sending push notification:', error);
@@ -136,7 +136,7 @@ const AdminEvents = ({ navigation }) => {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <View style={{ flex: 1, backgroundColor: "#ffb703" }}>
+      <View style={{ flex: 1, }}>
         <View style={styles.headerContainer}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
             <MaterialCommunityIcons name="arrow-left" size={24} color="#000" />
@@ -156,8 +156,8 @@ const AdminEvents = ({ navigation }) => {
                 }}
                 markedDates={markedDates}
                 theme={{
-                  todayTextColor: "#ffb703",
-                  arrowColor: "#ffb703",
+                  todayTextColor: "#f57c00",
+                  arrowColor: "#f57c00",
                   selectedDayBackgroundColor: "#bc430b",
                   selectedDayTextColor: "#ffffff",
                 }}
@@ -223,7 +223,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     padding: 10,
-    backgroundColor: "#ffb703",
   },
   backButton: {
     position: "absolute",
@@ -237,14 +236,11 @@ const styles = StyleSheet.create({
   contentContainer: {
     flex: 1,
     backgroundColor: "#ffffff",
-    borderTopLeftRadius: 30,
-    borderTopRightRadius: 30,
     padding: 20,
   },
   calendarContainer: {
     marginBottom: 20,
     backgroundColor: "#ffffff",
-    borderRadius: 10,
     shadowColor: "#000",
     shadowOpacity: 0.1,
     shadowRadius: 5,
@@ -318,7 +314,7 @@ const styles = StyleSheet.create({
   swipeActionEdit: {
     padding: 10,
     borderRadius: 5,
-    borderColor: "#ffb703",
+    borderColor: "#ccc",
     borderWidth: 1,
     justifyContent: "center",
     alignItems: "center",
@@ -327,7 +323,7 @@ const styles = StyleSheet.create({
   swipeActionDelete: {
     padding: 10,
     borderRadius: 5,
-    borderColor: "#ffb703",
+    borderColor: "#ccc",
     borderWidth: 1,
     justifyContent: "center",
     alignItems: "center",
@@ -335,7 +331,7 @@ const styles = StyleSheet.create({
   notifButton: {
     padding: 10,
     borderRadius: 5,
-    borderColor: "#ffb703",
+    borderColor: "#f57c00",
     borderWidth: 1,
     justifyContent: "center",
     alignItems: "center",

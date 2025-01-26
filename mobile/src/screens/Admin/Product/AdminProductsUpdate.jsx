@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, ScrollView, ActivityIndicator, TextInput, Image, TouchableOpacity, StyleSheet } from "react-native";
-import Footer from "../../../components/Layout/Footer";
 import Header from "../../../components/Layout/Header";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { useDispatch, useSelector } from "react-redux";
@@ -47,26 +46,17 @@ const AdminProductsUpdate = () => {
   }, [dispatch, productId]);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      if (product) {
-        // console.log("Fetched product:", product);  // Log the fetched product to inspect the structure
-        setUpdatedProduct({
-          name: product.name || "",
-          price: product.price || "",
-          stock: product.stock || "",
-          description: product.description || "",
-          category: product.category || "",
-          images: product.images.map((img) => {
-            // console.log("Mapping image:", img);  // Log each image object being mapped
-            return img.url;
-          }) || [], // Initial images from the product
-        });
-      }
-    }, 1000);  // 5 seconds timer
-
-    // Cleanup timer
-    return () => clearTimeout(timer);
-  }, [product]);  // This will run when the product changes
+    if (product) {
+      setUpdatedProduct({
+        name: product.name || "",
+        price: product.price || "",
+        stock: product.stock || "",
+        description: product.description || "",
+        category: product.category || "",
+        images: product.images.map((img) => img.url) || [], // Initial images from the product
+      });
+    }
+  }, [product]);
 
   const handleInputChange = (field, value) => {
     setUpdatedProduct((prevState) => ({
@@ -83,13 +73,13 @@ const AdminProductsUpdate = () => {
       });
       return;
     }
-  
+
     try {
       setIsUpdating(true);
-  
+
       // Remove duplicate image URIs
       const uniqueImages = [...new Set(updatedProduct.images)];
-  
+
       // Prepare form data for image uploads
       const uploadResponses = await Promise.all(
         uniqueImages.map(async (imageUri) => {
@@ -100,28 +90,28 @@ const AdminProductsUpdate = () => {
             name: imageUri.split("/").pop(),
           });
           formData.append("upload_preset", "ml_default");
-  
+
           const response = await axios.post(
             'https://api.cloudinary.com/v1_1/dglawxazg/image/upload', 
             formData,
             { headers: { 'Content-Type': 'multipart/form-data' } }
           );
-  
+
           return {
             public_id: response.data.public_id,
             url: response.data.secure_url,
           };
         })
       );
-  
+
       const productData = {
         ...updatedProduct,
         images: uploadResponses, // Add uploaded images with URLs and public_ids
         id: productId, // Add the productId here
       };
-  
+
       dispatch(updateProduct(productData));
-  
+
       setIsUpdating(false);
       Toast.show({
         type: "success",
@@ -144,7 +134,6 @@ const AdminProductsUpdate = () => {
     if (!permissionResult.granted) {
       return alert("Permission to access gallery is required");
     }
-
     const data = await ImagePicker.launchImageLibraryAsync({
       allowsMultipleSelection: true,
       selectionLimit: 5,
@@ -178,16 +167,13 @@ const AdminProductsUpdate = () => {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#ffb703" }}>
+    <View style={{ flex: 1, }}>
       <Header back={true} />
       <ScrollView
         contentContainerStyle={{
           flexGrow: 1,
           justifyContent: "center",
           alignItems: "center",
-          backgroundColor: "#F5F5F5",
-          borderTopRightRadius: 30,
-          borderTopLeftRadius: 30,
           paddingBottom: 100, // Add padding to avoid overlap with footer
         }}
       >
@@ -196,7 +182,6 @@ const AdminProductsUpdate = () => {
             backgroundColor: "#F5F5F5",
             width: "90%",
             padding: 20,
-            borderRadius: 10,
             shadowColor: "#000",
             shadowOpacity: 0.2,
             shadowRadius: 5,
@@ -312,23 +297,30 @@ const AdminProductsUpdate = () => {
           </Picker>
 
           {/* Image Picker */}
-          <TouchableOpacity onPress={openImagePicker} style={styles.imagePickerButton}>
-            <Text style={styles.imagePickerButtonText}>Pick Images</Text>
-          </TouchableOpacity>
+          <Text style={{ fontSize: 14, color: "#666666", marginBottom: 10 }}>
+            Product Images*
+          </Text>
+          <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 15 }}>
+            <TouchableOpacity onPress={openImagePicker} style={styles.imagePickerButton}>
+              <MaterialCommunityIcons name="plus" size={24} color="#000" />
+            </TouchableOpacity>
 
-          {/* Display Selected Images */}
-          <View style={styles.imageGallery}>
-            {updatedProduct.images.map((imageUri, index) => (
-              <View key={index} style={styles.imageContainer}>
-                <Image source={{ uri: imageUri }} style={styles.selectedImage} />
-                <TouchableOpacity
-                  onPress={() => removeImage(imageUri)}
-                  style={styles.removeImageButton}
-                >
-                  <MaterialCommunityIcons name="delete" size={24} color="#ff0000" />
-                </TouchableOpacity>
+            {/* Display Selected Images */}
+            <ScrollView horizontal>
+              <View style={{ flexDirection: "row" }}>
+                {updatedProduct.images.map((imageUri, index) => (
+                  <View key={index} style={styles.imageContainer}>
+                    <Image source={{ uri: imageUri }} style={styles.selectedImage} />
+                    <TouchableOpacity
+                      onPress={() => removeImage(imageUri)}
+                      style={styles.removeImageButton}
+                    >
+                      <MaterialCommunityIcons name="delete" size={24} color="#ff0000" />
+                    </TouchableOpacity>
+                  </View>
+                ))}
               </View>
-            ))}
+            </ScrollView>
           </View>
 
           {/* Update Button */}
@@ -345,27 +337,18 @@ const AdminProductsUpdate = () => {
           </TouchableOpacity>
         </View>
       </ScrollView>
-      <Footer />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   imagePickerButton: {
-    backgroundColor: "#007BFF",
-    padding: 10,
+    backgroundColor: "#DDDDDD",
+    padding: 12,
     borderRadius: 5,
-    marginBottom: 15,
+    marginRight: 10,
     alignItems: "center",
-  },
-  imagePickerButtonText: {
-    color: "#fff",
-    fontWeight: "bold",
-  },
-  imageGallery: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    marginBottom: 15,
+    justifyContent: "center",
   },
   imageContainer: {
     position: "relative",
@@ -386,9 +369,9 @@ const styles = StyleSheet.create({
     borderRadius: 50,
   },
   updateButton: {
-    backgroundColor: "#ff6600",
-    padding: 15,
-    borderRadius: 10,
+    backgroundColor: "#bc430b",
+    padding: 10,
+    borderRadius: 5,
     alignItems: "center",
     justifyContent: "center",
     marginTop: 20,

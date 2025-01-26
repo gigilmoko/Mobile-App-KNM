@@ -72,7 +72,6 @@ const AdminOrders = () => {
                     <Text style={styles.noOrdersText}>No orders available.</Text>
                 )}
             </ScrollView>
-            <Footer activeRoute={"home"} />
         </View>
     );
 };

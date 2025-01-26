@@ -58,7 +58,6 @@ const Home = ({ navigation }) => {
         return () => clearTimeout(timeOutId);
     }, [dispatch, category, isFocused]);
 
-    // Search effect
     useEffect(() => {
         const timeOutId = setTimeout(() => {
             dispatch(searchProducts(searchQuery)); 
@@ -138,7 +137,7 @@ const Home = ({ navigation }) => {
             return Toast.show({
                 type: "error",
                 text1: "Out Of Stock",
-            });
+        });
     };
 
     const addToWishlistHandler = (id, name, price, image, stock) => {
@@ -290,7 +289,6 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         paddingBottom: 60,
-        paddingTop:15
     },
     header: {
         padding: 12,
@@ -314,9 +312,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 12,
         backgroundColor: "#ffb703",
         height: 40,
-        borderBottomLeftRadius: 10,
-        borderBottomRightRadius: 10,
-        width: "100%", // Ensure the search container takes the full width
+        width: "100%",
     },
     searchInput: {
         height: 35,
@@ -336,25 +332,24 @@ const styles = StyleSheet.create({
     },
     primaryTextContainer: {
         paddingHorizontal: 5,
-        marginTop: 5, // Adjust space between carousel and categories
+        marginTop: 5,
     },
     primaryText: {
-        fontSize: 16, // Smaller text size
+        fontSize: 16, 
         fontWeight: "bold",
         marginVertical: 5,
     },
     categoryContainer: {
         flexDirection: "row",
-        height: 40, // Less height
-        // marginTop: 10, // Adjust space between categories and category buttons
+        height: 40, 
     },
     categoryButton: {
         flexDirection: "row",
         alignItems: "center",
-        padding: 5, // Less padding
-        marginHorizontal: 5, // Less margin
+        padding: 5, 
+        marginHorizontal: 5,
         borderRadius: 5,
-        fontSize: 12, // Smaller text size
+        fontSize: 12, 
     },
     selectedCategory: {
         backgroundColor: "#bc430b",

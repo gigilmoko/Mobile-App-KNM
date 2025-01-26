@@ -6,7 +6,6 @@ import {
   ScrollView,
   TextInput,
 } from "react-native";
-import Footer from "../../../components/Layout/Footer";
 import Header from "../../../components/Layout/Header";
 import Toast from "react-native-toast-message"; // Import Toast
 import { useDispatch } from "react-redux";
@@ -55,7 +54,7 @@ const AdminCategoryCreate = () => {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#ffb703" }}>
+    <View style={{ flex: 1 }}>
       <Header back={true} />
 
       <ScrollView
@@ -64,8 +63,6 @@ const AdminCategoryCreate = () => {
           justifyContent: centered ? "center" : "flex-start",
           alignItems: "center",
           backgroundColor: "#F5F5F5",
-          borderTopRightRadius: 30,
-          borderTopLeftRadius: 30,
         }}
       >
         <View
@@ -151,25 +148,20 @@ const AdminCategoryCreate = () => {
 
             <TouchableOpacity
               style={{
-                backgroundColor: "#ffb703",
+                backgroundColor: "#bc430b", // Changed to orange
                 padding: 12,
                 borderRadius: 5,
                 flex: 1,
               }}
               onPress={handleCreateCategory}
             >
-              <Text style={{ textAlign: "center", color: "#000" }}>
+              <Text style={{ textAlign: "center", color: "#fff" }}>
                 Create Category
               </Text>
             </TouchableOpacity>
           </View>
         </View>
       </ScrollView>
-
-      {/* Footer */}
-      <View style={{ position: "absolute", bottom: 0, width: "100%" }}>
-        <Footer activeRoute={"home"} />
-      </View>
     </View>
   );
 };

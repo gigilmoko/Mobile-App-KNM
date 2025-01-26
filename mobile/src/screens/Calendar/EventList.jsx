@@ -3,7 +3,6 @@ import { View, Text, ScrollView, TouchableOpacity, StyleSheet, TextInput } from 
 import Footer from "../../components/Layout/Footer";
 import { useDispatch, useSelector } from "react-redux";
 import { getAllEvents } from "../../redux/actions/calendarActions";
-// import moment from "moment";
 import moment from "moment-timezone";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 
@@ -19,9 +18,9 @@ const EventsList = ({ navigation }) => {
 
     const filteredEvents = React.useMemo(() => {
         const today = moment().tz("Asia/Manila");
-const endOfMonth = moment().tz("Asia/Manila").endOf("month");
-const startOfNextMonth = moment().tz("Asia/Manila").add(1, "month").startOf("month");
-const endOfNextMonth = moment().tz("Asia/Manila").add(1, "month").endOf("month");
+        const endOfMonth = moment().tz("Asia/Manila").endOf("month");
+        const startOfNextMonth = moment().tz("Asia/Manila").add(1, "month").startOf("month");
+        const endOfNextMonth = moment().tz("Asia/Manila").add(1, "month").endOf("month");
 
         let filtered = events;
 
@@ -40,7 +39,10 @@ const endOfNextMonth = moment().tz("Asia/Manila").add(1, "month").endOf("month")
         if (searchQuery) {
             filtered = filtered.filter((event) => event.title.toLowerCase().includes(searchQuery.toLowerCase()));
         }
-        filtered.sort((a, b) => moment(b.date) - moment(a.date));
+
+        // Sort events by date from soonest to farthest
+        filtered.sort((a, b) => moment(a.date) - moment(b.date));
+
         return filtered;
     }, [events, activeTab, searchQuery]);
 
@@ -69,12 +71,13 @@ const endOfNextMonth = moment().tz("Asia/Manila").add(1, "month").endOf("month")
                 {upcomingEvent && (
                     <View style={styles.upcomingEventContainer}>
                         <Text style={styles.upcomingEventTitle}>Upcoming Event</Text>
-                        <Text style={styles.eventTitle}>{upcomingEvent.title}</Text>
-                        <Text style={styles.eventDate}>
-                            {moment(upcomingEvent.date).format("MM-DD-YYYY")}
+                        <Text style={styles.eventTitle}>Title: {upcomingEvent.title}</Text>
+                        <Text style={styles.eventLocation}>Venue: {upcomingEvent.location}</Text>
+                        <Text style={styles.eventDate}>Date: 
+                             {moment(upcomingEvent.date).format("MM-DD-YYYY")}
                         </Text>
-                        <Text style={styles.eventLocation}>{upcomingEvent.location}</Text>
-                        <Text style={styles.eventDescription}>{upcomingEvent.description}</Text>
+                    
+                        <Text style={styles.eventDescription}>Description: {upcomingEvent.description}</Text>
                     </View>
                 )}
 
@@ -112,7 +115,7 @@ const endOfNextMonth = moment().tz("Asia/Manila").add(1, "month").endOf("month")
                             {filteredEvents && filteredEvents.length > 0 ? (
                                 filteredEvents.map((event) => (
                                     <TouchableOpacity
-                                        key={event._id} // Ensure each event has a unique key
+                                        key={event._id} 
                                         onPress={() => navigation.navigate("eventinfo", { eventId: event._id })}
                                         style={styles.eventItem}
                                     >
@@ -122,7 +125,7 @@ const endOfNextMonth = moment().tz("Asia/Manila").add(1, "month").endOf("month")
                                                 moment(event.date).isBetween(moment(), moment().endOf("month"), "day", "[]") && { color: "#ffb703" },
                                             ]}
                                         >
-                                            {event.title}
+                                            Title: {event.title}
                                         </Text>
                                         <Text style={styles.eventLocation}>{event.location}</Text>
                                         <Text style={styles.eventDate}>
@@ -172,9 +175,51 @@ const styles = StyleSheet.create({
         fontSize: 20,
         fontWeight: "bold",
     },
+    searchBox: {
+        padding: 10,
+        marginBottom: 10,
+        borderColor: "#f4b546",
+        borderWidth: 1,
+        borderRadius: 5,
+    },
+    upcomingEventContainer: {
+        backgroundColor: "#fff",
+        borderRadius: 10,
+        padding: 10,
+        shadowColor: "#000",
+        shadowOpacity: 0.2,
+        shadowRadius: 5,
+        shadowOffset: { width: 0, height: 3 },
+        elevation: 4,
+        borderColor: "#F4B546",
+        borderWidth: 1,
+    },
+    upcomingEventTitle: {
+        fontSize: 18,
+        fontWeight: "bold",
+        color: "#333",
+        marginBottom: 5,
+    },
+    eventTitle: {
+        fontSize: 16,
+        fontWeight: "bold",
+    },
+    eventLocation: {
+        fontSize: 12,
+        color: "#333",
+    },
+    eventDate: {
+        fontSize: 14,
+        color: "#777",
+    },
+    eventDescription: {
+        fontSize: 14,
+        color: "#666",
+    },
     tabsContainer: {
         flexDirection: "row",
         justifyContent: "space-around",
+        marginVertical: 15,
     },
     tab: {
         borderRadius: 5,
@@ -191,68 +236,24 @@ const styles = StyleSheet.create({
         color: "#fff",
         padding: 8,
     },
+    scrollContainer: {
+        paddingBottom: 10,
+    },
     loadingContainer: {
         justifyContent: "center",
         alignItems: "center",
-    },
-    eventsLabel: {
-        fontWeight: "bold",
-        marginBottom: 10,
-        color: "#333",
-    },
-    eventItem: {
-        marginVertical: 5,
-        borderColor: "#F4B546",
-        borderWidth: 1,
-        borderRadius: 10,
-        backgroundColor: "#fff",
-        padding: 10,
-    },
-    eventTitle: {
-        fontSize: 16,
-        fontWeight: "bold", 
-        paddingBottom: 5,
-    },
-    eventDate: {
-        fontSize: 14,
-        color: "#777",
-    },
-    eventLocation: {
-        fontSize: 12,
-        color: "#333",
     },
     noEventsText: {
         fontSize: 16,
         color: "#888",
         textAlign: "center",
     },
-    upcomingEventContainer: {
-        backgroundColor: "#ffb703",
-        borderRadius: 10,
-        padding: 20,
-        marginBottom: 20,
-        shadowColor: "#000",
-        shadowOpacity: 0.2,
-        shadowRadius: 5,
-        shadowOffset: { width: 0, height: 3 },
-        elevation: 4,
-    },
-    upcomingEventTitle: {
-        fontSize: 18,
-        fontWeight: "bold",
-        marginBottom: 10,
-        color: "#333",
-    },
-    eventDescription: {
-        fontSize: 14,
-        color: "#666",
-        marginTop: 10,
-    },
-    searchBox: {
-        padding: 5,
-        margin: 5,
+    eventItem: {
+        marginVertical: 5,
         borderColor: "#ccc",
         borderWidth: 1,
-        borderRadius: 5,
+        borderRadius: 10,
+        backgroundColor: "#fff",
+        padding: 10,
     },
 });

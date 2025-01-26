@@ -39,11 +39,8 @@ const UpdateProfile = ({ navigation }) => {
                 email,
                 dateOfBirth,
                 phone,
-                
             };
 
-            // console.log("Data to be sent:", updatedProfileData); 
-        
             await dispatch(updateProfile(updatedProfileData));
             setIsProfileChanged(true);
             
@@ -51,7 +48,6 @@ const UpdateProfile = ({ navigation }) => {
                 type: 'success',
                 text1: 'Profile updated successfully!',
             });
-
         } catch (error) {
             console.error(error);
             Toast.show({
@@ -82,169 +78,195 @@ const UpdateProfile = ({ navigation }) => {
     };
 
     return (
-        <>
-            <View className="flex-1" style={{ backgroundColor: "#ffb703" }}>
-                <Header back={true} />
-                <ScrollView>
-                    <View className="flex-1">
-                        <View className="flex-row justify-center mt-[-40px]">
+        <View style={styles.container}>
+            <Header back={true} />
+            <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+                <View style={styles.contentContainer}>
+                    <View style={styles.formContainer}>
+                        <View style={styles.logoContainer}>
                             <Image
                                 source={require("../../assets/images/logo.png")}
-                                style={{ width: 100, height: 100, marginTop: 30 }}
+                                style={styles.logo}
                             />
                         </View>
-                        <View className="flex-1 bg-white px-8 pt-8 rounded-t-[20px] shadow-lg justify-center">
-                            <Text className="text-gray-700 text-2xl font-bold text-center mb-4">
-                                Update Profile
-                            </Text>
-                            <View style={styles.form}>
-                                {/* First Name */}
-                                <Text style={styles.label}>First Name</Text>
+                        <Text style={styles.title}>Update Profile</Text>
+                        <View style={styles.form}>
+                            <Text style={styles.label}>First Name</Text>
+                            <TextInput
+                                placeholder="Enter first name"
+                                value={fname}
+                                onChangeText={setFname}
+                                onFocus={() => handleFocus("fname")}
+                                onBlur={handleBlur}
+                                style={[
+                                    styles.input,
+                                    focusedField === "fname" && { borderColor: "orange" },
+                                ]}
+                            />
+
+                            <Text style={styles.label}>Last Name</Text>
+                            <TextInput
+                                placeholder="Enter last name"
+                                value={lname}
+                                onChangeText={setLname}
+                                onFocus={() => handleFocus("lname")}
+                                onBlur={handleBlur}
+                                style={[
+                                    styles.input,
+                                    focusedField === "lname" && { borderColor: "orange" },
+                                ]}
+                            />
+
+                            <Text style={styles.label}>Middle Initial</Text>
+                            <TextInput
+                                placeholder="Enter middle initial (optional)"
+                                value={middlei}
+                                onChangeText={setMiddlei}
+                                onFocus={() => handleFocus("middlei")}
+                                onBlur={handleBlur}
+                                style={[
+                                    styles.input,
+                                    focusedField === "middlei" && { borderColor: "orange" },
+                                ]}
+                            />
+
+                            <Text style={styles.label}>Email Address</Text>
+                            <TextInput
+                                placeholder="Enter email address"
+                                keyboardType="email-address"
+                                value={email}
+                                onChangeText={setEmail}
+                                onFocus={() => handleFocus("email")}
+                                onBlur={handleBlur}
+                                style={[
+                                    styles.input,
+                                    focusedField === "email" && { borderColor: "orange" },
+                                ]}
+                            />
+
+                            <Text style={styles.label}>Date of Birth</Text>
+                            <TouchableOpacity onPress={() => setShowDatePicker(true)}>
                                 <TextInput
-                                    placeholder="Enter first name"
-                                    value={fname}
-                                    onChangeText={setFname}
-                                    onFocus={() => handleFocus("fname")}
-                                    onBlur={handleBlur}
-                                    style={[
-                                        styles.input,
-                                        focusedField === "fname" && { borderColor: "orange" },
-                                    ]}
+                                    placeholder="Enter date of birth"
+                                    value={dateOfBirth}
+                                    editable={false}
+                                    style={styles.input}
                                 />
-
-                                {/* Last Name */}
-                                <Text style={styles.label}>Last Name</Text>
-                                <TextInput
-                                    placeholder="Enter last name"
-                                    value={lname}
-                                    onChangeText={setLname}
-                                    onFocus={() => handleFocus("lname")}
-                                    onBlur={handleBlur}
-                                    style={[
-                                        styles.input,
-                                        focusedField === "lname" && { borderColor: "orange" },
-                                    ]}
+                            </TouchableOpacity>
+                            {showDatePicker && (
+                                <DateTimePicker
+                                    testID="dateTimePicker"
+                                    value={new Date(dateOfBirth || Date.now())}
+                                    mode="date"
+                                    is24Hour={true}
+                                    display="default"
+                                    onChange={handleDateChange}
                                 />
+                            )}
 
-                                {/* Middle Initial */}
-                                <Text style={styles.label}>Middle Initial</Text>
-                                <TextInput
-                                    placeholder="Enter middle initial (optional)"
-                                    value={middlei}
-                                    onChangeText={setMiddlei}
-                                    onFocus={() => handleFocus("middlei")}
-                                    onBlur={handleBlur}
-                                    style={[
-                                        styles.input,
-                                        focusedField === "middlei" && { borderColor: "orange" },
-                                    ]}
-                                />
+                            <Text style={styles.label}>Phone</Text>
+                            <TextInput
+                                placeholder="Enter phone number"
+                                keyboardType="phone-pad"
+                                value={phone}
+                                onChangeText={setPhone}
+                                onFocus={() => handleFocus("phone")}
+                                onBlur={handleBlur}
+                                style={[
+                                    styles.input,
+                                    focusedField === "phone" && { borderColor: "orange" },
+                                ]}
+                            />
 
-                                {/* Email Address */}
-                                <Text style={styles.label}>Email Address</Text>
-                                <TextInput
-                                    placeholder="Enter email address"
-                                    keyboardType="email-address"
-                                    value={email}
-                                    onChangeText={setEmail}
-                                    onFocus={() => handleFocus("email")}
-                                    onBlur={handleBlur}
-                                    style={[
-                                        styles.input,
-                                        focusedField === "email" && { borderColor: "orange" },
-                                    ]}
-                                />
-
-                                {/* Date of Birth */}
-                                <Text style={styles.label}>Date of Birth</Text>
-                                <TouchableOpacity onPress={() => setShowDatePicker(true)}>
-                                    <TextInput
-                                        placeholder="Enter date of birth"
-                                        value={dateOfBirth}
-                                        editable={false}
-                                        style={styles.input}
-                                    />
-                                </TouchableOpacity>
-                                {showDatePicker && (
-                                    <DateTimePicker
-                                        testID="dateTimePicker"
-                                        value={new Date(dateOfBirth || Date.now())}
-                                        mode="date"
-                                        is24Hour={true}
-                                        display="default"
-                                        onChange={handleDateChange}
-                                    />
-                                )}
-
-                                {/* Phone */}
-                                <Text style={styles.label}>Phone</Text>
-                                <TextInput
-                                    placeholder="Enter phone number"
-                                    keyboardType="phone-pad"
-                                    value={phone}
-                                    onChangeText={setPhone}
-                                    onFocus={() => handleFocus("phone")}
-                                    onBlur={handleBlur}
-                                    style={[
-                                        styles.input,
-                                        focusedField === "phone" && { borderColor: "orange" },
-                                    ]}
-                                />
-
-                                {/* Address */}
-                                
-                            </View>
-                            <View className="flex items-center mb-5">
+                            <View style={styles.buttonContainer}>
                                 <TouchableOpacity
-                                    style={{
-                                        backgroundColor: "#bc430b",
-                                        width: 350,
-                                        height: 50,
-                                        borderRadius: 10,
-                                        justifyContent: "center",
-                                        alignItems: "center",
-                                    }}
+                                    style={styles.button}
                                     onPress={submitHandler}
                                     disabled={loading}
                                 >
-                                    <Text style={{ color: "#fff", fontWeight: "bold", fontSize: 16 }}>
-                                        Update
-                                    </Text>
+                                    <Text style={styles.buttonText}>Update</Text>
                                 </TouchableOpacity>
                             </View>
                         </View>
                     </View>
-                </ScrollView>
-            </View>
-        </>
+                </View>
+            </ScrollView>
+        </View>
     );
 };
 
-export default UpdateProfile;
-
 const styles = StyleSheet.create({
-    form: {
+    container: {
         flex: 1,
-        // paddingHorizontal: 20,
-        paddingVertical: 10,
-        borderTopLeftRadius: 20,
-        borderTopRightRadius: 20,
-
+        backgroundColor: "#fff",
+    },
+    contentContainer: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        padding: 20,
+    },
+    logoContainer: {
+        alignItems: "center",
+        // marginBottom: 20,
+    },
+    logo: {
+        width: 100,
+        height: 100,
+    },
+    formContainer: {
+        width: "100%",
+        backgroundColor: "#f9f9f9",
+        borderRadius: 10,
+        padding: 20,
+        elevation: 5, // For Android shadow
+        shadowColor: "#000", // For iOS shadow
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 5,
+    },
+    title: {
+        fontSize: 24,
+        fontWeight: "bold",
+        textAlign: "center",
+        marginBottom: 20,
+    },
+    form: {
+        width: "100%",
     },
     label: {
         fontSize: 16,
-        // color: "#4a4a4a",
+        color: "#333",
         fontWeight: "bold",
-        marginBottom: 2,
+        marginBottom: 5,
     },
     input: {
+        backgroundColor: "#fff",
+        borderRadius: 10,
+        padding: 5,
+        marginBottom: 15,
+        fontSize: 14,
+        borderWidth: 1,
+        borderColor: "#ccc",
+        height: 35,
+    },
+    buttonContainer: {
+        alignItems: "center",
+        marginTop: 16,
+    },
+    button: {
+        backgroundColor: "#bc430b",
         width: "100%",
-        padding: 0,
-
-        backgroundColor: "#f5f5f5",
-        // color: "#333",
-        borderRadius: 12,
-        marginBottom: 10,
-        elevation: 2,
+        padding: 10,
+        justifyContent: "center",
+        alignItems: "center",
+        borderRadius: 10,
+    },
+    buttonText: {
+        color: "#fff",
+        fontWeight: "bold",
+        fontSize: 16,
     },
 });
+
+export default UpdateProfile;

@@ -76,10 +76,6 @@ const Dashboard = ({ navigation, route }) => {
                         />
                     </View>
                 </View>
-              
-                <View style={styles.footer}>
-                    <Footer activeRoute={"home"} />
-                </View>
             </ScrollView>
         </View>
     );

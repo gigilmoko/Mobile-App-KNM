@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, ScrollView, ActivityIndicator, TextInput, Image, TouchableOpacity, StyleSheet } from "react-native";
-import Footer from "../../../components/Layout/Footer";
 import Header from "../../../components/Layout/Header";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { useDispatch, useSelector } from "react-redux";
@@ -20,7 +19,7 @@ const AdminEventUpdate = () => {
 
     const { eventId } = route.params;
     const { event, loading } = useSelector((state) => state.calendar);
-    // console.log("frontend calendar: ", event)
+
     // Local state for handling updates to event
     const [updatedEvent, setUpdatedEvent] = useState({
         title: "",
@@ -79,7 +78,7 @@ const AdminEventUpdate = () => {
     
         try {
             setIsUpdating(true);
-    
+
             // Prepare form data for image upload
             const formData = new FormData();
             formData.append("file", {
@@ -186,22 +185,20 @@ const AdminEventUpdate = () => {
     };
 
     return (
-        <View style={{ flex: 1, backgroundColor: "#ffb703" }}>
+        <View style={{ flex: 1, backgroundColor: "#fff" }}>
             <Header back={true} />
             {loading ? (
                 <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
                     <ActivityIndicator size="large" color="#0000ff" />
                     <Text style={{ fontSize: 18 }}>Loading event details...</Text>
                 </View>
-                ) : (
+            ) : (
                 <ScrollView
                     contentContainerStyle={{
                         flexGrow: 1,
                         justifyContent: "center",
                         alignItems: "center",
-                        backgroundColor: "#F5F5F5",
-                        borderTopRightRadius: 30,
-                        borderTopLeftRadius: 30,
+                        backgroundColor: "#fff",
                         paddingBottom: 100, // Add padding to avoid overlap with footer
                     }}
                 >
@@ -210,7 +207,6 @@ const AdminEventUpdate = () => {
                             backgroundColor: "#F5F5F5",
                             width: "90%",
                             padding: 20,
-                            borderRadius: 10,
                             shadowColor: "#000",
                             shadowOpacity: 0.2,
                             shadowRadius: 5,
@@ -368,7 +364,7 @@ const AdminEventUpdate = () => {
                             <TouchableOpacity
                                 onPress={openImagePicker}
                                 style={{
-                                    backgroundColor: "#ffb703",
+                                    backgroundColor: "#DDDDDD",
                                     padding: 12,
                                     borderRadius: 5,
                                     marginRight: 10,
@@ -376,7 +372,7 @@ const AdminEventUpdate = () => {
                                     justifyContent: "center",
                                 }}
                             >
-                                <MaterialCommunityIcons name="plus" size={18} color="#000" />
+                                <MaterialCommunityIcons name="plus" size={24} color="#000" />
                             </TouchableOpacity>
 
                             {updatedEvent.image && (
@@ -391,25 +387,20 @@ const AdminEventUpdate = () => {
                         <TouchableOpacity
                             onPress={handleUpdate}
                             style={{
-                                backgroundColor: "#ffb703",
+                                backgroundColor: "#bc430b",
                                 padding: 12,
                                 borderRadius: 5,
                                 alignItems: "center",
                             }}
                             disabled={isUpdating}
                         >
-                            <Text style={{ color: "#000", fontWeight: "bold" }}>
+                            <Text style={{ color: "#fff", fontWeight: "bold" }}>
                                 {isUpdating ? 'Updating...' : 'Update Event'}
                             </Text>
                         </TouchableOpacity>
                     </View>
                 </ScrollView>
             )}
-
-            {/* Footer */}
-            <View style={{ position: "absolute", bottom: 0, width: "100%" }}>
-                <Footer activeRoute={"home"} />
-            </View>
         </View>
     );
 };

@@ -7,11 +7,10 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from "react-native";
-import Footer from "../../../components/Layout/Footer";
 import Header from "../../../components/Layout/Header";
+import Toast from "react-native-toast-message"; // Import Toast
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigation, useRoute } from "@react-navigation/native";
-import Toast from "react-native-toast-message"; // Import Toast
 import { getSingleCategory, updateCategory } from "../../../redux/actions/categoryActions";
 
 const AdminCategoryUpdate = () => {
@@ -77,9 +76,8 @@ const AdminCategoryUpdate = () => {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#ffb703" }}>
+    <View style={{ flex: 1 }}>
       <Header back={true} />
-
       {loading ? (
         <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
           <ActivityIndicator size="large" color="#0000ff" />
@@ -91,18 +89,14 @@ const AdminCategoryUpdate = () => {
             flexGrow: 1,
             justifyContent: "center",
             alignItems: "center",
-            backgroundColor: "#F5F5F5",
-            borderTopRightRadius: 30,
-            borderTopLeftRadius: 30,
+            borderRadius: 10,
           }}
         >
           <View
             style={{
               backgroundColor: "#F5F5F5",
               width: "90%",
-              height: "60%",
               padding: 20,
-              borderRadius: 10,
               shadowColor: "#000",
               shadowOpacity: 0.2,
               shadowRadius: 5,
@@ -178,14 +172,14 @@ const AdminCategoryUpdate = () => {
 
               <TouchableOpacity
                 style={{
-                  backgroundColor: "#ffb703",
+                  backgroundColor: "#bc430b",
                   padding: 12,
                   borderRadius: 5,
                   flex: 1,
                 }}
                 onPress={handleUpdate}
               >
-                <Text style={{ textAlign: "center", color: "#000" }}>
+                <Text style={{ textAlign: "center", color: "#fff" }}>
                   Update Category
                 </Text>
               </TouchableOpacity>
@@ -193,11 +187,6 @@ const AdminCategoryUpdate = () => {
           </View>
         </ScrollView>
       )}
-
-      {/* Footer */}
-      <View style={{ position: "absolute", bottom: 0, width: "100%" }}>
-        <Footer activeRoute={"home"} />
-      </View>
     </View>
   );
 };

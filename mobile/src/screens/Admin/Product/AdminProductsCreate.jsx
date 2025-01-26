@@ -129,77 +129,30 @@ const AdminProductsCreate = () => {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#ffb703" }}>
+    <View style={{ flex: 1 }}>
       <Header back={true} />
-
       <ScrollView
         contentContainerStyle={{
-          flexGrow: 1,
           justifyContent: "center",
           alignItems: "center",
-          backgroundColor: "#F5F5F5",
-          borderTopRightRadius: 30,
-          borderTopLeftRadius: 30,
-          paddingBottom: 100, // Add padding to avoid overlap with footer
         }}
       >
-        <View
-          style={{
-            backgroundColor: "#F5F5F5",
-            width: "90%",
-            padding: 20,
-            borderRadius: 10,
-            shadowColor: "#000",
-            shadowOpacity: 0.2,
-            shadowRadius: 5,
-            shadowOffset: { width: 0, height: 3 },
-            elevation: 4,
-          }}
-        >
-          <Text
-            style={{
-              fontSize: 24,
-              fontWeight: "bold",
-              marginBottom: 20,
-              textAlign: "center",
-              color: "#333333",
-              paddingTop: 15,
-            }}
-          >
-            Create Product
-          </Text>
+        <View style={styles.formContainer}>
+          <Text style={styles.title}>Create Product</Text>
 
           {/* Product Name */}
-          <Text style={{ fontSize: 14, color: "#666666", marginBottom: 10 }}>
-            Product Name*
-          </Text>
+          <Text style={styles.label}>Product Name*</Text>
           <TextInput
-            style={{
-              borderWidth: 1,
-              borderColor: "#CCCCCC",
-              borderRadius: 5,
-              padding: 10,
-              marginBottom: 15,
-            }}
+            style={styles.input}
             placeholder="Enter product name"
             value={productName}
             onChangeText={setProductName}
           />
 
           {/* Description */}
-          <Text style={{ fontSize: 14, color: "#666666", marginBottom: 10 }}>
-            Description*
-          </Text>
+          <Text style={styles.label}>Description*</Text>
           <TextInput
-            style={{
-              borderWidth: 1,
-              borderColor: "#CCCCCC",
-              borderRadius: 5,
-              padding: 10,
-              marginBottom: 15,
-              height: 100,
-              textAlignVertical: "top",
-            }}
+            style={[styles.input, { height: 100, textAlignVertical: "top" }]}
             placeholder="Enter product description"
             value={description}
             onChangeText={setDescription}
@@ -207,17 +160,9 @@ const AdminProductsCreate = () => {
           />
 
           {/* Price */}
-          <Text style={{ fontSize: 14, color: "#666666", marginBottom: 10 }}>
-            Price*
-          </Text>
+          <Text style={styles.label}>Price*</Text>
           <TextInput
-            style={{
-              borderWidth: 1,
-              borderColor: "#CCCCCC",
-              borderRadius: 5,
-              padding: 10,
-              marginBottom: 15,
-            }}
+            style={styles.input}
             placeholder="Enter price"
             value={price}
             onChangeText={setPrice}
@@ -225,17 +170,9 @@ const AdminProductsCreate = () => {
           />
 
           {/* Stock */}
-          <Text style={{ fontSize: 14, color: "#666666", marginBottom: 10 }}>
-            Stock*
-          </Text>
+          <Text style={styles.label}>Stock*</Text>
           <TextInput
-            style={{
-              borderWidth: 1,
-              borderColor: "#CCCCCC",
-              borderRadius: 5,
-              padding: 10,
-              marginBottom: 15,
-            }}
+            style={styles.input}
             placeholder="Enter stock quantity"
             value={stock}
             onChangeText={setStock}
@@ -243,10 +180,8 @@ const AdminProductsCreate = () => {
           />
 
           {/* Category Dropdown */}
-          <Text style={{ fontSize: 14, color: "#666666", marginBottom: 10 }}>
-            Category*
-          </Text>
-          <View style={{ borderWidth: 1, borderColor: '#CCCCCC', borderRadius: 5, marginBottom: 15 }}>
+          <Text style={styles.label}>Category*</Text>
+          <View style={styles.pickerContainer}>
             <Picker
               selectedValue={category}
               onValueChange={setCategory}
@@ -260,20 +195,11 @@ const AdminProductsCreate = () => {
           </View>
 
           {/* Image Picker */}
-          <Text style={{ fontSize: 14, color: "#666666", marginBottom: 10 }}>
-            Product Images*
-          </Text>
+          <Text style={styles.label}>Product Images*</Text>
           <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 15 }}>
             <TouchableOpacity
               onPress={openImagePicker}
-              style={{
-                backgroundColor: "#ffb703",
-                padding: 12,
-                borderRadius: 5,
-                marginRight: 10,
-                alignItems: "center",
-                justifyContent: "center",
-              }}
+              style={styles.imagePickerButton}
             >
               <MaterialCommunityIcons name="plus" size={24} color="#000" />
             </TouchableOpacity>
@@ -285,7 +211,7 @@ const AdminProductsCreate = () => {
                     <Image
                       key={index}
                       source={{ uri: imageUri }}
-                      style={{ width: 100, height: 100, borderRadius: 10, marginRight: 10 }}
+                      style={styles.selectedImage}
                     />
                   ))}
                 </View>
@@ -296,27 +222,79 @@ const AdminProductsCreate = () => {
           {/* Submit Button */}
           <TouchableOpacity
             onPress={handleSubmit}
-            style={{
-              backgroundColor: "#ffb703",
-              padding: 12,
-              borderRadius: 5,
-              alignItems: "center",
-            }}
+            style={styles.submitButton}
             disabled={isUpdating}
           >
-            <Text style={{ color: "#000", fontWeight: "bold" }}>
+            <Text style={styles.submitButtonText}>
               {isUpdating ? 'Creating...' : 'Create Product'}
             </Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
-
-      {/* Footer */}
-      <View style={{ position: "absolute", bottom: 0, width: "100%" }}>
-        <Footer activeRoute={"home"} />
-      </View>
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  formContainer: {
+    width: "90%",
+    backgroundColor: "#f9f9f9",
+    borderRadius: 10,
+    padding: 20,
+    elevation: 5, 
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 20,
+    textAlign: "center",
+    color: "#333333",
+    paddingTop: 15,
+  },
+  label: {
+    fontSize: 14,
+    color: "#666666",
+    marginBottom: 10,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: "#CCCCCC",
+    borderRadius: 5,
+    padding: 10,
+    marginBottom: 15,
+  },
+  pickerContainer: {
+    borderWidth: 1,
+    borderColor: '#CCCCCC',
+    borderRadius: 5,
+    marginBottom: 15,
+  },
+  imagePickerButton: {
+    backgroundColor: "#DDDDDD",
+    padding: 12,
+    borderRadius: 5,
+    marginRight: 10,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  selectedImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 10,
+    marginRight: 10,
+  },
+  submitButton: {
+    backgroundColor: "#bc430b",
+    padding: 12,
+    borderRadius:10,
+    alignItems: "center",
+  },
+  submitButtonText: {
+    color: "#fff",
+    fontWeight: "bold",
+  },
+});
 
 export default AdminProductsCreate;

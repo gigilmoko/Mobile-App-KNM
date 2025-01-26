@@ -5,15 +5,14 @@ import Header from "../../../components/Layout/Header";
 import { useNavigation } from "@react-navigation/native";
 import { useDispatch, useSelector } from "react-redux";
 import { getAllProducts, deleteProduct } from "../../../redux/actions/productActions";
-import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons"; // Import MaterialCommunityIcons
-import { GestureHandlerRootView, Swipeable } from "react-native-gesture-handler"; // Import Swipeable for swipe actions
+import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons"; 
+import { GestureHandlerRootView, Swipeable } from "react-native-gesture-handler";
 
 const AdminProducts = () => {
   const dispatch = useDispatch();
   const navigation = useNavigation();
 
-  const { products = [], loading } = useSelector((state) => state.product); // Default to an empty array
-
+  const { products = [], loading } = useSelector((state) => state.product); 
   useEffect(() => {
     dispatch(getAllProducts());
   }, [dispatch]);
@@ -58,8 +57,13 @@ const AdminProducts = () => {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <View style={{ flex: 1, backgroundColor: "#ffb703" }}>
-        <Header back={true} />
+      <View style={{ flex: 1, backgroundColor: "#fff" }}>
+        <View style={styles.headerContainer}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+            <MaterialCommunityIcons name="arrow-left" size={24} color="#000" />
+          </TouchableOpacity>
+          <Text style={styles.headerText}>Products</Text>
+        </View>
 
         {loading ? (
           <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
@@ -68,11 +72,7 @@ const AdminProducts = () => {
         ) : (
           <ScrollView contentContainerStyle={{ flexGrow: 1, paddingBottom: 30 }}>
             <View style={styles.container}>
-              <View style={{ alignItems: "center" }}>
-                <Text style={styles.headerText}>Products</Text>
-              </View>
-
-              <View style={{ marginTop: 20 }}>
+              <View>
                 {products.length > 0 ? (
                   products.map((product) => (
                     <Swipeable
@@ -106,10 +106,6 @@ const AdminProducts = () => {
         >
           <MaterialCommunityIcons name="plus" size={30} color="#FFF" />
         </TouchableOpacity>
-
-        <View style={{ position: "absolute", bottom: 0, width: "100%" }}>
-          <Footer activeRoute={"home"} />
-        </View>
       </View>
     </GestureHandlerRootView>
   );
@@ -118,21 +114,31 @@ const AdminProducts = () => {
 const styles = StyleSheet.create({
   container: {
     backgroundColor: "#ffffff",
-    borderTopLeftRadius: 30,
-    borderTopRightRadius: 30,
+    flex: 1,
     padding: 20,
+  },
+  headerContainer: {
+    flexDirection: "row",
+    alignItems: "center",
     justifyContent: "center",
+    padding: 10,
+    backgroundColor: "#fff",
+    borderBottomWidth: 1,
+    borderBottomColor: "#ccc",
+  },
+  backButton: {
+    position: "absolute",
+    left: 10,
   },
   headerText: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: "bold",
-    marginTop: 0,
   },
   productCard: {
-    backgroundColor: "#f9f9f9",
+    backgroundColor: "#f5f5f5",
     padding: 15,
     borderRadius: 10,
-    borderColor: "#ffb703",
+    borderColor: "#ccc",
     borderWidth: 1,
     marginBottom: 10,
     shadowColor: "#000",
@@ -153,7 +159,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 70, // Adjust to stay above the footer
     right: 20,
-    backgroundColor: "#ffb703",
+    backgroundColor: "#bc430b",
     width: 60,
     height: 60,
     borderRadius: 30,
@@ -176,7 +182,7 @@ const styles = StyleSheet.create({
   swipeActionEdit: {
     padding: 10,
     borderRadius: 5,
-    borderColor: "#ffb703",
+    borderColor: "#ccc",
     borderWidth: 1,
     justifyContent: "center",
     alignItems: "center",
@@ -185,7 +191,7 @@ const styles = StyleSheet.create({
   swipeActionDelete: {
     padding: 10,
     borderRadius: 5,
-    borderColor: "#ffb703",
+    borderColor: "#ccc",
     borderWidth: 1,
     justifyContent: "center",
     alignItems: "center",
