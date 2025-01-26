@@ -26,6 +26,7 @@
     "expo-location": "~18.0.5",
     "link": "^2.1.1",
     "mime": "^4.0.4",
+    "moment-timezone": "^0.5.46",
     "nativewind": "^2.0.11",
     "onesignal-expo-plugin": "^2.0.3",
     "postcss": "^8.4.47",

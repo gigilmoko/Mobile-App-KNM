@@ -3,7 +3,8 @@ import { View, Text, ScrollView, TouchableOpacity, StyleSheet, TextInput } from 
 import Footer from "../../components/Layout/Footer";
 import { useDispatch, useSelector } from "react-redux";
 import { getAllEvents } from "../../redux/actions/calendarActions";
-import moment from "moment";
+// import moment from "moment";
+import moment from "moment-timezone";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 
 const EventsList = ({ navigation }) => {
@@ -17,10 +18,10 @@ const EventsList = ({ navigation }) => {
     }, [dispatch]);
 
     const filteredEvents = React.useMemo(() => {
-        const today = moment();
-        const endOfMonth = moment().endOf("month");
-        const startOfNextMonth = moment().add(1, "month").startOf("month");
-        const endOfNextMonth = moment().add(1, "month").endOf("month");
+        const today = moment().tz("Asia/Manila");
+const endOfMonth = moment().tz("Asia/Manila").endOf("month");
+const startOfNextMonth = moment().tz("Asia/Manila").add(1, "month").startOf("month");
+const endOfNextMonth = moment().tz("Asia/Manila").add(1, "month").endOf("month");
 
         let filtered = events;
 

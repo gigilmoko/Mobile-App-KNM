@@ -63,8 +63,13 @@ export const userLogin = (email, password, playerId) => async (dispatch) => {
                 withCredentials: true,
             }
         );
+
+        // Store token and userId in AsyncStorage
         await AsyncStorage.setItem('token', data.token);
+        await AsyncStorage.setItem('userId', data.user._id);
+        
         console.log('Token:', data.token);
+        console.log('User ID:', data.user._id);
         console.log('Device Token:', playerId);
 
         dispatch({
@@ -117,6 +122,7 @@ export const logout = () => async (dispatch) => {
 
         await AsyncStorage.removeItem('token'); 
         await AsyncStorage.removeItem('user');
+        await AsyncStorage.removeItem('userId'); // Remove userId from AsyncStorage
 
         dispatch({ type: "logoutSuccess", payload: data.message });
     } catch (error) {

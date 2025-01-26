@@ -2,45 +2,35 @@ import React, { useEffect } from 'react';
 import { View, Text, Image, Button, ScrollView, StyleSheet } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchEvent } from '../../redux/actions/calendarActions';
-import { expressInterest, getUserInterest } from '../../redux/actions/userInterestActions';
 import { loadUser } from '../../redux/actions/userActions';
-import { fetchEventFeedback } from '../../redux/actions/eventFeedbackActions'; // Add fetchEventFeedback action
+import { fetchEventFeedback } from '../../redux/actions/eventFeedbackActions';
+import { getUserInterest } from '../../redux/actions/userInterestActions';  // Import the action
+import { expressInterest } from '../../redux/actions/userInterestActions';  // Import the expressInterest action
 import Toast from 'react-native-toast-message';
 import Footer from '../../components/Layout/Footer';
 import Header from '../../components/Layout/Header';
 import moment from 'moment';
-import { useNavigation } from '@react-navigation/native'; // Add this import
+import { useNavigation } from '@react-navigation/native';
 
 const EventInfo = ({ route }) => {
     const { eventId } = route.params;
     const dispatch = useDispatch();
-    const navigation = useNavigation();  // Initialize the useNavigation hook
-    // console.log("event id: ", eventId)
-    
-    // Access the calendar data and user info from the Redux store
-    const { event, loading, error } = useSelector(state => state.calendar);
-    const { user } = useSelector(state => state.auth || {}); 
-    const { interestData, getInterestLoading, getInterestError } = useSelector(state => state.userInterested || {});
-    const { eventFeedback, loadingFeedback, errorFeedback } = useSelector(state => state.eventFeedback || {}); // Access event feedback from Redux
+    const navigation = useNavigation();
 
-    // Fetch event data and user interest data when the component mounts
+    const { event, loading, error } = useSelector(state => state.calendar);
+    const { user } = useSelector(state => state.auth || {});
+    const { eventFeedback, loadingFeedback } = useSelector(state => state.eventFeedback || {});
+    const { interestData, loadingInterest, errorInterest } = useSelector(state => state.userInterested || {});
+
+    const attendedUsers = interestData.attendedUsers || [];
+    const interestedUsers = interestData.interestedUsers || [];
+
     useEffect(() => {
-        if (eventId) {
-            dispatch(getUserInterest(eventId)); 
-            dispatch(fetchEvent(eventId)); 
-            dispatch(fetchEventFeedback(eventId)); // Fetch feedback when eventId changes
-        }   
-        if (user) {
-            dispatch(loadUser()); 
-        }
-    }, [eventId, dispatch, user]);
-    
-    // Log the interestData after it is fetched
-    useEffect(() => {
-        if (interestData) {
-            // console.log('Fetched User Interest Data:', interestData); 
-        }
-    }, [interestData]);
+        dispatch(fetchEvent(eventId));
+        dispatch(fetchEventFeedback(eventId));
+        dispatch(loadUser());
+        dispatch(getUserInterest(eventId));  // Fetch user interest for the specific event
+    }, [eventId, dispatch]);
 
     useEffect(() => {
         if (error) {
@@ -52,32 +42,41 @@ const EventInfo = ({ route }) => {
         }
     }, [error]);
 
-    // Helper function to format dates
     const formatDateTime = (dateTimeString) => {
         const date = new Date(dateTimeString);
         return `${date.toLocaleDateString()} ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
     };
 
-    // Check if the event date is in the past
     const isEventPast = event ? moment(event.endDate).isBefore(moment()) : false;
 
-    const handleInterest = () => {
-        dispatch(expressInterest(eventId)); 
-    };
-
     const handleRating = () => {
-        // Navigate to the 'eventreview' screen if the event has passed
         navigation.navigate('eventfeedback', { eventId });
     };
 
-    // Ensure interestData is an array before using .some()
-    const isUserInterested = Array.isArray(interestData) && interestData.some(item => item.eventId === eventId);
-    // console.log("userInterested:", isUserInterested)
+    const userRegistered = interestedUsers.some(user => user.email === user?.email && user.interested);
+    const userAttended = attendedUsers.some(user => user.email === user?.email && user.isAttended);
+
+    // Define the button text based on registration and attendance status
+    let buttonText = '';
+    if (!userRegistered) {
+        buttonText = "You did not register for this event";
+    } else if (userRegistered && !userAttended) {
+        buttonText = "You registered but did not attend";
+    } else if (userRegistered && userAttended) {
+        buttonText = "Rate the Event";
+    }
+
+    const handleRegister = () => {
+       
+            dispatch(expressInterest(eventId));  // Dispatch expressInterest when the button is pressed
+       
+    };
+
     return (
         <View style={styles.container}>
             <Header back={true} />
 
-            <ScrollView contentContainerStyle={styles.scrollViewContent} >
+            <ScrollView contentContainerStyle={styles.scrollViewContent}>
                 {loading ? (
                     <Text style={styles.loadingText}>Loading event details...</Text>
                 ) : event ? (
@@ -94,23 +93,35 @@ const EventInfo = ({ route }) => {
                             )}
                         </View>
                         <Text style={styles.eventTitle}>{event.title}</Text>
-                        <Text style={styles.eventTime}>Event time: {formatDateTime(event.startDate)} - {formatDateTime(event.endDate)}</Text>
+                        <Text style={styles.eventTime}>
+                            Event time: {formatDateTime(event.startDate)} - {formatDateTime(event.endDate)}
+                        </Text>
                         <Text style={styles.eventDescription}>{event.description}</Text>
 
-                        {/* Conditional button */}
+                        {loadingInterest ? (
+                            <Text style={styles.loadingText}>Checking your interest...</Text>
+                        ) : (
+                            <Text style={styles.userInterestText}>
+                                {userRegistered ? 'You are interested in this event.' : 'You are not interested in this event.'}
+                            </Text>
+                        )}
+
+                        {/* Conditional Button Rendering */}
+                        {!isEventPast && !userRegistered && !userAttended && (
+                            <Button
+                                title="Register for Event"
+                                onPress={handleRegister}  // Call the handleRegister function
+                                color="#4CAF50"
+                            />
+                        )}
+
                         <Button
-                            title={isEventPast 
-                                ? "Rate the Event" 
-                                : getInterestLoading 
-                                ? "Loading..." 
-                                : isUserInterested 
-                                ? "You are already interested" 
-                                : "Express Interest"}
-                            onPress={isEventPast ? handleRating : handleInterest}
-                            color={isEventPast ? "#FFD700" : isUserInterested ? "gray" : "#bc430b"} 
+                            title={buttonText}
+                            onPress={userRegistered && userAttended ? handleRating : null}
+                            color={userRegistered ? "#FFD700" : "gray"}
+                            disabled={!userRegistered || !userAttended}
                         />
 
-                        {/* Show feedback only if the event is past */}
                         {isEventPast && eventFeedback && eventFeedback.length > 0 && (
                             <View style={styles.feedbackContainer}>
                                 <Text style={styles.feedbackTitle}>Event Ratings and Feedback:</Text>
@@ -127,7 +138,6 @@ const EventInfo = ({ route }) => {
                                 )}
                             </View>
                         )}
-
                     </View>
                 ) : (
                     <Text style={styles.noEventDetails}>No event details available.</Text>
@@ -165,7 +175,7 @@ const styles = StyleSheet.create({
         marginTop: 16,
         borderRadius: 8,
         overflow: "hidden",
-        backgroundColor: "#e0e0e0", // Placeholder background color
+        backgroundColor: "#e0e0e0", 
     },
     eventImage: {
         width: "100%",
@@ -189,8 +199,8 @@ const styles = StyleSheet.create({
         backgroundColor: "#ffb703",
         borderTopLeftRadius: 5,
         borderTopRightRadius: 5,
-        flex: 1, // Ensure it occupies the remaining space
-        marginTop: 20, // Add distance between Add to Wishlist and Feedbacks
+        flex: 1, 
+        marginTop: 20, 
     },
     feedbackTitle: {
         fontSize: 20,

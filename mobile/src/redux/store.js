@@ -42,7 +42,7 @@ export const store = configureStore({
 
 
 //Bahay na Von
-// export const server = "http://192.168.1.6:4002/api/"
+export const server = "http://192.168.1.6:4002/api/"
 // export const server = "http://192.168.43.21:4002/api/"
 
 //Bahay ni Jis
@@ -54,4 +54,4 @@ export const store = configureStore({
 // export const server = "http://192.168.100.3:4002/api/"
 
 //Deployed Server
-export const server = "https://knm-t7bh.onrender.com/api/"
+// export const server = "https://knm-t7bh.onrender.com/api/"
