@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, Text, Image, Button, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, Image, Button, ScrollView, StyleSheet } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchEvent } from '../../redux/actions/calendarActions';
 import { loadUser } from '../../redux/actions/userActions';
@@ -8,9 +8,9 @@ import { getUserInterest } from '../../redux/actions/userInterestActions';  // I
 import { expressInterest } from '../../redux/actions/userInterestActions';  // Import the expressInterest action
 import Toast from 'react-native-toast-message';
 import Footer from '../../components/Layout/Footer';
+import Header from '../../components/Layout/Header';
 import moment from 'moment';
 import { useNavigation } from '@react-navigation/native';
-import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons"; 
 
 const EventInfo = ({ route }) => {
     const { eventId } = route.params;
@@ -74,13 +74,9 @@ const EventInfo = ({ route }) => {
 
     return (
         <View style={styles.container}>
-            <View style={styles.headerContainer}>
-                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                <MaterialCommunityIcons name="arrow-left" size={24} color="#000" />
-                </TouchableOpacity>
-                <Text style={styles.headerText}>Event Details</Text>
-            </View>
-            <ScrollView contentContainerStyle={styles.scrollViewContent} >
+            <Header back={true} />
+
+            <ScrollView contentContainerStyle={styles.scrollViewContent}>
                 {loading ? (
                     <Text style={styles.loadingText}>Loading event details...</Text>
                 ) : event ? (
@@ -156,27 +152,11 @@ const EventInfo = ({ route }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: "#fff",
+        backgroundColor: "#f0f0f0",
     },
-    headerContainer: {
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: 10,
-        backgroundColor: "#fff",
-        borderBottomWidth: 1,
-        borderBottomColor: "#ccc",
-      },
-      backButton: {
-        position: "absolute",
-        left: 10,
-      },
-      headerText: {
-        fontSize: 20,
-        fontWeight: "bold",
-      },
     scrollViewContent: {
         padding: 16,
+        paddingBottom: 70
     },
     loadingText: {
         textAlign: "center",
@@ -192,11 +172,10 @@ const styles = StyleSheet.create({
     imageContainer: {
         width: "100%",
         height: 200,
+        marginTop: 16,
         borderRadius: 8,
         overflow: "hidden",
-        backgroundColor: "#fff", 
-        borderColor: "#f4b546",
-        borderWidth: 1,
+        backgroundColor: "#e0e0e0", 
     },
     eventImage: {
         width: "100%",
@@ -220,8 +199,6 @@ const styles = StyleSheet.create({
         backgroundColor: "#ffb703",
         borderTopLeftRadius: 5,
         borderTopRightRadius: 5,
-        flex: 1, 
-        marginTop: 20, 
         flex: 1, 
         marginTop: 20, 
     },
