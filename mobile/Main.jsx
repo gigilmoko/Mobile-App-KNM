@@ -47,13 +47,14 @@ import EditAddress from "./src/screens/Address/EditAddress";
 import LoadingRider from "./src/screens/Rider/LoadingRider";
 import RiderStack from "./src/screens/Rider/RiderStack";
 import ForgetPassword from "./src/screens/User/ForgetPassword";
+
 const Stack = createNativeStackNavigator();
 
-OneSignal.Debug.setLogLevel(LogLevel.Verbose);
-OneSignal.initialize(Constants.expoConfig.extra.oneSignalAppId);
+// OneSignal.Debug.setLogLevel(LogLevel.Verbose);
+// OneSignal.initialize(Constants.expoConfig.extra.oneSignalAppId);
 
-// Also need enable notifications to complete OneSignal setup
-OneSignal.Notifications.requestPermission(true);
+// // Also need enable notifications to complete OneSignal setup
+// OneSignal.Notifications.requestPermission(true);
 
 const HomeStack = () => {
     return (
@@ -82,6 +83,7 @@ const HomeStack = () => {
             <Stack.Screen name="changepassword" component={ChangePassword} />
             <Stack.Screen name="updateprofile" component={UpdateProfile} />
             <Stack.Screen name="addressupdate" component={AddressUpdate} />
+            
             <Stack.Screen name="editaddress" component={EditAddress} />
             <Stack.Screen name="forgetpassword" component={ForgetPassword} />
             {/* Admin Screens */}

@@ -216,7 +216,6 @@ export const updatePassword = (id, passwordData) => async (dispatch) => {
   }
 };
 
-
 export const getPendingTruck = (riderId) => async (dispatch) => {
   try {
     dispatch({ type: "GET_PENDING_TRUCK_REQUEST" });

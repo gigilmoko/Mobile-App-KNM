@@ -131,6 +131,9 @@ const MyAccountRider = ({ navigation }) => {
                     <View style={styles.OptionsContainer}>
                         <OptionList text={"Change Password"} Icon={Ionicons} iconName={"key-sharp"} onPress={() => navigation.navigate("changepassword")} />
                     </View>
+                    <View style={styles.OptionsContainer}>
+                        <OptionList text={" Leaflet"} Icon={Ionicons} iconName={"key-sharp"} onPress={() => navigation.navigate("leaflet")} />
+                    </View>
 
                     <Button mode="contained" onPress={handleLogout} style={styles.logoutButton} >
                         Logout

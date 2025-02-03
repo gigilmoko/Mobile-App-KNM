@@ -5,7 +5,7 @@ import History from './History';
 import MyAccount from './MyAccountRider';
 import Task from './Task';
 import ChangePassword from "./ChangePassword";
-
+import LeafletTry from "./LeafletTry";
 const Stack = createNativeStackNavigator();
 
 const RiderStack = () => {
@@ -22,6 +22,7 @@ const RiderStack = () => {
             <Stack.Screen name="account" component={MyAccount} />
             <Stack.Screen name="changepassword" component={ChangePassword} />
             {/* <Stack.Screen name="ongoingsession" component={OngoingSession} /> */}
+            <Stack.Screen name="leaflet" component={LeafletTry} />
             
            
         </Stack.Navigator>
