@@ -18,6 +18,7 @@ export const deliveryReducer = (state = initialState, action) => {
                 ongoingSessions: action.ongoingSessions,
                 rejectedSessions: action.rejectedSessions,
             };
+        
         case 'GET_PENDING_SESSIONS':
             return {
                 ...state,
@@ -53,7 +54,27 @@ export const deliveryReducer = (state = initialState, action) => {
                 ...state,
                 error: action.error,
             };
+      
+            case 'SUBMIT_PROOF_DELIVERY':
+                return {
+                    ...state,
+                    ongoingSessions: state.ongoingSessions.map(session => ({
+                        ...session,
+                        orders: session.orders.map(order => {
+                            // Find the updated order and replace it
+                            const updatedOrder = action.orders.find(updated => updated._id === order._id);
+                            return updatedOrder ? updatedOrder : order;
+                        })
+                    })),
+                };
+            
+            case 'DELIVERY_SESSION_ERROR':
+                return {
+                    ...state,
+                    error: action.error,
+                };
+
         default:
-            return state;
+        return state;
     }
 };

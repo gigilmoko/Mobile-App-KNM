@@ -43,6 +43,7 @@ export const getSessionsByRider = (riderId) => async (dispatch) => {
         dispatch({ type: 'DELIVERY_SESSION_ERROR', error: error.response?.data?.message || error.message });
     }
 };
+
 // Accept work
 export const acceptWork = (sessionId) => async (dispatch) => {
     try {
@@ -78,7 +79,7 @@ export const declineWork = (id, riderId, truckId) => async (dispatch) => {
 };
 
 // Start delivery session
-// Start delivery session
+
 export const startDeliverySession = (id) => async (dispatch) => {
     try {
         const token = await AsyncStorage.getItem('riderToken');
@@ -143,4 +144,43 @@ export const getHistoryByRider = (riderId) => async (dispatch) => {
         dispatch({ type: 'DELIVERY_SESSION_ERROR', error: error.response?.data?.message || error.message });
     }
 };
+
+export const submitProofDeliverySession = (id, orderId, proofOfDelivery) => async (dispatch) => {
+    console.log("submitProofDeliverySession mobile");
+    console.log("Proof of Delivery:", proofOfDelivery);
+    console.log("Order ID:", orderId);
+
+    try {
+        const token = await AsyncStorage.getItem('riderToken');
+        const route = `${server}delivery-session/${id}/proof`;
+
+        console.log(`API Route: ${route}`);
+        console.log("Payload being sent to the server:", { orderId, proofOfDelivery });
+
+        const { data } = await axios.put(route, 
+            { orderId, proofOfDelivery }, 
+            {
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                },
+            }
+        );
+
+        dispatch({
+            type: 'SUBMIT_PROOF_DELIVERY',
+            order: data.order, 
+        });
+
+        console.log('Proof of delivery submitted:', data);
+    } catch (error) {
+        // console.error('Error submitting proof of delivery:', error);
+        dispatch({ type: 'DELIVERY_SESSION_ERROR', error: error.response?.data?.message || error.message });
+
+        if (error.response) {
+            console.error('Error Response Data:', error.response.data);
+        }
+    }
+};
+
 
