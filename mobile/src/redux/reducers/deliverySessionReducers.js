@@ -6,6 +6,7 @@ const initialState = {
     completedSession: null,
     ongoingSessions: [],
     historySessions: [],  // New state property for session history
+    sessionByOrderId: {}, // New state property for session by order ID with default value
     error: null,
 };
 
@@ -28,6 +29,11 @@ export const deliveryReducer = (state = initialState, action) => {
             return {
                 ...state,
                 historySessions: action.sessions,
+            };
+        case 'GET_SESSION_BY_ORDER_ID': // New case to handle session by order ID
+            return {
+                ...state,
+                sessionByOrderId: action.session,
             };
         case 'ACCEPT_WORK':
             return {

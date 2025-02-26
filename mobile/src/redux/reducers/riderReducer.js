@@ -90,5 +90,20 @@ export const riderReducer = createReducer(initialState, (builder) => {
         .addCase("GET_RIDER_PROFILE_FAIL", (state, action) => {
             state.loading = false;
             state.error = action.payload;
+        })
+        .addCase("UPDATE_RIDER_LOCATION_REQUEST", (state) => {
+            state.loading = true;
+        })
+        .addCase("UPDATE_RIDER_LOCATION_SUCCESS", (state, action) => {
+            state.loading = false;
+            state.rider = {
+                ...state.rider,
+                location: action.payload,
+            };
+            state.message = "Rider location updated successfully";
+        })
+        .addCase("UPDATE_RIDER_LOCATION_FAIL", (state, action) => {
+            state.loading = false;
+            state.error = action.payload;
         });
 });

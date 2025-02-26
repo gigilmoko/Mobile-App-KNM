@@ -54,4 +54,7 @@ export const server = "http://192.168.1.9:4002/api/"
 // export const server = "http://192.168.100.3:4002/api/"
 
 //Deployed Server
-// export const server = "https://knm-t7bh.onrender.com/api/"
+// export const server = "https://knm-backend.onrender.com/api/"
+
+// https://knm-t7bh.onrender.com/api/
+// https://knm-jiwx.onrender.com

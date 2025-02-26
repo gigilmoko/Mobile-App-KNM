@@ -131,10 +131,12 @@ const MyAccountRider = ({ navigation }) => {
                     <View style={styles.OptionsContainer}>
                         <OptionList text={"Change Password"} Icon={Ionicons} iconName={"key-sharp"} onPress={() => navigation.navigate("changepassword")} />
                         <OptionList text={" Camera"} Icon={Ionicons} iconName={"key-sharp"} onPress={() => navigation.navigate("cameracomponent")} />
-                    </View>
-                    <View style={styles.OptionsContainer}>
                         <OptionList text={" Leaflet"} Icon={Ionicons} iconName={"key-sharp"} onPress={() => navigation.navigate("leaflet")} />
+                        <OptionList text={" Leaflet Update"} Icon={Ionicons} iconName={"key-sharp"} onPress={() => navigation.navigate("leafletupdate")} />
                     </View>
+                    
+                        
+               
 
                     <Button mode="contained" onPress={handleLogout} style={styles.logoutButton} >
                         Logout

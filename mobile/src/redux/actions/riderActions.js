@@ -82,8 +82,11 @@ export const riderLogin = (email, password, playerId) => async (dispatch) => {
   try {
       dispatch({ type: "loginRequest" });
 
+      const route = `${server}rider/login`;
+      console.log('API Route:', route);
+
       const { data } = await axios.post(
-          `${server}/rider/login`,
+          route,
           { email, password, playerId },
           {
               headers: { "Content-Type": "application/json" },
@@ -91,13 +94,10 @@ export const riderLogin = (email, password, playerId) => async (dispatch) => {
           }
       );
 
-      // Correctly access the rider ID from the response
       const riderId = data.user._id;
       console.log('Rider data:', data);
       console.log('Rider ID:', riderId);
-      
 
-      // Store rider ID and token
       await AsyncStorage.setItem('riderId', riderId);
       await AsyncStorage.setItem('riderToken', data.token);
 
@@ -148,6 +148,7 @@ export const riderLogout = () => async (dispatch) => {
 };
 
 export const getRiderProfile = () => async (dispatch) => {
+  console.log("getRiderProfile action");
   try {
     dispatch({ type: "GET_RIDER_PROFILE_REQUEST" });
 
@@ -326,4 +327,34 @@ export const updateRiderAvatar = (imageUrl) => async (dispatch, getState) => {
             });
         }
     }
+};
+
+export const updateRiderLocation = (riderId, latitude, longitude) => async (dispatch) => {
+  // console.log('Updating rider location:', riderId, latitude, longitude);
+  try {
+      dispatch({ type: "UPDATE_RIDER_LOCATION_REQUEST" });
+
+      const token = await AsyncStorage.getItem('riderToken');
+
+      const { data } = await axios.put(
+          `${server}rider/update-location`, 
+          { riderId, latitude, longitude }, 
+          {
+              headers: {
+                  "Authorization": `Bearer ${token}`,
+              },
+              withCredentials: true,
+          }
+      );
+
+      dispatch({
+          type: "UPDATE_RIDER_LOCATION_SUCCESS",
+          payload: data.location,
+      });
+  } catch (error) {
+      dispatch({
+          type: "UPDATE_RIDER_LOCATION_FAIL",
+          payload: error.response?.data?.message || 'Failed to update location',
+      });
+  }
 };

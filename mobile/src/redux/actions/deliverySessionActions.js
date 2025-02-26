@@ -37,7 +37,7 @@ export const getSessionsByRider = (riderId) => async (dispatch) => {
             rejectedSessions: data.rejectedSessions,
         });
 
-        console.log('Fetched sessions:', data);
+        // console.log('Fetched sessions:', data);
     } catch (error) {
         console.error('Error fetching sessions:', error);
         dispatch({ type: 'DELIVERY_SESSION_ERROR', error: error.response?.data?.message || error.message });
@@ -180,6 +180,29 @@ export const submitProofDeliverySession = (id, orderId, proofOfDelivery) => asyn
         if (error.response) {
             console.error('Error Response Data:', error.response.data);
         }
+    }
+};
+
+export const getSessionByOrderId = (orderId) => async (dispatch) => {
+    console.log("getSessionByOrderId it")
+    try {
+        const token = await AsyncStorage.getItem('token');
+        const { data } = await axios.get(`${server}/delivery-session/order/${orderId}`, {
+            headers: {
+                "Authorization": `Bearer ${token}`,
+            },
+            withCredentials: true,
+        });
+
+        dispatch({
+            type: 'GET_SESSION_BY_ORDER_ID',
+            session: data.session,
+        });
+
+        console.log('Fetched session by order ID:', data);
+    } catch (error) {
+        console.error('Error fetching session by order ID:', error);
+        dispatch({ type: 'DELIVERY_SESSION_ERROR', error: error.response?.data?.message || error.message });
     }
 };
 

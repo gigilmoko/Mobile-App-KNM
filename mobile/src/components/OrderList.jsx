@@ -10,13 +10,8 @@ const OrderList = ({
     statusColor,
     paymentInfo,
     i = 0,
-    navigate,
 }) => {
-    // const navigation = useNavigation("Comment");
-
-    // const getProductIds = () => {
-    //     return orderItems.map((item) => item.product);
-    // };
+    const navigation = useNavigation();
 
     const badgeTextColor = status === "Shipped" ? "#707981" : "#ffffff";
 
@@ -40,7 +35,7 @@ const OrderList = ({
                 <Text style={styles.secondaryText} i={i}>Total Amount : ${price}</Text>
             </View>
             <View style={styles.innerRow}>
-                <TouchableOpacity style={styles.detailButton} onPress={() => navigate.navigate("orderdetails", { id })}>
+                <TouchableOpacity style={styles.detailButton} onPress={() => navigation.navigate("orderdetails", { id })}>
                     <Text>Details</Text>
                 </TouchableOpacity>
                 <View style={[styles.badge, { backgroundColor: statusColor }]}>

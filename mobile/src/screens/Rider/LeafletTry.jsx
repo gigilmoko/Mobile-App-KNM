@@ -6,7 +6,7 @@ import * as Location from "expo-location";
 import * as ImagePicker from 'expo-image-picker';
 import mime from 'mime';
 import axios from 'axios';
-import { getRiderProfile } from "../../redux/actions/riderActions";
+import { getRiderProfile, updateRiderLocation } from "../../redux/actions/riderActions";
 import { getSessionsByRider, submitProofDeliverySession, completeDeliverySession, startDeliverySession } from "../../redux/actions/deliverySessionActions";
 import { useNavigation } from '@react-navigation/native';
 
@@ -129,6 +129,29 @@ const LeafletTry = () => {
     setImageUrl(null);
   };
 
+  const handleRefreshLocation = async () => {
+    try {
+      const location = await Location.getCurrentPositionAsync({});
+      setLocation({
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+      });
+      if (rider?._id) {
+        dispatch(updateRiderLocation(rider._id, location.coords.latitude, location.coords.longitude));
+      }
+      if (webViewRef.current) {
+        webViewRef.current.injectJavaScript(`
+          if (typeof updateCurrentLocation === 'function') {
+            updateCurrentLocation(${location.coords.latitude}, ${location.coords.longitude});
+          }
+        `);
+      }
+    } catch (error) {
+      ToastAndroid.show("Failed to refresh location", ToastAndroid.LONG);
+      console.error(error);
+    }
+  };
+
   useEffect(() => {
     const getCurrentLocation = async () => {
       try {
@@ -143,6 +166,9 @@ const LeafletTry = () => {
           latitude: location.coords.latitude,
           longitude: location.coords.longitude,
         });
+        if (rider?._id) {
+          dispatch(updateRiderLocation(rider._id, location.coords.latitude, location.coords.longitude));
+        }
       } catch (error) {
         ToastAndroid.show("Failed to get current location", ToastAndroid.LONG);
         console.error(error);
@@ -152,12 +178,15 @@ const LeafletTry = () => {
     getCurrentLocation();
 
     const locationSubscription = Location.watchPositionAsync(
-      { accuracy: Location.Accuracy.High, timeInterval: 5000, distanceInterval: 10 },
+      { accuracy: Location.Accuracy.High, timeInterval: 1000, distanceInterval: 5 },
       (newLocation) => {
         setLocation({
           latitude: newLocation.coords.latitude,
           longitude: newLocation.coords.longitude,
         });
+        if (rider?._id) {
+          dispatch(updateRiderLocation(rider._id, newLocation.coords.latitude, newLocation.coords.longitude));
+        }
         if (webViewRef.current) {
           webViewRef.current.injectJavaScript(`
             if (typeof updateCurrentLocation === 'function') {
@@ -171,7 +200,7 @@ const LeafletTry = () => {
     return () => {
       locationSubscription.then((sub) => sub.remove());
     };
-  }, []);
+  }, [dispatch, rider]);
 
   if (!location) {
     return (
@@ -324,9 +353,13 @@ const LeafletTry = () => {
       <Modal visible={showMapModal} animationType="slide">
         <View style={{ flex: 1 }}>
           <TouchableOpacity onPress={handleCloseModal}>
+            
             <Text style={{ padding: 10, fontSize: 16, color: "blue" }}>Close Map</Text>
+            <Button title="Refresh Location" onPress={handleRefreshLocation} />
           </TouchableOpacity>
+          
           <WebView ref={webViewRef} originWhitelist={["*"]} source={{ html: htmlContent }} style={styles.webview} />
+         
         </View>
       </Modal>
 
