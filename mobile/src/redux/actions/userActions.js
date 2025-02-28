@@ -85,6 +85,7 @@ export const userLogin = (email, password, playerId) => async (dispatch) => {
 };
 
 export const loadUser = () => async (dispatch) => {
+    
     try {
         dispatch({ type: "loadUserRequest" });
         const token = await AsyncStorage.getItem('token');
@@ -98,6 +99,7 @@ export const loadUser = () => async (dispatch) => {
 
         if (data.success) {
             dispatch({ type: "loadUserSuccess", payload: data.user });
+            console.log("data user: ", data.user);
         } else {
             dispatch({
                 type: "loadUserFail",
