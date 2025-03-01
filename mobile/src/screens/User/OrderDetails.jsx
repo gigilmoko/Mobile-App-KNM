@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Text, View, ScrollView, Modal, TouchableOpacity, Button } from "react-native";
+import { Text, View, ScrollView, Modal, TouchableOpacity, Button, ActivityIndicator, Image } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 import { useIsFocused, useRoute } from "@react-navigation/native";
-import { getOrderDetails } from '../../redux/actions/orderActions';
+import { getOrderDetails, confirmProofOfDelivery, notConfirmProofOfDelivery } from '../../redux/actions/orderActions';
 import { getSessionByOrderId } from '../../redux/actions/deliverySessionActions';
 import Header from "../../components/Layout/Header";
 import StepIndicator from "react-native-step-indicator";
@@ -48,9 +48,15 @@ const OrderDetails = () => {
     const [showMapModal, setShowMapModal] = useState(false);
     const webViewRef = useRef(null);
     const [userDeliveryLocation, setUserDeliveryLocation] = useState(null);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        dispatch(getOrderDetails(id));
+        const fetchOrderDetails = async () => {
+            setLoading(true);
+            await dispatch(getOrderDetails(id));
+            setLoading(false);
+        };
+        fetchOrderDetails();
     }, [dispatch, id]);
 
     useEffect(() => {
@@ -86,6 +92,23 @@ const OrderDetails = () => {
     useEffect(() => {
         dispatch(loadUser());
     }, [dispatch, isFocused]);
+ 
+    useEffect(() => {
+        const interval = setInterval(async () => {
+            if (order?.status === "Shipped" || order?.status === "Delivered") {
+                await dispatch(getSessionByOrderId(id));
+                if (sessionByOrderId?.rider?.location && webViewRef.current) {
+                    webViewRef.current.injectJavaScript(`
+                        if (typeof updateCurrentLocation === 'function') {
+                            updateCurrentLocation(${sessionByOrderId.rider.location.latitude}, ${sessionByOrderId.rider.location.longitude});
+                        }
+                    `);
+                }
+            }
+        }, 1000);
+
+        return () => clearInterval(interval);
+    }, [dispatch, id, order?.status, sessionByOrderId]);
 
     const handleShowRoute = () => {
         setShowMapModal(true);
@@ -112,6 +135,14 @@ const OrderDetails = () => {
         } catch (error) {
             console.error("Failed to refresh location", error);
         }
+    };
+
+    const handleConfirmDelivery = () => {
+        dispatch(confirmProofOfDelivery(id));
+    };
+
+    const handleDeliveryDidntArrive = () => {
+        dispatch(notConfirmProofOfDelivery(id));
     };
 
     const htmlContent = location && userDeliveryLocation ? `
@@ -178,6 +209,7 @@ const OrderDetails = () => {
         if (order?.status) {
             setTrackingState(
                 order.status === "Delivered" ? 3 :
+                order.status === "Delivered Pending" ? 3 :
                 order.status === "Shipped" ? 2 :
                 order.status === "Preparing" ? 1 : 0
             );
@@ -193,16 +225,13 @@ const OrderDetails = () => {
         : 0;
 
     // Ensure order status exists before rendering the UI
-    if (!order?.status) {
+    if (loading) {
         return (
-            <>
-                <View className="flex-1 items-center justify-center bg-gray-200">
-                    <Text className="text-lg font-bold text-gray-600">Loading order details...</Text>
-                </View>
-            </>
+            <View className="flex-1 items-center justify-center bg-gray-200">
+                <ActivityIndicator size="large" color="#FB6831" />
+            </View>
         );
     }
-    
 
     return (
         <>
@@ -275,7 +304,7 @@ const OrderDetails = () => {
                     )}
 
                     {/* Rider & Truck Details */}
-                    {(order?.status === "Shipped" || order?.status === "Delivered") && (
+                    {(order?.status === "Shipped" || order?.status === "Delivered" || order?.status === "Delivered Pending" || order?.status === "Cancelled") && (
                         <>
                             {sessionByOrderId?.rider && (
                                 <View className="mt-2 w-full">
@@ -298,9 +327,28 @@ const OrderDetails = () => {
                         </>
                     )}
 
-                    <View className="mt-2 w-full">
-                        <Button title="Show Rider Route" onPress={handleShowRoute} />
-                    </View>
+                    {/* Show Rider Route Button */}
+                    {order?.status === "Shipped" && (
+                        <View className="mt-2 w-full">
+                            <Button title="Show Rider Route" onPress={handleShowRoute} />
+                        </View>
+                    )}
+
+                    {/* Proof of Delivery */}
+                    {(order?.status === "Delivered Pending" || order?.status === "Delivered" || order?.status === "Cancelled") && (
+                        <View className="mt-2 w-full">
+                            <View className="mt-2 w-full">
+                                <Text className="text-xl font-extrabold text-gray-600">Proof of Delivery</Text>
+                                <Image source={{ uri: order.proofOfDelivery }} style={{ width: '100%', height: 200, marginTop: 10 }} />
+                            </View>
+                            {order?.status === "Delivered Pending" && (
+                                <>
+                                    <Button title="Confirm Delivery" onPress={handleConfirmDelivery} />
+                                    <Button title="Delivery Didn't Arrive" onPress={handleDeliveryDidntArrive} />
+                                </>
+                            )}
+                        </View>
+                    )}
 
                     {/* Map Modal */}
                     <Modal visible={showMapModal} animationType="slide">

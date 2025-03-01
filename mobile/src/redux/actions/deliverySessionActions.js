@@ -201,7 +201,7 @@ export const getSessionByOrderId = (orderId) => async (dispatch) => {
 
         console.log('Fetched session by order ID:', data);
     } catch (error) {
-        console.error('Error fetching session by order ID:', error);
+        // console.error('Error fetching session by order ID:', error);
         dispatch({ type: 'DELIVERY_SESSION_ERROR', error: error.response?.data?.message || error.message });
     }
 };

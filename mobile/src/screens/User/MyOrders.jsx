@@ -36,15 +36,15 @@ const MyOrders = () => {
                 return 'red';
             case 'shipped':
                 return 'yellow';
+            case 'delivered pending':
+                return 'orange';
             case 'delivered':
                 return 'green';
+            case 'cancelled':
+                return 'gray';
             default:
                 return 'gray';
         }
-    };
-
-    const handleConfirmDelivery = (orderId) => {
-        console.log(`Order ${orderId} confirmed as delivered.`);
     };
 
     const filteredOrders = orders
@@ -66,8 +66,14 @@ const MyOrders = () => {
                     <TouchableOpacity onPress={() => setSelectedTab("Shipped")}>
                         <Text style={[styles.tabText, selectedTab === "Shipped" && styles.activeTabText]}>Shipping</Text>
                     </TouchableOpacity>
+                    <TouchableOpacity onPress={() => setSelectedTab("Delivered Pending")}>
+                        <Text style={[styles.tabText, selectedTab === "Delivered Pending" && styles.activeTabText]}>Confirmation</Text>
+                    </TouchableOpacity>
                     <TouchableOpacity onPress={() => setSelectedTab("Delivered")}>
                         <Text style={[styles.tabText, selectedTab === "Delivered" && styles.activeTabText]}>Delivered</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => setSelectedTab("Cancelled")}>
+                        <Text style={[styles.tabText, selectedTab === "Cancelled" && styles.activeTabText]}>Cancelled</Text>
                     </TouchableOpacity>
                 </View>
                 {loading ? (
@@ -90,14 +96,6 @@ const MyOrders = () => {
                                             : 'Address not available'
                                     }
                                 />
-                                {selectedTab === "Delivered" && (
-                                    <TouchableOpacity
-                                        style={styles.confirmButton}
-                                        onPress={() => handleConfirmDelivery(item._id)}
-                                    >
-                                        <Text style={styles.confirmButtonText}>Confirm Delivery</Text>
-                                    </TouchableOpacity>
-                                )}
                                 <View style={styles.emptyView}></View>
                             </View>
                         ))}

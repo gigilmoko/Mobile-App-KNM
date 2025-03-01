@@ -19,53 +19,44 @@ const LeafletTry = () => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const webViewRef = useRef(null);
   const [showMapModal, setShowMapModal] = useState(false);
-  const [capturedImage, setCapturedImage] = useState(null);
-  const [imageUrl, setImageUrl] = useState(null);
+  const [capturedImages, setCapturedImages] = useState({});
+  const [imageUrls, setImageUrls] = useState({});
   const [showStartModal, setShowStartModal] = useState(false);
   const [showCompleteModal, setShowCompleteModal] = useState(false);
   const [currentSessionId, setCurrentSessionId] = useState(null);
-
   useEffect(() => {
     dispatch(getRiderProfile());
   }, [dispatch]);
-
   useEffect(() => {
     if (rider?._id) {
       dispatch(getSessionsByRider(rider._id));
     }
   }, [dispatch, rider]);
-
   const handleShowRoute = (order) => {
     setSelectedOrder(order);
     setShowMapModal(true);
   };
-
   const handleCloseModal = () => {
     setShowMapModal(false);
     setSelectedOrder(null);
   };
-
-  const handleCaptureProof = async () => {
+  const handleCaptureProof = async (orderId) => {
     const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
-
     if (!permissionResult.granted) {
       return Alert.alert("Permission required", "Camera permission is needed to capture an image.");
     }
-
     const result = await ImagePicker.launchCameraAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       quality: 1,
     });
-
     if (!result.canceled && result.assets) {
       const imageUri = result.assets[0].uri;
-      setCapturedImage(imageUri);
-      uploadToCloudinary(imageUri);
+      setCapturedImages((prev) => ({ ...prev, [orderId]: imageUri }));
+      uploadToCloudinary(imageUri, orderId);
     }
   };
-
-  const uploadToCloudinary = async (imageUri) => {
+  const uploadToCloudinary = async (imageUri, orderId) => {
     const formData = new FormData();
     formData.append('file', {
       uri: imageUri,
@@ -73,7 +64,6 @@ const LeafletTry = () => {
       name: imageUri.split("/").pop(),
     });
     formData.append('upload_preset', 'ml_default');
-
     try {
       const response = await axios.post(
         'https://api.cloudinary.com/v1_1/dglawxazg/image/upload',
@@ -85,50 +75,43 @@ const LeafletTry = () => {
         }
       );
       const url = response.data.secure_url;
-      setImageUrl(url);
+      setImageUrls((prev) => ({ ...prev, [orderId]: url }));
       Alert.alert("Success", `Image uploaded successfully: ${url}`);
     } catch (error) {
       console.error('Failed to upload image', error);
       Alert.alert('Error', 'Failed to upload image. Please try again.');
     }
   };
-
-  const handleDelivered = (sessionId, group) => {
+  const handleDelivered = (sessionId, group, orderId) => {
     const orderIds = group.orders.map(order => order._id);
-    dispatch(submitProofDeliverySession(sessionId, orderIds, imageUrl));
-    setCapturedImage(null);
-    setImageUrl(null);
+    dispatch(submitProofDeliverySession(sessionId, orderIds, imageUrls[orderId]));
+    setCapturedImages((prev) => ({ ...prev, [orderId]: null }));
+    setImageUrls((prev) => ({ ...prev, [orderId]: null }));
     Alert.alert("Success", "Proof of delivery submitted.");
     navigation.navigate("leaflet");
   };
-
   const handleCompleteSession = (sessionId) => {
     setCurrentSessionId(sessionId);
     setShowCompleteModal(true);
   };
-
   const handleStartSession = (sessionId) => {
     setCurrentSessionId(sessionId);
     setShowStartModal(true);
   };
-
   const confirmStartSession = () => {
     dispatch(startDeliverySession(currentSessionId));
     setShowStartModal(false);
     navigation.navigate("leaflet");
   };
-
   const confirmCompleteSession = () => {
     dispatch(completeDeliverySession(currentSessionId));
     setShowCompleteModal(false);
     navigation.navigate("task");
   };
-
-  const removeCapturedImage = () => {
-    setCapturedImage(null);
-    setImageUrl(null);
+  const removeCapturedImage = (orderId) => {
+    setCapturedImages((prev) => ({ ...prev, [orderId]: null }));
+    setImageUrls((prev) => ({ ...prev, [orderId]: null }));
   };
-
   const handleRefreshLocation = async () => {
     try {
       const location = await Location.getCurrentPositionAsync({});
@@ -151,7 +134,6 @@ const LeafletTry = () => {
       console.error(error);
     }
   };
-
   useEffect(() => {
     const getCurrentLocation = async () => {
       try {
@@ -160,7 +142,6 @@ const LeafletTry = () => {
           ToastAndroid.show("Location permission denied", ToastAndroid.LONG);
           return;
         }
-
         const location = await Location.getCurrentPositionAsync({});
         setLocation({
           latitude: location.coords.latitude,
@@ -174,9 +155,7 @@ const LeafletTry = () => {
         console.error(error);
       }
     };
-
     getCurrentLocation();
-
     const locationSubscription = Location.watchPositionAsync(
       { accuracy: Location.Accuracy.High, timeInterval: 1000, distanceInterval: 5 },
       (newLocation) => {
@@ -196,12 +175,10 @@ const LeafletTry = () => {
         }
       }
     );
-
     return () => {
       locationSubscription.then((sub) => sub.remove());
     };
   }, [dispatch, rider]);
-
   if (!location) {
     return (
       <View style={styles.loader}>
@@ -209,7 +186,6 @@ const LeafletTry = () => {
       </View>
     );
   }
-
   const htmlContent = selectedOrder ? `
   <!DOCTYPE html>
   <html>
@@ -263,10 +239,8 @@ const LeafletTry = () => {
     </body>
   </html>
   ` : '';
-
   const groupOrdersByUserAndLocation = (orders) => {
     const groupedOrders = {};
-  
     orders.forEach(order => {
       if (order.proofOfDelivery === null) {
         const key = `${order.user.email}-${JSON.stringify(order.user.deliveryAddress)}`;
@@ -280,10 +254,8 @@ const LeafletTry = () => {
         groupedOrders[key].orders.push(order);
       }
     });
-  
     return Object.values(groupedOrders);
   };
- 
   return (
     <View style={styles.container}>
       <ScrollView style={styles.fullContainer}>
@@ -307,34 +279,35 @@ const LeafletTry = () => {
                       <Text key={i} style={styles.orderText}>
                         Delivery Address: {address.houseNo} {address.streetName}, {address.barangay}, {address.city}, {address.latitude}, {address.longitude}
                       </Text>
-                    ))}
-                    
+                    ))}                 
                     {group.orders.map((order, index) => (
                       <View key={index} style={styles.orderItem}>
                         <Text style={styles.orderText}>Order Status: {order.status}</Text>
                         <Text style={styles.orderText}>Payment Method: {order.paymentInfo}</Text>
                         <Text style={styles.orderText}>Total Price: ₱{order.totalPrice}</Text>
+                        {session.startTime && !capturedImages[order._id] && (
+                          <Button title="Capture Proof" onPress={() => handleCaptureProof(order._id)} style={styles.captureButton} />
+                        )}
+                        {capturedImages[order._id] && (
+                          <View style={styles.imageContainer}>
+                            <TouchableOpacity style={styles.removeImageButton} onPress={() => removeCapturedImage(order._id)}>
+                              <Text style={styles.removeImageText}>X</Text>
+                            </TouchableOpacity>
+                            <Image source={{ uri: capturedImages[order._id] }} style={styles.capturedImage} />
+                            {imageUrls[order._id] && (
+                              <Button 
+                                title="Delivered" 
+                                onPress={() => handleDelivered(session._id, group, order._id)} 
+                                style={{ marginBottom: 10 }}
+                              />
+                            )}
+                          </View>
+                        )}
                       </View>
                     ))}
-                    {session.startTime && !capturedImage && <Button title="Capture Proof" onPress={handleCaptureProof} style={styles.captureButton} />}
-                    {capturedImage && (
-                      <View style={styles.imageContainer}>
-                        <TouchableOpacity style={styles.removeImageButton} onPress={removeCapturedImage}>
-                          <Text style={styles.removeImageText}>X</Text>
-                        </TouchableOpacity>
-                        <Image source={{ uri: capturedImage }} style={styles.capturedImage} />
-                        {imageUrl && (
-                        <Button 
-                          title="Delivered" 
-                          onPress={() => handleDelivered(session._id, group)} 
-                          style={{ marginBottom: 10 }}
-                        />
-                      )}
-                      </View>
-                    )}
                     <View style={{ marginTop: 10 }}>
-              <Button title="Show Route" onPress={() => handleShowRoute(group.orders[0])} />
-            </View>
+                      <Button title="Show Route" onPress={() => handleShowRoute(group.orders[0])} />
+                    </View>
                   </View>
                 ))
               ) : (
@@ -343,27 +316,18 @@ const LeafletTry = () => {
             </View>
             {!session.startTime && <Button title="Start Session" onPress={() => handleStartSession(session._id)} />}
             {session.startTime && <Button title="Complete Session" onPress={() => handleCompleteSession(session._id)} />}
-          </View>
-          
-        ))}
-          
+          </View>        
+        ))}         
       </ScrollView>
-
-      {/* Map Modal */}
       <Modal visible={showMapModal} animationType="slide">
         <View style={{ flex: 1 }}>
-          <TouchableOpacity onPress={handleCloseModal}>
-            
+          <TouchableOpacity onPress={handleCloseModal}>         
             <Text style={{ padding: 10, fontSize: 16, color: "blue" }}>Close Map</Text>
             <Button title="Refresh Location" onPress={handleRefreshLocation} />
-          </TouchableOpacity>
-          
-          <WebView ref={webViewRef} originWhitelist={["*"]} source={{ html: htmlContent }} style={styles.webview} />
-         
+          </TouchableOpacity>          
+          <WebView ref={webViewRef} originWhitelist={["*"]} source={{ html: htmlContent }} style={styles.webview} />        
         </View>
       </Modal>
-
-      {/* Start Session Modal */}
       <Modal visible={showStartModal} animationType="slide" transparent={true}>
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
@@ -375,8 +339,6 @@ const LeafletTry = () => {
           </View>
         </View>
       </Modal>
-
-      {/* Complete Session Modal */}
       <Modal visible={showCompleteModal} animationType="slide" transparent={true}>
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
@@ -391,7 +353,6 @@ const LeafletTry = () => {
     </View>
   );
 };
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,

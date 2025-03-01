@@ -201,3 +201,65 @@ export const getUserOrders = () => async (dispatch) => {
         });
     }
 };
+
+export const confirmProofOfDelivery = (orderId) => async (dispatch) => {
+    try {
+        dispatch({ type: "confirmProofOfDeliveryRequest" });
+
+        const token = await AsyncStorage.getItem('token');
+        if (!token) {
+            throw new Error("No token found");
+        }
+
+        const { data } = await axios.put(
+            `${server}/order/proof/${orderId}/confirmed`,
+            {},
+            {
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                },
+            }
+        );
+
+        dispatch({
+            type: "confirmProofOfDeliverySuccess",
+            payload: data.order,
+        });
+    } catch (error) {
+        dispatch({
+            type: "confirmProofOfDeliveryFail",
+            payload: error.response?.data?.message || error.message,
+        });
+    }
+};
+
+export const notConfirmProofOfDelivery = (orderId) => async (dispatch) => {
+    try {
+        dispatch({ type: "notConfirmProofOfDeliveryRequest" });
+
+        const token = await AsyncStorage.getItem('token');
+        if (!token) {
+            throw new Error("No token found");
+        }
+
+        const { data } = await axios.put(
+            `${server}/order/proof/${orderId}/notconfirmed`,
+            {},
+            {
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                },
+            }
+        );
+
+        dispatch({
+            type: "notConfirmProofOfDeliverySuccess",
+            payload: data.order,
+        });
+    } catch (error) {
+        dispatch({
+            type: "notConfirmProofOfDeliveryFail",
+            payload: error.response?.data?.message || error.message,
+        });
+    }
+};

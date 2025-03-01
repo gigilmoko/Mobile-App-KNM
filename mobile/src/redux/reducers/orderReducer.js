@@ -70,6 +70,30 @@ export const orderReducer = createReducer(
                 state.loading = false;
                 state.error = action.payload;
             })
+            .addCase("confirmProofOfDeliveryRequest", (state) => {
+                state.loading = true;
+            })
+            .addCase("confirmProofOfDeliverySuccess", (state, action) => {
+                state.loading = false;
+                state.order = action.payload;
+                state.message = "Proof of Delivery confirmed. Order marked as Delivered.";
+            })
+            .addCase("confirmProofOfDeliveryFail", (state, action) => {
+                state.loading = false;
+                state.error = action.payload;
+            })
+            .addCase("notConfirmProofOfDeliveryRequest", (state) => {
+                state.loading = true;
+            })
+            .addCase("notConfirmProofOfDeliverySuccess", (state, action) => {
+                state.loading = false;
+                state.order = action.payload;
+                state.message = "Proof of Delivery not confirmed. Order marked as Cancelled.";
+            })
+            .addCase("notConfirmProofOfDeliveryFail", (state, action) => {
+                state.loading = false;
+                state.error = action.payload;
+            })
             .addCase("clearError", (state) => {
                 state.error = null;
             })
