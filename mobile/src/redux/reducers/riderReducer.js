@@ -33,6 +33,7 @@ export const riderReducer = createReducer(initialState, (builder) => {
             state.rider = action.payload.rider;
         })
         .addCase("RIDER_LOGOUT", (state) => {
+            console.log("rider logout touched")
             state.token = null;
             state.rider = null;
         })

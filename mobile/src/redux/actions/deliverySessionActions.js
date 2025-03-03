@@ -206,4 +206,26 @@ export const getSessionByOrderId = (orderId) => async (dispatch) => {
     }
 };
 
+export const cancelOrder = (sessionId, orderId) => async (dispatch) => {
+    try {
+        const token = await AsyncStorage.getItem('riderToken');
+        const { data } = await axios.put(`${server}/delivery-session/${sessionId}/cancel-order/${orderId}`, {}, {
+            headers: {
+                "Authorization": `Bearer ${token}`,
+            },
+            withCredentials: true,
+        });
+
+        dispatch({
+            type: 'CANCEL_ORDER',
+            order: data.order,
+        });
+
+        console.log('Order cancelled:', data);
+    } catch (error) {
+        console.error('Error cancelling order:', error);
+        dispatch({ type: 'DELIVERY_SESSION_ERROR', error: error.response?.data?.message || error.message });
+    }
+};
+
 

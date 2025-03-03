@@ -7,7 +7,7 @@ import * as ImagePicker from 'expo-image-picker';
 import mime from 'mime';
 import axios from 'axios';
 import { getRiderProfile, updateRiderLocation } from "../../redux/actions/riderActions";
-import { getSessionsByRider, submitProofDeliverySession, completeDeliverySession, startDeliverySession } from "../../redux/actions/deliverySessionActions";
+import { getSessionsByRider, submitProofDeliverySession, completeDeliverySession, startDeliverySession, cancelOrder } from "../../redux/actions/deliverySessionActions";
 import { useNavigation } from '@react-navigation/native';
 
 const LeafletTry = () => {
@@ -133,6 +133,26 @@ const LeafletTry = () => {
       ToastAndroid.show("Failed to refresh location", ToastAndroid.LONG);
       console.error(error);
     }
+  };
+  const handleCancelOrder = (sessionId, orderId) => {
+    Alert.alert(
+      "Cancel Order",
+      "Are you sure you want to cancel this order?",
+      [
+        {
+          text: "No",
+          style: "cancel",
+        },
+        {
+          text: "Yes",
+          onPress: () => {
+            dispatch(cancelOrder(sessionId, orderId));
+            Alert.alert("Success", "Order has been cancelled.");
+          },
+        },
+      ],
+      { cancelable: false }
+    );
   };
   useEffect(() => {
     const getCurrentLocation = async () => {
@@ -285,7 +305,7 @@ const LeafletTry = () => {
                         <Text style={styles.orderText}>Order Status: {order.status}</Text>
                         <Text style={styles.orderText}>Payment Method: {order.paymentInfo}</Text>
                         <Text style={styles.orderText}>Total Price: ₱{order.totalPrice}</Text>
-                        {session.startTime && !capturedImages[order._id] && (
+                        {session.startTime && order.status !== 'Cancelled' && order.status !== 'Delivered' && !capturedImages[order._id] && (
                           <Button title="Capture Proof" onPress={() => handleCaptureProof(order._id)} style={styles.captureButton} />
                         )}
                         {capturedImages[order._id] && (
@@ -303,11 +323,16 @@ const LeafletTry = () => {
                             )}
                           </View>
                         )}
+                        {order.status !== 'Cancelled' && order.status !== 'Delivered' && (
+                          <Button title="Cancel Order" onPress={() => handleCancelOrder(session._id, order._id)} />
+                        )}
                       </View>
                     ))}
-                    <View style={{ marginTop: 10 }}>
-                      <Button title="Show Route" onPress={() => handleShowRoute(group.orders[0])} />
-                    </View>
+                    {group.orders.some(order => order.status !== 'Cancelled' && order.status !== 'Delivered') && (
+                      <View style={{ marginTop: 10 }}>
+                        <Button title="Show Route" onPress={() => handleShowRoute(group.orders[0])} />
+                      </View>
+                    )}
                   </View>
                 ))
               ) : (
