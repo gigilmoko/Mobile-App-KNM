@@ -16,7 +16,7 @@ const OptionList = ({
         <>
             <TouchableOpacity style={styles.container} onPress={onPress}>
                 <View style={styles.IconContainer}>
-                    <Ionicons name={iconName} size={24} color="#023047" />
+                    <Ionicons name={iconName} size={24} color="#e01d47" />
                     <Text style={styles.listText}>{text}</Text>
                 </View>
                 <View>

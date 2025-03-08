@@ -1,6 +1,6 @@
-import { View, Text, ScrollView, Image, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, ScrollView, Image, TouchableOpacity, TextInput, StyleSheet } from "react-native";
 import React, { useEffect, useState } from "react";
-import { TextInput } from "react-native-paper";
+
 import Header from "../../components/Layout/Header";
 import { useDispatch, useSelector } from "react-redux";
 import { updateProfile, loadUser } from "../../redux/actions/userActions"; 
@@ -78,195 +78,109 @@ const UpdateProfile = ({ navigation }) => {
     };
 
     return (
-        <View style={styles.container}>
-            <Header back={true} />
-            <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-                <View style={styles.contentContainer}>
-                    <View style={styles.formContainer}>
-                        <View style={styles.logoContainer}>
-                            <Image
-                                source={require("../../assets/images/logo.png")}
-                                style={styles.logo}
-                            />
-                        </View>
-                        <Text style={styles.title}>Update Profile</Text>
-                        <View style={styles.form}>
-                            <Text style={styles.label}>First Name</Text>
+        <View className="flex-1 bg-white">
+        <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+            <View className="flex-1 items-center bg-white py-5 px-5">
+                <Header title="Update Profile" />
+                <View className="w-full bg-white rounded-lg p-5 shadow-md justify-center">
+                    <Text className="text-xl font-bold my-4 text-[#e01d47]">Personal Details</Text>
+    
+                    <View className="flex-row space-x-2">
+                        <View className="flex-1">
+                            <Text className="text-[#ff7895] font-bold">First Name</Text>
                             <TextInput
                                 placeholder="Enter first name"
                                 value={fname}
                                 onChangeText={setFname}
                                 onFocus={() => handleFocus("fname")}
                                 onBlur={handleBlur}
-                                style={[
-                                    styles.input,
-                                    focusedField === "fname" && { borderColor: "orange" },
-                                ]}
+                                className="p-4 bg-gray-100 text-gray-700 rounded-2xl mb-3"
                             />
-
-                            <Text style={styles.label}>Last Name</Text>
+                        </View>
+                        <View className="w-1/3">
+                            <Text className="text-[#ff7895] font-bold ml-4">M.I.</Text>
                             <TextInput
-                                placeholder="Enter last name"
-                                value={lname}
-                                onChangeText={setLname}
-                                onFocus={() => handleFocus("lname")}
-                                onBlur={handleBlur}
-                                style={[
-                                    styles.input,
-                                    focusedField === "lname" && { borderColor: "orange" },
-                                ]}
-                            />
-
-                            <Text style={styles.label}>Middle Initial</Text>
-                            <TextInput
-                                placeholder="Enter middle initial (optional)"
                                 value={middlei}
                                 onChangeText={setMiddlei}
                                 onFocus={() => handleFocus("middlei")}
                                 onBlur={handleBlur}
-                                style={[
-                                    styles.input,
-                                    focusedField === "middlei" && { borderColor: "orange" },
-                                ]}
+                                className="p-4 bg-gray-100 text-gray-700 rounded-2xl mb-3"
                             />
-
-                            <Text style={styles.label}>Email Address</Text>
-                            <TextInput
-                                placeholder="Enter email address"
-                                keyboardType="email-address"
-                                value={email}
-                                onChangeText={setEmail}
-                                onFocus={() => handleFocus("email")}
-                                onBlur={handleBlur}
-                                style={[
-                                    styles.input,
-                                    focusedField === "email" && { borderColor: "orange" },
-                                ]}
-                            />
-
-                            <Text style={styles.label}>Date of Birth</Text>
-                            <TouchableOpacity onPress={() => setShowDatePicker(true)}>
-                                <TextInput
-                                    placeholder="Enter date of birth"
-                                    value={dateOfBirth}
-                                    editable={false}
-                                    style={styles.input}
-                                />
-                            </TouchableOpacity>
-                            {showDatePicker && (
-                                <DateTimePicker
-                                    testID="dateTimePicker"
-                                    value={new Date(dateOfBirth || Date.now())}
-                                    mode="date"
-                                    is24Hour={true}
-                                    display="default"
-                                    onChange={handleDateChange}
-                                />
-                            )}
-
-                            <Text style={styles.label}>Phone</Text>
-                            <TextInput
-                                placeholder="Enter phone number"
-                                keyboardType="phone-pad"
-                                value={phone}
-                                onChangeText={setPhone}
-                                onFocus={() => handleFocus("phone")}
-                                onBlur={handleBlur}
-                                style={[
-                                    styles.input,
-                                    focusedField === "phone" && { borderColor: "orange" },
-                                ]}
-                            />
-
-                            <View style={styles.buttonContainer}>
-                                <TouchableOpacity
-                                    style={styles.button}
-                                    onPress={submitHandler}
-                                    disabled={loading}
-                                >
-                                    <Text style={styles.buttonText}>Update</Text>
-                                </TouchableOpacity>
-                            </View>
                         </View>
                     </View>
+    
+                    <Text className="text-[#ff7895] font-bold mb-1">Last Name</Text>
+                    <TextInput
+                        placeholder="Enter last name"
+                        value={lname}
+                        onChangeText={setLname}
+                        onFocus={() => handleFocus("lname")}
+                        onBlur={handleBlur}
+                        className="p-4 bg-gray-100 text-gray-700 rounded-2xl mb-3"
+                    />
+    
+                    <Text className="text-[#ff7895] font-bold mb-1">Email Address</Text>
+                    <TextInput
+                        placeholder="Enter email address"
+                        keyboardType="email-address"
+                        value={email}
+                        onChangeText={setEmail}
+                        onFocus={() => handleFocus("email")}
+                        onBlur={handleBlur}
+                        className="p-4 bg-gray-100 text-gray-700 rounded-2xl mb-3"
+                    />
+    
+                    <Text className="text-[#ff7895] font-bold mb-1">Date of Birth</Text>
+                    <TouchableOpacity onPress={() => setShowDatePicker(true)}>
+                        <TextInput
+                            placeholder="Enter date of birth"
+                            value={dateOfBirth}
+                            editable={false}
+                            className="p-4 bg-gray-100 text-gray-700 rounded-2xl mb-3"
+                        />
+                    </TouchableOpacity>
+                    {showDatePicker && (
+                        <DateTimePicker
+                            testID="dateTimePicker"
+                            value={new Date(dateOfBirth || Date.now())}
+                            mode="date"
+                            is24Hour={true}
+                            display="default"
+                            onChange={handleDateChange}
+                        />
+                    )}
+    
+                    <Text className="text-[#ff7895] font-bold mb-1">Phone</Text>
+                    <TextInput
+                        placeholder="Enter phone number"
+                        keyboardType="phone-pad"
+                        value={phone}
+                        onChangeText={setPhone}
+                        onFocus={() => handleFocus("phone")}
+                        onBlur={handleBlur}
+                        className="p-4 bg-gray-100 text-gray-700 rounded-2xl mb-3"
+                    />
                 </View>
-            </ScrollView>
+            </View>
+        </ScrollView>
+    
+        {/* Button at the bottom */}
+        <View className="p-5">
+            <TouchableOpacity
+                className="bg-[#e01d47] w-full py-3 rounded-lg items-center"
+                onPress={submitHandler}
+                disabled={loading}
+            >
+                <Text className="text-white font-bold text-lg">Update</Text>
+            </TouchableOpacity>
         </View>
+    </View>
+    
+    
+
     );
 };
 
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: "#fff",
-    },
-    contentContainer: {
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-        padding: 20,
-    },
-    logoContainer: {
-        alignItems: "center",
-        // marginBottom: 20,
-    },
-    logo: {
-        width: 100,
-        height: 100,
-    },
-    formContainer: {
-        width: "100%",
-        backgroundColor: "#f9f9f9",
-        borderRadius: 10,
-        padding: 20,
-        elevation: 5, // For Android shadow
-        shadowColor: "#000", // For iOS shadow
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.3,
-        shadowRadius: 5,
-    },
-    title: {
-        fontSize: 24,
-        fontWeight: "bold",
-        textAlign: "center",
-        marginBottom: 20,
-    },
-    form: {
-        width: "100%",
-    },
-    label: {
-        fontSize: 16,
-        color: "#333",
-        fontWeight: "bold",
-        marginBottom: 5,
-    },
-    input: {
-        backgroundColor: "#fff",
-        borderRadius: 10,
-        padding: 5,
-        marginBottom: 15,
-        fontSize: 14,
-        borderWidth: 1,
-        borderColor: "#ccc",
-        height: 35,
-    },
-    buttonContainer: {
-        alignItems: "center",
-        marginTop: 16,
-    },
-    button: {
-        backgroundColor: "#bc430b",
-        width: "100%",
-        padding: 10,
-        justifyContent: "center",
-        alignItems: "center",
-        borderRadius: 10,
-    },
-    buttonText: {
-        color: "#fff",
-        fontWeight: "bold",
-        fontSize: 16,
-    },
-});
+
 
 export default UpdateProfile;

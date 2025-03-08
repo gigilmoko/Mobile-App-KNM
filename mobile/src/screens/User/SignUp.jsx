@@ -177,234 +177,122 @@ const SignUp = ({ navigation, route }) => {
     }, [route.params]);
 
     return (
-        <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-            <View style={styles.container}>
-                <View style={styles.box}>
-                    {/* <View style={styles.logoContainer}>
-                        <Image
-                            source={require("../../assets/images/logo.png")}
-                            style={styles.logo}
-                        />
-                    </View> */}
-                    <View className="form space-y-2">
+        <View className="flex-1">
+    <ScrollView contentContainerStyle={{ flexGrow: 1, paddingBottom: 100 }}>
+        <View className="flex-1 justify-center items-center bg-white py-5 px-5">
+            <View className="w-full bg-white rounded-lg p-5 shadow-md">
+                <View className="space-y-2">
+                    <Text className="text-2xl font-bold mt-4 px-3 text-[#e01d47]">Sign Up</Text>
+                    <Text className="text-base font-medium mb-8 px-3 text-[#c5c5c5]">Sign up to your account</Text>
+
+                    {/* Avatar */}
+                    <View className="relative ">
                         <Avatar.Image
-                            style={{
-                                alignSelf: "center",
-                                backgroundColor: "#c70049",
-                            }}
+                            style={{ alignSelf: "center", backgroundColor: "#c70049" }}
                             size={80}
                             source={avatar ? { uri: avatar } : require("../../assets/images/default-user-icon.jpg")}
                         />
-                        <TouchableOpacity onPress={openImagePicker}>
-                            <Button textColor="gray">Add Photo</Button>
-                        </TouchableOpacity>
-
-                        <Text className="text-gray-700 ml-4">First Name</Text>
-                        <TextInput
-                            placeholder="Enter first name"
-                            value={fname}
-                            onChangeText={setFname}
-                            className="p-4 bg-gray-100 text-gray-700 rounded-2xl mb-3"
-                        />
-
-                        <Text className="text-gray-700 ml-4">Last Name</Text>
-                        <TextInput
-                            placeholder="Enter last name"
-                            value={lname}
-                            onChangeText={setLname}
-                            className="p-4 bg-gray-100 text-gray-700 rounded-2xl mb-3"
-                        />
-
-                        <Text className="text-gray-700 ml-4">Middle Initial</Text>
-                        <TextInput
-                            placeholder="Enter middle initial (optional)"
-                            value={middlei}
-                            onChangeText={setMiddlei}
-                            className="p-4 bg-gray-100 text-gray-700 rounded-2xl mb-3"
-                        />
-
-                        <Text className="text-gray-700 ml-4">Email Address</Text>
-                        <TextInput
-                            placeholder="Enter email address"
-                            keyboardType="email-address"
-                            value={email}
-                            onChangeText={setEmail}
-                            className="p-4 bg-gray-100 text-gray-700 rounded-2xl mb-3"
-                        />
-
-                        <Text className="text-gray-700 ml-4">Password</Text>
-                        <TextInput
-                            secureTextEntry={true}
-                            placeholder="Enter password"
-                            value={password}
-                            onChangeText={setPassword}
-                            className="p-4 bg-gray-100 text-gray-700 rounded-2xl"
-                        />
-
-                        <Text className="text-gray-700 ml-4">Date of Birth</Text>
-                        <TouchableOpacity onPress={() => setShowDatePicker(true)}>
-                            <TextInput
-                                placeholder="Enter date of birth"
-                                value={dateOfBirth}
-                                editable={false}
-                                className="p-4 bg-gray-100 text-gray-700 rounded-2xl mb-3"
-                            />
-                        </TouchableOpacity>
-
-                        {showDatePicker && (
-                            <DateTimePicker
-                                testID="dateTimePicker"
-                                value={new Date(dateOfBirth || Date.now())}
-                                mode="date"
-                                is24Hour={true}
-                                display="default"
-                                onChange={handleDateChange}
-                            />
-                        )}
-
-                        <Text className="text-gray-700 ml-4">Phone</Text>
-                        <TextInput
-                            placeholder="Enter phone number"
-                            keyboardType="phone-pad"
-                            value={phone}
-                            onChangeText={setPhone}
-                            className="p-4 bg-gray-100 text-gray-700 rounded-2xl mb-3"
-                        />
-
-                        <TouchableOpacity
-                            style={{ backgroundColor: '#bc430b' }}
-                            loading={loading}
-                            className="py-3 bg-400 rounded-xl"
-                            disabled={disableBtn}
-                            onPress={() => setShowMemberModal(true)}
+                        <TouchableOpacity 
+                            onPress={openImagePicker} 
+                            className="absolute bg-white rounded-full p-1 shadow-md"
+                            style={{ right: -5, bottom: -5 }}
                         >
-                            <Text style={{ color: '#fff' }} className="text-gray-700 font-bold text-center">Sign Up</Text>
+                            <Icons.CameraIcon size={24} color="#c70049" />
                         </TouchableOpacity>
                     </View>
-                    <Text className="text-xl text-gray-700 text-center font-bold py-2">Or</Text>
-                    <View className="flex-row justify-center py-2">
-                        <Text className="text-gray-500 font-semibold">Already have an account?</Text>
-                        <TouchableOpacity onPress={() => {
-                            dispatch({ type: "resetUser" });
-                            navigation.navigate('login');
-                        }}>
-                            <Text style={{ backgroundColor: '#fff' }} className="text-400 font-semibold ml-2">Login</Text>
-                        </TouchableOpacity>
+
+                    {/* Form Fields */}
+                    <View className="flex-row space-x-2">
+                        <View className="flex-1">
+                            <Text className="text-[#e01d47] font-bold ml-4">First Name</Text>
+                            <TextInput placeholder="Enter first name" value={fname} onChangeText={setFname} className="p-4 bg-gray-100 text-gray-700 rounded-2xl mb-3" />
+                        </View>
+                        <View className="w-1/3">
+                            <Text className="text-[#e01d47] font-bold ml-4">M.I.</Text>
+                            <TextInput placeholder="M.I." value={middlei} onChangeText={setMiddlei} className="p-4 bg-gray-100 text-gray-700 rounded-2xl mb-3" />
+                        </View>
+                    </View>
+
+                    <Text className="text-[#e01d47] font-bold ml-4">Last Name</Text>
+                    <TextInput placeholder="Enter last name" value={lname} onChangeText={setLname} className="p-4 bg-gray-100 text-gray-700 rounded-2xl mb-3" />
+
+                    <Text className="text-[#e01d47] font-bold ml-4">Email Address</Text>
+                    <TextInput placeholder="Enter email address" keyboardType="email-address" value={email} onChangeText={setEmail} className="p-4 bg-gray-100 text-gray-700 rounded-2xl mb-3" />
+
+                    <Text className="text-[#e01d47] font-bold ml-4">Password</Text>
+                    <TextInput secureTextEntry placeholder="Enter password" value={password} onChangeText={setPassword} className="p-4 bg-gray-100 text-gray-700 rounded-2xl" />
+
+                    <Text className="text-[#e01d47] font-bold ml-4">Date of Birth</Text>
+                    <TouchableOpacity onPress={() => setShowDatePicker(true)}>
+                        <TextInput placeholder="Enter date of birth" value={dateOfBirth} editable={false} className="p-4 bg-gray-100 text-gray-700 rounded-2xl mb-3" />
+                    </TouchableOpacity>
+
+                    {showDatePicker && (
+                        <DateTimePicker testID="dateTimePicker" value={new Date(dateOfBirth || Date.now())} mode="date" is24Hour display="default" onChange={handleDateChange} />
+                    )}
+
+                    <Text className="text-[#e01d47] font-bold ml-4">Phone</Text>
+                    <TextInput placeholder="Enter phone number" keyboardType="phone-pad" value={phone} onChangeText={setPhone} className="p-4 bg-gray-100 text-gray-700 rounded-2xl mb-3" />
+                </View>
+            </View>
+        </View>
+    </ScrollView>
+
+    {/* Fixed Sign Up & Login Section */}
+    <View className="absolute bottom-0 w-full bg-white p-5 shadow-lg">
+        <TouchableOpacity className="py-3 rounded-xl bg-[#e01d47]" disabled={disableBtn} onPress={() => setShowMemberModal(true)}>
+            <Text className="text-white font-bold text-center">Sign Up</Text>
+        </TouchableOpacity>
+
+
+        
+        <View className="flex-row justify-center py-2">
+            <Text className="text-gray-500 font-semibold">Already have an account?</Text>
+            <TouchableOpacity onPress={() => {
+                dispatch({ type: "resetUser" });
+                navigation.navigate('login');
+            }}>
+                <Text className="text-[#e01d47] font-semibold ml-2">Login</Text>
+            </TouchableOpacity>
+        </View>
+    </View>
+    
+    <Modal visible={showMemberModal} transparent animationType="slide" onRequestClose={() => setShowMemberModal(false)}>
+    <View className="flex-1 justify-center items-center bg-transparent">
+        <View className="w-4/5 bg-white p-5 rounded-lg items-center shadow-lg">
+            <Text className="text-lg font-bold mb-4">Are you a member of KNM?</Text>
+            <View className="flex-row justify-between w-full">
+                <Button onPress={() => {
+                    setShowMemberModal(false);
+                    setShowMemberIdModal(true);
+                }}>Yes</Button>
+                <Button onPress={() => {
+                    setShowMemberModal(false);
+                    submitHandler(false);
+                }}>No</Button>
+            </View>
+        </View>
+    </View>
+</Modal>
+    
+            <Modal visible={showMemberIdModal} transparent animationType="slide" onRequestClose={() => setShowMemberIdModal(false)}>
+                <View className="flex-1 justify-center items-center bg-black bg-opacity-50">
+                    <View className="w-4/5 bg-white p-5 rounded-lg items-center">
+                        <Text className="text-lg font-bold mb-4">Enter your Member ID</Text>
+                        <TextInput placeholder="Enter Member ID" value={memberId} onChangeText={setMemberId} className="w-full p-2 border border-gray-400 rounded-md mb-4" />
+                        <Button onPress={() => {
+                            setShowMemberIdModal(false);
+                            submitHandler(true);
+                        }}>Submit</Button>
                     </View>
                 </View>
+            </Modal>
+        </View>
+   
+    
 
-                <Modal
-                    visible={showMemberModal}
-                    transparent={true}
-                    animationType="slide"
-                    onRequestClose={() => setShowMemberModal(false)}
-                >
-                    <View style={styles.modalContainer}>
-                        <View style={styles.modalContent}>
-                            <Text style={styles.modalTitle}>Are you a member of KNM?</Text>
-                            <View style={styles.modalButtonContainer}>
-                                <Button onPress={() => {
-                                    setShowMemberModal(false);
-                                    setShowMemberIdModal(true);
-                                }}>Yes</Button>
-                                <Button onPress={() => {
-                                    setShowMemberModal(false);
-                                    submitHandler(false);
-                                }}>No</Button>
-                            </View>
-                        </View>
-                    </View>
-                </Modal>
-
-                <Modal
-                    visible={showMemberIdModal}
-                    transparent={true}
-                    animationType="slide"
-                    onRequestClose={() => setShowMemberIdModal(false)}
-                >
-                    <View style={styles.modalContainer}>
-                        <View style={styles.modalContent}>
-                            <Text style={styles.modalTitle}>Enter your Member ID</Text>
-                            <TextInput
-                                placeholder="Enter Member ID"
-                                value={memberId}
-                                onChangeText={setMemberId}
-                                style={styles.modalInput}
-                            />
-                            <Button onPress={() => {
-                                setShowMemberIdModal(false);
-                                submitHandler(true);
-                            }}>Submit</Button>
-                        </View>
-                    </View>
-                </Modal>
-            </View>
-        </ScrollView>
     );
 };
 
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-        backgroundColor: "#fff",
-        padding: 20,
-        marginVertical: 20,
-    },
-    box: {
-        width: "100%",
-        backgroundColor: "#fff",
-        borderRadius: 10,
-        padding: 20,
-        elevation: 5, // For Android shadow
-        shadowColor: "#000", // For iOS shadow
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.3,
-        shadowRadius: 5,
-    },
-    logoContainer: {
-        alignItems: "center",
-        marginBottom: 20,
-    },
-    logo: {
-        width: 100,
-        height: 100,
-    },
-    form: {
-        width: "100%",
-    },
-    modalContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    },
-    modalContent: {
-        width: '80%',
-        padding: 20,
-        backgroundColor: 'white',
-        borderRadius: 10,
-        alignItems: 'center',
-    },
-    modalTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        marginBottom: 20,
-    },
-    modalButtonContainer: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        width: '100%',
-    },
-    modalInput: {
-        width: '100%',
-        padding: 10,
-        borderWidth: 1,
-        borderColor: 'gray',
-        borderRadius: 5,
-        marginBottom: 20,
-    },
-});
 
 export default SignUp;

@@ -70,6 +70,17 @@ export const orderReducer = createReducer(
                 state.loading = false;
                 state.error = action.payload;
             })
+            .addCase("getUserOrdersMobileRequest", (state) => {
+                state.loading = true;
+            })
+            .addCase("getUserOrdersMobileSuccess", (state, action) => {
+                state.loading = false;
+                state.orders = action.payload;
+            })
+            .addCase("getUserOrdersMobileFail", (state, action) => {
+                state.loading = false;
+                state.error = action.payload;
+            })
             .addCase("confirmProofOfDeliveryRequest", (state) => {
                 state.loading = true;
             })

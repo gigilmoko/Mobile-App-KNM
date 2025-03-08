@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Dimensions } from "react-native";
 import Footer from "../../components/Layout/Footer";
+import { useNavigation } from "@react-navigation/native";
 import { useDispatch, useSelector } from "react-redux";
 import { Ionicons } from "@expo/vector-icons";
 import { CameraIcon } from "react-native-heroicons/outline"; // Import CameraIcon from Heroicons
@@ -9,15 +10,16 @@ import { Avatar, Button } from "react-native-paper";
 import { loadUser, updateAvatar, logout } from "../../redux/actions/userActions";
 import { useIsFocused } from "@react-navigation/native";
 import mime from "mime";
-import Header from "../../components/Layout/Header";
 import * as ImagePicker from "expo-image-picker";
 import axios from "axios";
 import Toast from "react-native-toast-message"; // Import Toast
+import Header from "../../components/Layout/Header";
 
 const { height } = Dimensions.get("window"); // Get the screen height
 
 const MyAccount = ({ navigation, route }) => {
     const { user } = useSelector((state) => state.user);
+    const navigate = useNavigation();
     const dispatch = useDispatch();
     const isFocused = useIsFocused();
     const [avatar, setAvatar] = useState(user?.avatar || "");
@@ -96,163 +98,126 @@ const MyAccount = ({ navigation, route }) => {
     };
 
     return (
-        <View style={{ flex: 1, backgroundColor: "#fff" }}>
-            {/* <Header back={true} /> */}
+      <View className="flex-1 bg-white">
+    <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+        <View className="px-5 py-5">
+            {/* My Account Section */}
+            <View className="flex items-center">
+                <Header title="My Account" />
 
-            <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-                <View style={styles.boxContainer}>
-                    <View style={styles.UserContainer}>
-                        <View style={styles.screenNameContainer}>
-                            <Text style={styles.screenNameText}>My Account</Text>
-                        </View>
-                        <View style={styles.avatarContainer}>
-                            <Avatar.Image
-                                source={{ uri: avatar.toString() }}
-                                size={100}
-                                style={{ backgroundColor: "#c70049" }}
-                            />
-                            <TouchableOpacity onPress={openImagePicker} style={styles.cameraIconContainer}>
-                                <CameraIcon size={24} color="#219ebc" />
-                            </TouchableOpacity>
-                            {isAvatarChanged && (
-                                <TouchableOpacity onPress={handleAvatarUpdate} disabled={isUpdating}>
-                                    <Button loading={isUpdating} textColor="#fff" style={styles.updateButton}>
-                                        {isUpdating ? "Updating..." : "Update"}
-                                    </Button>
-                                </TouchableOpacity>
-                            )}
-                        </View>
 
-                        <View style={styles.infoContainer}>
-                            <Text style={styles.usernameText}>
-                                {user?.fname} {user?.middlei}. {user?.lname}
-                            </Text>
-                            <Text style={styles.secondaryText}>{user?.email}</Text>
-                            <Text style={styles.addressText}>{user?.address}</Text>
-                        </View>
-                    </View>
-
-                    <View style={styles.OptionsContainer}>
-                        {/* Conditionally Render "My Orders" or "Manage Orders" */}
-                        {user?.role === "admin" ? (
-                            <OptionList
-                                text={"Dashboard"}
-                                Icon={Ionicons}
-                                iconName={"grid-outline"} // Icon for a dashboard-like appearance
-                                onPress={() => navigation.navigate("dashboard")}
-                            />
-                        ) : (
-                            <OptionList
-                                text={"My Orders"}
-                                Icon={Ionicons}
-                                iconName={"bag-check"}
-                                onPress={() => navigation.navigate("myorders")}
-                            />
-                        )}
-
-                        <OptionList
-                            text={"Change Password"}
-                            Icon={Ionicons}
-                            iconName={"key-sharp"}
-                            onPress={() => navigation.navigate("changepassword")}
-                        />
-                        <OptionList
-                            text={"Update Profile"}
-                            Icon={Ionicons}
-                            iconName={"person"}
-                            onPress={() => navigation.navigate("updateprofile")}
-                        />
-                        <OptionList
-                            text={"Contact and Feedback"}
-                            Icon={Ionicons}
-                            iconName={"person"}
-                            onPress={() => navigation.navigate("feedback")}
-                        />
-                    </View>
-
-                    {/* Logout Button */}
-                    <Button mode="contained" onPress={handleLogout} style={styles.logoutButton}>
-                        Logout
-                    </Button>
+                <View className="relative flex items-center justify-center mb-8">
+                    <Avatar.Image
+                        source={{ uri: avatar.toString() }}
+                        size={100}
+                        className="bg-[#c70049]"
+                    />
+                    <TouchableOpacity 
+                        onPress={openImagePicker} 
+                        className="absolute bg-white rounded-full p-1 shadow-md right-0 bottom-0"
+                    >
+                        <CameraIcon size={24} color="#e01d47" />
+                    </TouchableOpacity>
+                    {isAvatarChanged && (
+                        <TouchableOpacity onPress={handleAvatarUpdate} disabled={isUpdating}>
+                            <Button 
+                                loading={isUpdating} 
+                                textColor="#fff" 
+                                className="bg-[#e01d47] mb-2 rounded-lg px-5 py-2"
+                            >
+                                {isUpdating ? "Updating..." : "Update"}
+                            </Button>
+                        </TouchableOpacity>
+                    )}
                 </View>
-                {/* End of Box */}
 
-                <View style={styles.footer}>
-                    <Footer activeRoute={"home"} />
+                <View className="flex items-center">
+                    <Text className="text-xl font-bold -mt-2 ">
+                        {user?.fname} {user?.middlei}. {user?.lname}
+                    </Text>
+                    <Text className="text-lg text-gray-500 mb-1">{user?.email}</Text>
+                    <Text className="text-sm text-gray-500">{user?.address}</Text>
                 </View>
-            </ScrollView>
-        </View>
+            </View>
+
+            {/* All Options in One Full-Width Box */}
+          
+                <Text className="text-lg font-medium px-3 py-2 text-[#c5c5c5]">Account Settings</Text>
+                
+                {user?.role !== "admin" && (
+                    <OptionList
+                        text={"My Orders"}
+                        Icon={Ionicons}
+                        iconName={"bag-check"}
+                        onPress={() => navigation.navigate("myorders")}
+                        iconColor="#e01d47"
+                        textColor="#e01d47"
+                    />
+                )}
+
+                {user?.role === "admin" && (
+                    <OptionList
+                        text={"Dashboard"}
+                        Icon={Ionicons}
+                        iconName={"grid-outline"}
+                        onPress={() => navigation.navigate("dashboard")}
+                        iconColor="#e01d47"
+                        textColor="#e01d47"
+                    />
+                )}
+
+                <OptionList
+                    text={"Change Password"}
+                    Icon={Ionicons}
+                    iconName={"key-sharp"}
+                    onPress={() => navigation.navigate("changepassword")}
+                    iconColor="#e01d47"
+                    textColor="#e01d47"
+                />
+                <OptionList
+                    text={"Update Profile"}
+                    Icon={Ionicons}
+                    iconName={"person"}
+                    onPress={() => navigation.navigate("updateprofile")}
+                    iconColor="#e01d47"
+                    textColor="#e01d47"
+                />
+                <OptionList
+                    text={"Contact and Feedback"}
+                    Icon={Ionicons}
+                    iconName={"chatbox-ellipses"}
+                    onPress={() => navigation.navigate("feedback")}
+                    iconColor="#e01d47"
+                    textColor="#e01d47"
+                />
+
+             
+               
+            </View>
+      
+    </ScrollView>
+
+    <View className="absolute bottom-16 w-full px-5">
+        <Button 
+            mode="contained" 
+            onPress={handleLogout} 
+            className="bg-[#e01d47] rounded-lg py-2"
+        >
+            Logout
+        </Button>
+    </View>
+
+    {/* Footer */}
+    <View className="absolute bottom-0 w-full">
+        <Footer activeRoute={"home"} />
+    </View>
+</View>
+
+    
+    
     );
 };
 
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#fff',
-    },
-    screenNameContainer: {
-        padding: 10,
-        alignItems: 'center',
-    },
-    screenNameText: {
-        fontSize: 24,
-        fontWeight: 'bold',
-    },
-    UserContainer: {
-        alignItems: 'center',
-    },
-    avatarContainer: {
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginBottom: 20,
-        position: 'relative',
-    },
-    cameraIconContainer: {
-        position: 'absolute',
-        bottom: 0,
-        right: 0,
-        backgroundColor: '#fff',
-        borderRadius: 50,
-        padding: 5,
-    },
-    infoContainer: {
-        alignItems: 'center',
-    },
-    usernameText: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        marginBottom: 5,
-        marginTop: -10,
-    },
-    secondaryText: {
-        fontSize: 16,
-        color: '#888',
-        marginBottom: 5,
-    },
-    addressText: {
-        fontSize: 14,
-        color: '#888',
-    },
-    updateButton: {
-        backgroundColor: "#219ebc",
-        marginBottom: 10,
-        borderRadius: 20,
-    },
-    OptionsContainer: {
-        marginTop: 30,
-        paddingHorizontal: 20,
-    },
-    logoutButton: {
-        backgroundColor: "#bc430b",
-        borderRadius: 10,
-        margin: 20,
-    },
-    footer: {
-        position: "absolute",
-        bottom: 0,
-        width: "100%",
-        paddingTop: 0,
-    },
-});
+
 
 export default MyAccount;

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Alert, Image, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Alert, Image, StyleSheet, ScrollView } from 'react-native';
 import { useDispatch } from 'react-redux';
 import { useNavigation } from '@react-navigation/native'; // Import useNavigation hook
 import { submitFeedback } from '../../redux/actions/feedbackActions'; // Import the submitFeedback action
@@ -69,121 +69,51 @@ const Feedback = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <Header back={true} />
-      <View style={styles.contentContainer}>
-        <Text style={styles.title}>Submit Your Feedback</Text>
-        <Image
-          source={{
-            uri: 'https://res.cloudinary.com/dglawxazg/image/upload/v1732302161/logo_edz3ze.png',
-          }}
-          style={styles.logo}
-        />
-        <Text style={styles.contactDetails}>Email: kbituin123@gmail.com</Text>
-
-        {/* Rating Stars */}
-        <View style={styles.ratingContainer}>
-          {[1, 2, 3, 4, 5].map((star) => (
-            <TouchableOpacity key={star} onPress={() => handleStarClick(star)}>
-              <Text style={[styles.star, rating >= star && styles.selectedStar]}>
-                ★
-              </Text>
-            </TouchableOpacity>
-          ))}
+    <View className="flex-1 bg-white">
+      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+        <View className="px-5 py-5 flex-1">
+          <Header title="Feedback" />
+  
+          {/* Rating Section */}
+          <View className="items-center mt-20">
+            <Text className="text-2xl font-bold mb-3">How would you rate our app?</Text>
+            <View className="flex-row justify-center mb-5">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <TouchableOpacity key={star} onPress={() => handleStarClick(star)}>
+                  <Text className={`text-2xl ${rating >= star ? "text-yellow-400" : "text-gray-400"}`}>
+                    ★
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+  
+          {/* Feedback Input Section */}
+          <View className="mt-5 px-5">
+            <Text className="text-[#e01d47] text-xl font-bold">Feedback</Text>
+            <TextInput
+              className="border border-gray-300 bg-gray-200 rounded-lg p-3 w-full h-40 text-base text-gray-700 mb-10"
+              placeholder="Tell us more about your experience..."
+              value={feedback}
+              onChangeText={setFeedback}
+              multiline
+              textAlignVertical="top" // Ensures placeholder starts at the top
+              onFocus={() => setIsFocused(true)}
+              onBlur={() => setIsFocused(false)}
+            />
+          </View>
         </View>
-
-        {/* Feedback Text Input */}
-        <TextInput
-          style={styles.input}
-          placeholder="Enter your feedback here"
-          value={feedback}
-          onChangeText={setFeedback}
-          multiline
-          numberOfLines={3}
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
-        />
-
+      </ScrollView>
+      <View className="absolute bottom-10 w-full px-10">
         <TouchableOpacity
           onPress={handleSubmitFeedback}
-          style={styles.submitButton}
+          className="bg-[#e01d47] py-3 rounded-lg items-center w-full"
         >
-          <Text style={styles.submitButtonText}>Submit Feedback</Text>
+          <Text className="text-white font-bold text-lg">Submit Feedback</Text>
         </TouchableOpacity>
       </View>
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#f9f9f9",
-  },
-  contentContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 10,
-    backgroundColor: "#f9f9f9",
-    elevation: 5, // For Android shadow
-    shadowColor: "#000", // For iOS shadow
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 30,
-  },
-  logo: {
-    width: 100,
-    height: 100,
-    marginBottom: 20,
-  },
-  contactDetails: {
-    fontSize: 16,
-    fontWeight: "bold",
-    textAlign: "center",
-    marginBottom: 20,
-  },
-  ratingContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    marginBottom: 20,
-  },
-  star: {
-    fontSize: 24,
-    color: '#CCCCCC',
-  },
-  selectedStar: {
-    color: '#FFD700',
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    backgroundColor: '#f5f5f5',
-    padding: 10,
-    width: '90%',
-    height: 150,
-    textAlignVertical: 'top',
-    marginBottom: 30,
-  },
-  submitButton: {
-    backgroundColor: '#bc430b',
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    borderRadius: 8,
-    width: '90%',
-    alignItems: 'center',
-  },
-  submitButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
-});
 
 export default Feedback;

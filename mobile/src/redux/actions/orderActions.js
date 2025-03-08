@@ -202,6 +202,37 @@ export const getUserOrders = () => async (dispatch) => {
     }
 };
 
+export const getUserOrdersMobile = () => async (dispatch) => {
+    try {
+        dispatch({ type: "getUserOrdersMobileRequest" });
+
+        const token = await AsyncStorage.getItem('token');
+        if (!token) {
+            throw new Error("No token found");
+        }
+
+        const { data } = await axios.get(`${server}/my/mobile`, {
+            headers: {
+                "Authorization": `Bearer ${token}`,
+            },
+        });
+
+        dispatch({
+            type: "getUserOrdersMobileSuccess",
+            payload: data.orders,
+        });
+    } catch (error) {
+        dispatch({
+            type: "getUserOrdersMobileFail",
+            payload: error.response?.data?.message || error.message,
+        });
+        Toast.show({
+            type: "error",
+            text1: error.response?.data?.message || error.message,
+        });
+    }
+};
+
 export const confirmProofOfDelivery = (orderId) => async (dispatch) => {
     try {
         dispatch({ type: "confirmProofOfDeliveryRequest" });

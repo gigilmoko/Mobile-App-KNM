@@ -1,38 +1,29 @@
-import { TouchableOpacity, View } from "react-native";
-import React from "react";
-import { useNavigation, useRoute } from "@react-navigation/native";
-import Entypo from 'react-native-vector-icons/Entypo';
+import { View, Text, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useDispatch } from "react-redux";
+import { useNavigation } from "@react-navigation/native";
 
-const Header = ({ back }) => {
-    const navigate = useNavigation();
-    const dispatch = useDispatch();
-    const route = useRoute();
+const Header = ({ title }) => {
+    const navigation = useNavigation();
 
     return (
-        <View
-            style={{
-                width: '100%',
-                flexDirection: 'row',
-                justifyContent: 'space-between',
-                // paddingTop: 30,
-                paddingLeft: 0,
-            }}>
-            {back && (
-                <TouchableOpacity
-                    onPress={() => navigate.goBack()}
-                    className="p-2 rounded-tr-2xl rounded-bl-2xl mt-2"
-                >
-                    <Entypo
-                        name="chevron-left"
-                        style={{
-                            fontSize: 25,
-                            color: "000",
-                        }}
-                    />
-                </TouchableOpacity>
-            )}
+        <View className="flex-row items-center py-3">
+            {/* Back Button */}
+            <TouchableOpacity 
+                onPress={() => navigation.goBack()} 
+                className="p-2 bg-[#ff7895] rounded-full items-center justify-center w-9 h-9"
+            >
+                <Ionicons name="arrow-back" size={20} color="#ffffff" />
+            </TouchableOpacity>
+
+            {/* Title */}
+            <View className="flex-1">
+                <Text className="text-2xl font-bold text-[#e01d47] text-center">
+                    {title}
+                </Text>
+            </View>
+
+            {/* Spacer */}
+            <View className="w-10" />
         </View>
     );
 };
