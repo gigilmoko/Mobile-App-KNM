@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity, Image } from "react-native";
 import FontAwesome from "react-native-vector-icons/FontAwesome";
 import { useDispatch, useSelector } from "react-redux";
-import { getSingleCategory } from "../redux/actions/categoryActions"; // Adjust path as needed
 
 const ProductCard = ({
   stock,
@@ -12,24 +11,8 @@ const ProductCard = ({
   id,
   addToCartHandler,
   navigate,
-  category, // This is the category ID
+  categoryName, // Accept category name as a prop
 }) => {
-  const [categoryName, setCategoryName] = useState("Loading...");
-  const dispatch = useDispatch();
-  const categoryData = useSelector((state) => state.category.category); // FIXED: Correct selector
-
-  useEffect(() => {
-    if (category && typeof category === "string" && category.length === 24) {
-      dispatch(getSingleCategory(category));
-    }
-  }, [dispatch, category]);
-
-  useEffect(() => {
-    if (categoryData && categoryData._id === category) {
-      setCategoryName(categoryData.name);
-    }
-  }, [categoryData, category]);
-
   return (
     <TouchableOpacity
       onPress={() => navigate.navigate("productdetail", { id })}

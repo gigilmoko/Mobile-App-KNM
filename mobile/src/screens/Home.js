@@ -9,7 +9,6 @@ import { loadUser } from "../redux/actions/userActions";
 import { useSetCategories } from "../../utils/hooks";
 import Footer from "../components/Layout/Footer";
 import Toast from "react-native-toast-message";
-import { getSingleCategory } from "../redux/actions/categoryActions"; // Add this import
 
 const screenWidth = Dimensions.get("window").width;
 const screenHeight = Dimensions.get("window").height;
@@ -60,6 +59,7 @@ const Home = ({ navigation }) => {
 
     useEffect(() => {
         const timeOutId = setTimeout(() => {
+            dispatch({ type: "CLEAR_PRODUCTS" });
             dispatch(searchProducts(searchQuery)); 
         }, 200);
     
@@ -72,6 +72,11 @@ const Home = ({ navigation }) => {
         setSelectedCategory(categoryId);
         setCategory(categoryId === null ? "" : categoryId);
         dispatch({ type: "CLEAR_PRODUCTS" });
+        if (categoryId === null) {
+            dispatch(getAllProducts("", ""));
+        } else {
+            dispatch(getProductsByCategory(categoryId));
+        }
     };
 
     const renderCategoryItem = ({ item }) => {
@@ -84,8 +89,8 @@ const Home = ({ navigation }) => {
               paddingVertical: 6,
               marginHorizontal: 5,
               borderRadius: 20,
-              backgroundColor: category === item._id ? "#ff6b81" : "#f5f5f5",
-              borderWidth: category === item._id ? 0 : 1,
+              backgroundColor: selectedCategory === item._id ? "#ff6b81" : "#f5f5f5",
+              borderWidth: selectedCategory === item._id ? 0 : 1,
               borderColor: "#ddd",
             }}
           >
@@ -93,7 +98,7 @@ const Home = ({ navigation }) => {
               style={{
                 fontSize: 12,
                 fontWeight: "bold",
-                color: category === item._id ? "#fff" : "#888",
+                color: selectedCategory === item._id ? "#fff" : "#888",
               }}
             >
               {item.name || "Unknown"}
@@ -204,13 +209,12 @@ const Home = ({ navigation }) => {
             id={item._id}
             key={item._id}
             i={index}
-            category={item.category}
+            categoryName={item.category ? item.category.name : "Unknown"} // Add condition to check if category is not null
             navigate={navigation}
         />
     );
-
     return (
-        <View className="flex-1 pb-14">    
+        <View className="flex-1 pb-20">    
        <View className="flex-row items-center justify-between px-2 py-2 bg-white">
     {/* Logo and Welcome Text */}
     <View className="items-center">
@@ -276,9 +280,11 @@ const Home = ({ navigation }) => {
                                     contentContainerStyle={{ alignItems: "center" }}
                                     showsHorizontalScrollIndicator={false}
                                     ListHeaderComponent={
-                                        <TouchableOpacity onPress={() => handleCategoryClick(null)}>
-                                           <TouchableOpacity
-                                            onPress={() => setSelectedCategory(null)}
+                                        <TouchableOpacity
+                                            onPress={() => {
+                                                handleCategoryClick(null);
+                                                dispatch(getAllProducts("", ""));
+                                            }}
                                             style={{
                                                 paddingHorizontal: 12,
                                                 paddingVertical: 6,
@@ -286,17 +292,16 @@ const Home = ({ navigation }) => {
                                                 borderRadius: 20,
                                                 backgroundColor: selectedCategory === null ? "#ff6b81" : "#f5f5f5",
                                             }}
-                                            >
+                                        >
                                             <Text
                                                 style={{
-                                                fontSize: 14,
-                                                fontWeight: "bold",
-                                                color: selectedCategory === null ? "#fff" : "#888",
+                                                    fontSize: 14,
+                                                    fontWeight: "bold",
+                                                    color: selectedCategory === null ? "#fff" : "#888",
                                                 }}
                                             >
                                                 All
                                             </Text>
-                                            </TouchableOpacity>
                                         </TouchableOpacity>
                                     }
                                 />
@@ -309,7 +314,7 @@ const Home = ({ navigation }) => {
             }
         />
         <TouchableOpacity
-            className="absolute bottom-14 right-4 bg-[#bc430b] p-4 rounded-full shadow-lg"
+            className="absolute bottom-20 right-6 bg-[#bc430b] p-4 rounded-full shadow-lg"
             onPress={() => navigation.navigate("wishlist")}
         >
             <Icon name="heart-outline" size={24} color="#fff" />
