@@ -1,6 +1,7 @@
 const initialState = {
     loading: false,
     feedbacks: [],
+    averageRatings: {}, // Add averageRatings to the initial state
     error: null,
 };
 
@@ -45,6 +46,28 @@ export const productFeedbackReducer = (state = initialState, action) => {
                 ...state,
                 loading: false,
                 feedbacks: [],
+                error: action.payload,
+            };
+        case "getAverageProductRatingRequest":
+            return {
+                ...state,
+                loading: true,
+                error: null,
+            };
+        case "getAverageProductRatingSuccess":
+            return {
+                ...state,
+                loading: false,
+                averageRatings: {
+                    ...state.averageRatings,
+                    [action.productId]: action.payload,
+                },
+                error: null,
+            };
+        case "getAverageProductRatingFail":
+            return {
+                ...state,
+                loading: false,
                 error: action.payload,
             };
         default:

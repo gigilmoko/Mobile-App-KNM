@@ -11,29 +11,19 @@ const ProductCard = ({
   id,
   addToCartHandler,
   navigate,
-  categoryName, // Accept category name as a prop
+  categoryName, 
+  averageRating, 
 }) => {
+  // console.log(image)
+  // console.log(averageRating)
   return (
     <TouchableOpacity
       onPress={() => navigate.navigate("productdetail", { id })}
-      style={{
-        width: 180,
-        borderWidth: 1,
-        borderColor: "#ff6b81",
-        borderRadius: 12,
-        backgroundColor: "#fff",
-        padding: 10,
-        margin: 10,
-        shadowColor: "#000",
-        shadowOpacity: 0.1,
-        shadowRadius: 5,
-        shadowOffset: { width: 0, height: 2 },
-        position: "relative",
-      }}
+      className="w-44 border border-[#ff6b81] rounded-xl bg-white p-2 m-2 shadow-sm relative"
     >
       {/* Product Image */}
-      <View style={{ position: "relative" }}>
-        <Image
+      <View className="relative">
+      <Image
           source={{ uri: image }}
           style={{
             width: "100%",
@@ -46,51 +36,29 @@ const ProductCard = ({
         {/* Cart Icon Positioned on Top of the Image */}
         <TouchableOpacity
           onPress={() => addToCartHandler(id, name, price, image, stock)}
-          style={{
-            position: "absolute",
-            top: 5,
-            right: 5,
-            backgroundColor: "#ff6b81",
-            borderRadius: 20,
-            width: 35,
-            height: 35,
-            justifyContent: "center",
-            alignItems: "center",
-            elevation: 3,
-            zIndex: 10,
-          }}
+          className="absolute top-1 right-1 bg-[#ff6b81] rounded-full w-9 h-9 flex justify-center items-center shadow-md z-10"
         >
           <FontAwesome name="shopping-cart" size={16} color="#fff" />
         </TouchableOpacity>
       </View>
 
       {/* Name and Price in the Same Row */}
-      <View
-        style={{
-          flexDirection: "row",
-          justifyContent: "space-between",
-          width: "100%",
-          marginTop: 5,
-        }}
-      >
-        <Text style={{ fontSize: 12, fontWeight: "600", color: "#333" }}>{name}</Text>
-        <Text style={{ fontSize: 12, fontWeight: "bold", color: "#ff6b81" }}>₱{price}</Text>
+      <View className="flex-row justify-between w-full mt-1">
+        <Text className="text-xs font-semibold text-gray-800">{name}</Text>
+        <Text className="text-xs font-bold text-[#ff6b81]">₱{price}</Text>
       </View>
 
       {/* Category and Ratings in the Same Row */}
-      <View
-        style={{
-          flexDirection: "row",
-          justifyContent: "space-between",
-          width: "100%",
-          marginTop: 3,
-          alignItems: "center",
-        }}
-      >
-        <Text style={{ fontSize: 12, color: "#999" }}>{categoryName}</Text>
-        <View style={{ flexDirection: "row" }}>
+      <View className="flex-row justify-between w-full mt-1 items-center">
+        <Text className="text-xs text-gray-500">{categoryName}</Text>
+        <View className="flex-row">
           {[...Array(5)].map((_, index) => (
-            <FontAwesome key={index} name="star" size={12} color="#ffcc00" />
+            <FontAwesome
+              key={index}
+              name="star"
+              size={12}
+              color={index < Math.round(averageRating) ? "#ffcc00" : "#ccc"} // Display average rating
+            />
           ))}
         </View>
       </View>

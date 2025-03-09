@@ -86,6 +86,27 @@ export const fetchProductFeedbacks = (productId) => async (dispatch) => {
     }
 };
 
+export const getAverageProductRating = (productId) => async (dispatch) => {
+    try {
+        dispatch({ type: "getAverageProductRatingRequest" });
+
+        const { data } = await axios.get(`${server}/feedback/average/product/${productId}`, {
+            withCredentials: true,
+        });
+
+        dispatch({
+            type: "getAverageProductRatingSuccess",
+            payload: data.averageRating,
+            productId, // Ensure productId is included in the action
+        });
+    } catch (error) {
+        dispatch({
+            type: "getAverageProductRatingFail",
+            payload: error.response?.data.message || error.message,
+        });
+    }
+};
+
 
 
 

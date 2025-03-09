@@ -8,7 +8,7 @@ export const getAllProducts = (keyword = "", category = "") => async (dispatch) 
 
 
         const { data } = await axios.get(`${server}/product/all/mobile?keyword=${keyword}&category=${category}`);
-        console.log("product data: ", data.products);
+        // console.log("product data: ", data.products);
         dispatch({
             type: "ALL_PRODUCTS_SUCCESS",
             payload: data.products,

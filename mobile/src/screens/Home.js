@@ -9,6 +9,7 @@ import { loadUser } from "../redux/actions/userActions";
 import { useSetCategories } from "../../utils/hooks";
 import Footer from "../components/Layout/Footer";
 import Toast from "react-native-toast-message";
+import { getAverageProductRating } from "../redux/actions/productFeedbackActions";
 
 const screenWidth = Dimensions.get("window").width;
 const screenHeight = Dimensions.get("window").height;
@@ -32,6 +33,7 @@ const Home = ({ navigation }) => {
     const wishlist = useSelector((state) => state.wishlist.wishlistItems) || [];
     const { user } = useSelector((state) => state.user);
     const [isCategoryFetched, setIsCategoryFetched] = useState(false);
+    const averageRatings = useSelector((state) => state.feedbacks.averageRatings);
 
     useSetCategories(setCategories, isFocused);
 
@@ -67,6 +69,16 @@ const Home = ({ navigation }) => {
             clearTimeout(timeOutId);
         };
     }, [dispatch, searchQuery, category, isFocused]); 
+
+    useEffect(() => {
+        if (products && products.length > 0) {
+            products.forEach(product => {
+                dispatch(getAverageProductRating(product._id)).then((result) => {
+                    console.log(`Average rating for product ${product._id}:`, result.payload);
+                });
+            });
+        }
+    }, [products, dispatch]);
 
     const handleCategoryClick = (categoryId) => {
         setSelectedCategory(categoryId);
@@ -211,6 +223,7 @@ const Home = ({ navigation }) => {
             i={index}
             categoryName={item.category ? item.category.name : "Unknown"} // Add condition to check if category is not null
             navigate={navigation}
+            averageRating={averageRatings[item._id]} // Pass average rating to ProductCard
         />
     );
     return (
@@ -262,7 +275,7 @@ const Home = ({ navigation }) => {
             keyExtractor={(item) => item._id}
             numColumns={2}
             columnWrapperStyle={{ justifyContent: "center" }}
-            contentContainerStyle={{ paddingHorizontal: 16,  }}
+            contentContainerStyle={{ paddingHorizontal: 16, }}
             ListHeaderComponent={
                 <>
                     {isCategoryFetched ? (
