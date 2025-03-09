@@ -9,10 +9,10 @@ import { loadUser } from "../redux/actions/userActions";
 import { useSetCategories } from "../../utils/hooks";
 import Footer from "../components/Layout/Footer";
 import Toast from "react-native-toast-message";
+import { getSingleCategory } from "../redux/actions/categoryActions"; // Add this import
 
 const screenWidth = Dimensions.get("window").width;
 const screenHeight = Dimensions.get("window").height;
-
 const Home = ({ navigation }) => {
     const [category, setCategory] = useState("");
     const [categories, setCategories] = useState([]);
@@ -76,11 +76,30 @@ const Home = ({ navigation }) => {
 
     const renderCategoryItem = ({ item }) => {
         return (
-            <TouchableOpacity key={item._id} onPress={() => handleCategoryClick(item._id)}>
-                <Text style={[styles.categoryButton, category === item._id ? styles.selectedCategory : styles.unselectedCategory]}>
-                    {item.name || "Unknown"}
-                </Text>
-            </TouchableOpacity>
+            <TouchableOpacity
+            key={item._id}
+            onPress={() => handleCategoryClick(item._id)}
+            style={{
+              paddingHorizontal: 12,
+              paddingVertical: 6,
+              marginHorizontal: 5,
+              borderRadius: 20,
+              backgroundColor: category === item._id ? "#ff6b81" : "#f5f5f5",
+              borderWidth: category === item._id ? 0 : 1,
+              borderColor: "#ddd",
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 12,
+                fontWeight: "bold",
+                color: category === item._id ? "#fff" : "#888",
+              }}
+            >
+              {item.name || "Unknown"}
+            </Text>
+          </TouchableOpacity>
+          
         );
     };
 
@@ -185,211 +204,124 @@ const Home = ({ navigation }) => {
             id={item._id}
             key={item._id}
             i={index}
+            category={item.category}
             navigate={navigation}
         />
     );
 
-    const renderCarouselItem = ({ item }) => (
-        <Image source={{ uri: item.url }} style={styles.carouselImage} />
-    );
-
     return (
-        <View style={styles.container}>
-            <View style={styles.header}>
-                <Text style={styles.headerText}>
-                    Hello, {user?.fname} {user?.lname || "Guest"}!
-                </Text>
-            </View>
-            {/* Search Bar */}
-            <View style={styles.searchContainer}>
-                <TextInput
-                    style={styles.searchInput}
-                    placeholder="Search products..."
-                    value={searchQuery}
-                    onChangeText={(text) => setSearchQuery(text)} // Update search query
-                />
-            </View>
-
-            {/* Main Content */}
-            <FlatList
-                data={products}
-                renderItem={renderProductItem}
-                keyExtractor={(item) => item._id}
-                numColumns={2}
-                columnWrapperStyle={styles.productListRow} // Center the product cards
-                contentContainerStyle={styles.productList}
-                ListHeaderComponent={
-                    <>
-                        {isCategoryFetched ? (
-                            <>
-                                <View style={styles.carouselContainer}>
-                                    <FlatList
-                                        data={carouselImages}
-                                        renderItem={renderCarouselItem}
-                                        keyExtractor={(item) => item.id}
-                                        horizontal
-                                        showsHorizontalScrollIndicator={false}
-                                        pagingEnabled
-                                        snapToAlignment="center"
-                                        snapToInterval={screenWidth}
-                                        decelerationRate="fast"
-                                        contentContainerStyle={styles.carouselContentContainer}
-                                    />
-                                </View>
-                                <View style={styles.primaryTextContainer}>
-                                    <Text style={styles.primaryText}>Categories</Text>
-                                </View>
-                                <View style={styles.categoryContainer}>
-                                    <FlatList
-                                        data={categories}
-                                        renderItem={renderCategoryItem}
-                                        keyExtractor={(item) => item._id}
-                                        horizontal
-                                        contentContainerStyle={{ alignItems: "center" }}
-                                        showsHorizontalScrollIndicator={false}
-                                        ListHeaderComponent={
-                                            <TouchableOpacity onPress={() => handleCategoryClick(null)}>
-                                                <Text
-                                                    style={[styles.categoryButton, selectedCategory === null ? styles.selectedCategory : styles.unselectedCategory]}
-                                                >
-                                                    All
-                                                </Text>
-                                            </TouchableOpacity>
-                                        }
-                                    />
-                                </View>
-                            </>
-                        ) : (
-                            // Optionally, you can show a loading spinner or some message if no category is selected or products are being fetched
-                            <Text>Loading products...</Text>
-                        )}
-                    </>
-                }
-            />
-
-            {/* Floating Wishlist Button */}
-            <TouchableOpacity
-                style={styles.floatingWishlistButton}
-                onPress={() => navigation.navigate("wishlist")}
-            >
-                <Icon name="heart-outline" size={20} color="#fff" />
-            </TouchableOpacity>
-
-            {/* Footer */}
-            <View style={styles.footer}>
-                <Footer />
-            </View>
+        <View className="flex-1 pb-14">    
+       <View className="flex-row items-center justify-between px-2 py-2 bg-white">
+    {/* Logo and Welcome Text */}
+    <View className="items-center">
+        <Image
+            source={{ uri: "https://res.cloudinary.com/dglawxazg/image/upload/v1741112980/image_2025-03-05_022855838-removebg-preview_thwgac.png" }}
+            style={{ width: 100, height: 80, marginRight: 20 }}
+            resizeMode="contain"
+        />
+        <View className="ml-5">
+        <Text className="text-md font-bold text-black -mt-5">
+            Welcome, <Text className="font-bold text-[#c5162e]">{user?.fname || "Guest"}!</Text>
+        </Text>
         </View>
+    </View>
+
+    {/* Search Bar */}
+    <View className="flex-row items-center bg-white border border-gray-300 mt-5 rounded-full px-2 py-1 w-[50%] shadow-sm">
+    <Icon name="search" size={16} color="#c5162e" style={{ marginRight: 5 }} />
+    <TextInput
+        className="flex-1 text-gray-600"
+        placeholder="Search"
+        placeholderTextColor="#c5162e"
+        value={searchQuery}
+        onChangeText={(text) => setSearchQuery(text)}
+    />
+</View>
+</View>
+
+        <View className="bg-red-600 p-4 rounded-xl flex-row items-center w-[90%] self-center my-4">
+            <View className="flex-1">
+                <Text className="text-white font-bold text-lg">Mega Sale</Text>
+                <Text className="text-white font-bold text-lg">Spectacular!</Text>
+                <Text className="text-white text-sm">Indulge in unbeatable deals</Text>
+                <Text className="text-white text-sm">across various products.</Text>
+            </View>
+            <Image
+                source={{ uri: "https://res.cloudinary.com/dglawxazg/image/upload/v1741545362/tote_bag_kq7jhu-removebg-preview_ztj8kv.png" }}
+                style={{ width: 140, height: 120, marginLeft: 16 }}
+                resizeMode="contain"
+            />
+        </View>     
+        <FlatList
+            data={products}
+            renderItem={renderProductItem}
+            keyExtractor={(item) => item._id}
+            numColumns={2}
+            columnWrapperStyle={{ justifyContent: "center" }}
+            contentContainerStyle={{ paddingHorizontal: 16,  }}
+            ListHeaderComponent={
+                <>
+                    {isCategoryFetched ? (
+                        <>
+                            <View className="px-1 ">
+                                <Text className="text-lg font-bold my-1">Categories</Text>
+                            </View>
+
+                            <View className="flex-row h-10">
+                                <FlatList
+                                    data={categories}
+                                    renderItem={renderCategoryItem}
+                                    keyExtractor={(item) => item._id}
+                                    horizontal
+                                    contentContainerStyle={{ alignItems: "center" }}
+                                    showsHorizontalScrollIndicator={false}
+                                    ListHeaderComponent={
+                                        <TouchableOpacity onPress={() => handleCategoryClick(null)}>
+                                           <TouchableOpacity
+                                            onPress={() => setSelectedCategory(null)}
+                                            style={{
+                                                paddingHorizontal: 12,
+                                                paddingVertical: 6,
+                                                marginHorizontal: 5,
+                                                borderRadius: 20,
+                                                backgroundColor: selectedCategory === null ? "#ff6b81" : "#f5f5f5",
+                                            }}
+                                            >
+                                            <Text
+                                                style={{
+                                                fontSize: 14,
+                                                fontWeight: "bold",
+                                                color: selectedCategory === null ? "#fff" : "#888",
+                                                }}
+                                            >
+                                                All
+                                            </Text>
+                                            </TouchableOpacity>
+                                        </TouchableOpacity>
+                                    }
+                                />
+                            </View>
+                        </>
+                    ) : (
+                        <Text>Loading products...</Text>
+                    )}
+                </>
+            }
+        />
+        <TouchableOpacity
+            className="absolute bottom-14 right-4 bg-[#bc430b] p-4 rounded-full shadow-lg"
+            onPress={() => navigation.navigate("wishlist")}
+        >
+            <Icon name="heart-outline" size={24} color="#fff" />
+        </TouchableOpacity>
+
+        {/* Footer */}
+        <View className="absolute bottom-0 w-full bg-[#ffb703]">
+            <Footer />
+        </View>
+    </View>
     );
 };
 
 export default Home;
 
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        paddingBottom: 60,
-    },
-    header: {
-        padding: 12,
-        backgroundColor: "#ffb703",
-    },
-    headerText: {
-        fontSize: 18,
-        fontWeight: "bold",
-        color: "#000",
-    },
-    locationContainer: {
-        flexDirection: "row",
-        alignItems: "center",
-    },
-    locationText: {
-        marginLeft: 8,
-        fontSize: 12,
-        color: "#000",
-    },
-    searchContainer: {
-        paddingHorizontal: 12,
-        backgroundColor: "#ffb703",
-        height: 40,
-        width: "100%",
-    },
-    searchInput: {
-        height: 35,
-        borderColor: "#ccc",
-        borderWidth: 1,
-        borderRadius: 10,
-        paddingHorizontal: 10,
-        backgroundColor: "#fff",
-        width: "100%",
-    },
-    productList: {
-        paddingHorizontal: 16,
-        paddingTop: 16,
-    },
-    productListRow: {
-        justifyContent: 'center', 
-    },
-    primaryTextContainer: {
-        paddingHorizontal: 5,
-        marginTop: 5,
-    },
-    primaryText: {
-        fontSize: 16, 
-        fontWeight: "bold",
-        marginVertical: 5,
-    },
-    categoryContainer: {
-        flexDirection: "row",
-        height: 40, 
-    },
-    categoryButton: {
-        flexDirection: "row",
-        alignItems: "center",
-        padding: 5, 
-        marginHorizontal: 5,
-        borderRadius: 5,
-        fontSize: 12, 
-    },
-    selectedCategory: {
-        backgroundColor: "#bc430b",
-        color: "#fff",
-    },
-    unselectedCategory: {
-        backgroundColor: "#ffb703",
-        color: "#000",
-    },
-    footer: {
-        position: "absolute",
-        bottom: 0,
-        width: "100%",
-        backgroundColor: "#ffb703",
-    },
-    floatingWishlistButton: {
-        position: "absolute",
-        bottom: 60,
-        right: 10,
-        backgroundColor: "#bc430b",
-        padding: 16,
-        borderRadius: 50,
-        elevation: 5,
-    },
-    carouselContainer: {
-        width: screenWidth * 0.90,
-        margin: screenHeight * 0.002,
-        height: 150,
-        alignSelf: "center",
-        alignItems: "center",
-        justifyContent: "center",
-    },
-    carouselContentContainer: {
-        alignItems: "center",
-        justifyContent: "center",
-        paddingBottom: 30,
-    },
-    carouselImage: {
-        width: screenWidth,
-        height: 150,
-        resizeMode: "cover",
-    },
-});

@@ -60,6 +60,14 @@ const MyOrders = () => {
         .filter(order => order.status && order.status === selectedTab)
         .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
+        const tabMapping = {
+          "Preparing": "Preparing",
+          "Shipping": "Shipped",
+          "Pending": "Delivered Pending",
+          "Delivered": "Delivered",
+          "Cancelled": "Cancelled"
+        };
+           
     return (
         <View className="flex-1 bg-white">
             <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
@@ -70,28 +78,26 @@ const MyOrders = () => {
           
     
         <ScrollView
-      horizontal
-      ref={scrollRef}
-      showsHorizontalScrollIndicator={false}
-      contentContainerStyle={{ alignItems: "center", justifyContent: "center" }}
-      className="w-full"
-    >
-      <View className="flex-row py-1 px-1 bg-red-100 rounded-lg">
-        {["Preparing", "Shipping", "Pending", "Delivered", "Cancelled"].map((tab, index) => (
-          <TouchableOpacity
-            key={tab}
-            onPress={() => setSelectedTab(tab)}
-            className={`px-3 py-1 mx-1 rounded-md ${
-              selectedTab === tab ? "bg-red-600" : "text-red-500"
-            }`}
-          >
-            <Text className={`text-base font-medium ${selectedTab === tab ? "text-white" : "text-red-500"}`}>
-              {tab}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-    </ScrollView>
+  horizontal
+  ref={scrollRef}
+  showsHorizontalScrollIndicator={false}
+  contentContainerStyle={{ alignItems: "center", justifyContent: "center" }}
+  className="w-full"
+>
+  <View className="flex-row py-1 px-1 bg-red-100 rounded-lg">
+    {Object.keys(tabMapping).map((tab) => (
+      <TouchableOpacity
+        key={tab}
+        onPress={() => setSelectedTab(tabMapping[tab])} // Set the actual status value
+        className={`px-3 py-1 mx-1 rounded-md ${selectedTab === tabMapping[tab] ? "bg-red-600" : "text-red-500"}`}
+      >
+        <Text className={`text-base font-medium ${selectedTab === tabMapping[tab] ? "text-white" : "text-red-500"}`}>
+          {tab} {/* Display the UI-friendly name */}
+        </Text>
+      </TouchableOpacity>
+    ))}
+  </View>
+</ScrollView>
   
           
           {loading ? (

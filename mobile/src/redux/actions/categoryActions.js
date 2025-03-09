@@ -71,6 +71,7 @@ export const getSingleCategory = (id) => async (dispatch) => {
         dispatch({ type: "GET_CATEGORY_REQUEST" });
 
         const { data } = await axios.get(`${server}/category/${id}`);
+       
         dispatch({
             type: "GET_CATEGORY_SUCCESS",
             payload: data.category,

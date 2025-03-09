@@ -1,186 +1,118 @@
-import React from 'react';
-import {
-    View,
-    Text,
-    TouchableOpacity,
-    Image,
-} from 'react-native';
-import { Button } from "react-native-paper";
-import FontAwesome from 'react-native-vector-icons/FontAwesome';
+import React, { useEffect, useState } from "react";
+import { View, Text, TouchableOpacity, Image } from "react-native";
+import FontAwesome from "react-native-vector-icons/FontAwesome";
+import { useDispatch, useSelector } from "react-redux";
+import { getSingleCategory } from "../redux/actions/categoryActions"; // Adjust path as needed
 
 const ProductCard = ({
-    stock,
-    name,
-    price,
-    image,
-    id,
-    addToCardHandler,
-    addToWishlistHandler,
-    navigate,
-    isLastItemInRow,
+  stock,
+  name,
+  price,
+  image,
+  id,
+  addToCartHandler,
+  navigate,
+  category, // This is the category ID
 }) => {
-    const isOutOfStock = stock === 0;
+  const [categoryName, setCategoryName] = useState("Loading...");
+  const dispatch = useDispatch();
+  const categoryData = useSelector((state) => state.category.category); // FIXED: Correct selector
 
-    const truncateName = (name, maxLength) => {
-        if (name.length > maxLength) {
-            return name.substring(0, maxLength) + '...';
-        }
-        return name;
-    };
+  useEffect(() => {
+    if (category && typeof category === "string" && category.length === 24) {
+      dispatch(getSingleCategory(category));
+    }
+  }, [dispatch, category]);
 
-    return (
+  useEffect(() => {
+    if (categoryData && categoryData._id === category) {
+      setCategoryName(categoryData.name);
+    }
+  }, [categoryData, category]);
+
+  return (
+    <TouchableOpacity
+      onPress={() => navigate.navigate("productdetail", { id })}
+      style={{
+        width: 180,
+        borderWidth: 1,
+        borderColor: "#ff6b81",
+        borderRadius: 12,
+        backgroundColor: "#fff",
+        padding: 10,
+        margin: 10,
+        shadowColor: "#000",
+        shadowOpacity: 0.1,
+        shadowRadius: 5,
+        shadowOffset: { width: 0, height: 2 },
+        position: "relative",
+      }}
+    >
+      {/* Product Image */}
+      <View style={{ position: "relative" }}>
+        <Image
+          source={{ uri: image }}
+          style={{
+            width: "100%",
+            height: 150,
+            resizeMode: "cover",
+            borderRadius: 10,
+          }}
+        />
+
+        {/* Cart Icon Positioned on Top of the Image */}
         <TouchableOpacity
-            onPress={() => navigate.navigate("productdetail", { id })}
-            style={{
-                width: '45%',
-                marginVertical: 10,
-                marginRight: isLastItemInRow ? 0 : '4%',
-                borderColor: '#ffb703',
-                borderWidth: 1, 
-                borderRadius: 10, 
-                backgroundColor: '#ffffff', 
-                alignSelf: 'center', 
-            }}
+          onPress={() => addToCartHandler(id, name, price, image, stock)}
+          style={{
+            position: "absolute",
+            top: 5,
+            right: 5,
+            backgroundColor: "#ff6b81",
+            borderRadius: 20,
+            width: 35,
+            height: 35,
+            justifyContent: "center",
+            alignItems: "center",
+            elevation: 3,
+            zIndex: 10,
+          }}
         >
-            {/* Product Image Box */}
-            <View
-                style={{
-                    width: '100%',
-                    height: 90,
-                    borderTopLeftRadius: 10,
-                    borderTopRightRadius: 10,
-                    backgroundColor: '#F0F0F3',
-                    position: 'relative',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                }}
-            >
-                <Image
-                    source={{
-                        uri: image,
-                    }}
-                    style={{
-                        width: '80%',
-                        height: '90%',
-                        resizeMode: 'contain',
-                    }}
-                />
-            </View>
-
-            {/* Product Name */}
-            <Text
-                style={{
-                    fontSize: 14,
-                    color: '#000000',
-                    fontWeight: '600',
-                    marginBottom: 2,
-                    paddingHorizontal: 8, // Optional: add horizontal padding
-                }}
-            >
-                {truncateName(name, 50)}
-            </Text>
-
-            {/* Availability Status */}
-            {isOutOfStock ? (
-                <View
-                    style={{
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        paddingHorizontal: 8, // Optional: add horizontal padding
-                    }}
-                >
-                    <FontAwesome
-                        name="circle"
-                        style={{
-                            fontSize: 6,
-                            marginRight: 6,
-                            color: '#C04345',
-                        }}
-                    />
-                    <Text
-                        style={{
-                            fontSize: 8,
-                            color: '#C04345',
-                        }}
-                    >
-                        Unavailable
-                    </Text>
-                </View>
-            ) : (
-                <View
-                    style={{
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        paddingHorizontal: 8, // Optional: add horizontal padding
-                    }}
-                >
-                    <FontAwesome
-                        name="circle"
-                        style={{
-                            fontSize: 10,
-                            marginRight: 6,
-                            color: '#00AC76',
-                        }}
-                    />
-                    <Text
-                        style={{
-                            fontSize: 10,
-                            color: '#00AC76',
-                        }}
-                    >
-                        Available
-                    </Text>
-                </View>
-            )}
-
-            {/* Product Price */}
-            <Text
-                style={{
-                    fontSize: 14,
-                    fontWeight: '500',
-                    color: '#e84219',
-                    marginBottom: 4,
-                    paddingHorizontal: 8, // Optional: add horizontal padding
-                }}
-            >
-                ₱ {price}
-            </Text>
-
-            <View
-                style={{
-                    flexDirection: "row",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    backgroundColor: "#ffb703",
-                    borderBottomLeftRadius: 8,
-                    borderBottomRightRadius: 8,
-                    width: "100%",
-                    paddingVertical: 2, // Minimized vertical padding
-                }}
-            >
-                <Button
-                    onPress={() => addToCardHandler(id, name, price, image, stock)}
-                    textColor="#000"
-                    style={{ flex: 2, paddingVertical: 0 }}
-                    disabled={isOutOfStock}
-                    labelStyle={{ fontSize: 12 }} // Smaller text size
-                >
-                    {isOutOfStock ? "Out Of Stock" : "Add To Cart"}
-                </Button>
-
-                <TouchableOpacity
-                    onPress={() => addToWishlistHandler(id, name, price, image, stock)}
-                    style={{ flex: 4, padding: 4 }}
-                >
-                    <FontAwesome
-                        name="heart"
-                        size={12} // Smaller icon size
-                        color="#ffffff"
-                    />
-                </TouchableOpacity>
-            </View>
+          <FontAwesome name="shopping-cart" size={16} color="#fff" />
         </TouchableOpacity>
-    );
+      </View>
+
+      {/* Name and Price in the Same Row */}
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "space-between",
+          width: "100%",
+          marginTop: 5,
+        }}
+      >
+        <Text style={{ fontSize: 12, fontWeight: "600", color: "#333" }}>{name}</Text>
+        <Text style={{ fontSize: 12, fontWeight: "bold", color: "#ff6b81" }}>₱{price}</Text>
+      </View>
+
+      {/* Category and Ratings in the Same Row */}
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "space-between",
+          width: "100%",
+          marginTop: 3,
+          alignItems: "center",
+        }}
+      >
+        <Text style={{ fontSize: 12, color: "#999" }}>{categoryName}</Text>
+        <View style={{ flexDirection: "row" }}>
+          {[...Array(5)].map((_, index) => (
+            <FontAwesome key={index} name="star" size={12} color="#ffcc00" />
+          ))}
+        </View>
+      </View>
+    </TouchableOpacity>
+  );
 };
 
 export default ProductCard;

@@ -1,15 +1,13 @@
-import { View, TouchableOpacity } from "react-native";
+import { View, TouchableOpacity, Text } from "react-native";
 import React, { useEffect } from "react";
 import { useNavigation, useRoute } from "@react-navigation/native";
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { useSelector } from "react-redux";
 
 const Footer = () => {
     const navigate = useNavigation();
-    const route = useRoute(); // Get the current route
+    const route = useRoute();
     const { isAuthenticated } = useSelector((state) => state.user);
-
-    // Determine the current active route
     const activeRoute = route.name;
 
     useEffect(() => {
@@ -43,64 +41,57 @@ const Footer = () => {
         }
     };
 
-    const iconStyle = {
-        color: "#000000",
-        fontSize: 25,
-    };
-
     return (
         <View
             style={{
-                backgroundColor: "#ffb703", 
+                backgroundColor: "#ffffff", 
                 position: "absolute",
                 width: "100%",
                 bottom: 0,
-                borderRadius: 15,
                 justifyContent: "center",
                 alignSelf: "center",
-                height: 50,
+                height: 70,
+                paddingVertical: 8,
+                borderTopWidth: 1,
+                borderTopColor: "#ddd",
             }}
         >
             <View
                 style={{
                     flexDirection: "row",
                     justifyContent: "space-evenly",
+                    alignItems: "center",
                 }}
             >
-                <TouchableOpacity activeOpacity={0.8} onPress={() => navigationHandler(0)}>
-                    <Icon
-                        name={activeRoute === "home" ? "home" : "home-outline"}
-                        style={iconStyle}
-                    />
-                </TouchableOpacity>
-
-                <TouchableOpacity activeOpacity={0.8} onPress={() => navigationHandler(1)}>
-                    <Icon
-                        name={activeRoute === "cart" ? "cart" : "cart-outline"}
-                        style={iconStyle}
-                    />
-                </TouchableOpacity>
-
-                <TouchableOpacity activeOpacity={0.8} onPress={() => navigationHandler(2)}>
-                    <Icon
-                        name={activeRoute === "eventlist" ? "clipboard-list" : "clipboard-list-outline"}
-                        style={iconStyle}
-                    />
-                </TouchableOpacity>
-
-                <TouchableOpacity activeOpacity={0.8} onPress={() => navigationHandler(3)}>
-                    <Icon
-                        name={activeRoute === "notification" ? "bell" : "bell-outline"}
-                        style={iconStyle}
-                    />
-                </TouchableOpacity>
-
-                <TouchableOpacity activeOpacity={0.8} onPress={() => navigationHandler(4)}>
-                    <Icon
-                        name={activeRoute === "myaccount" ? "account" : "account-outline"}
-                        style={iconStyle}
-                    />
-                </TouchableOpacity>
+                {[
+                    { key: 0, name: "home", label: "Home" },
+                    { key: 1, name: "cart", label: "Cart" },
+                    { key: 2, name: "calendar-month", label: "Events" },
+                    { key: 3, name: "bell", label: "Alerts" },
+                    { key: 4, name: "account", label: "Profile" },
+                ].map((item) => (
+                    <TouchableOpacity
+                        key={item.key}
+                        activeOpacity={0.8}
+                        onPress={() => navigationHandler(item.key)}
+                        style={{ alignItems: "center" }}
+                    >
+                        <View
+                            style={{
+                                backgroundColor: activeRoute === item.name ? "#f5a8b8" : "transparent",
+                                borderRadius: 25,
+                                padding: 8,
+                            }}
+                        >
+                            <Icon
+                                name={activeRoute === item.name ? item.name : `${item.name}-outline`}
+                                size={25}
+                                color="#e01d47"
+                            />
+                        </View>
+                        <Text style={{ fontSize: 12, color: "#e01d47" }}>{item.label}</Text>
+                    </TouchableOpacity>
+                ))}
             </View>
         </View>
     );

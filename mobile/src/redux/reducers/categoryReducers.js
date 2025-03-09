@@ -34,11 +34,14 @@ export const categoryReducer = (state = initialState, action) => {
                 loading: true,
             };
         case "GET_CATEGORY_SUCCESS":
+            
             return {
                 ...state,
                 loading: false,
-                category: action.payload, // Storing single category details
+                category: action.payload,
+                
             };
+            
         case "GET_CATEGORY_FAIL":
             return {
                 ...state,

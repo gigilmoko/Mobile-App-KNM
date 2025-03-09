@@ -68,9 +68,9 @@ export const userLogin = (email, password, playerId) => async (dispatch) => {
         await AsyncStorage.setItem('token', data.token);
         await AsyncStorage.setItem('userId', data.user._id);
         
-        console.log('Token:', data.token);
-        console.log('User ID:', data.user._id);
-        console.log('Device Token:', playerId);
+        // console.log('Token:', data.token);
+        // console.log('User ID:', data.user._id);
+        // console.log('Device Token:', playerId);
 
         dispatch({
             type: "loginSuccess",
@@ -97,9 +97,11 @@ export const loadUser = () => async (dispatch) => {
             withCredentials: true,
         });
 
+        // console.log('User data:', data);
+
         if (data.success) {
             dispatch({ type: "loadUserSuccess", payload: data.user });
-            console.log("data user: ", data.user);
+            // console.log("data user: ", data.user);
         } else {
             dispatch({
                 type: "loadUserFail",
