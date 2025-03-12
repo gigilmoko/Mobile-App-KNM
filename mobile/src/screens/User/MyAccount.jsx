@@ -99,7 +99,7 @@ const MyAccount = ({ navigation, route }) => {
 
     return (
       <View className="flex-1 bg-white">
-    <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+    <ScrollView contentContainerStyle={{ flexGrow: 1 ,}} >
         <View className="px-5 py-5">
             {/* My Account Section */}
             <View className="flex items-center">
@@ -183,6 +183,14 @@ const MyAccount = ({ navigation, route }) => {
                     textColor="#e01d47"
                 />
                 <OptionList
+                    text={"Update Address"}
+                    Icon={Ionicons}
+                    iconName={"person"}
+                    onPress={() => navigation.navigate("editaddress")}
+                    iconColor="#e01d47"
+                    textColor="#e01d47"
+                />
+                <OptionList
                     text={"Contact and Feedback"}
                     Icon={Ionicons}
                     iconName={"chatbox-ellipses"}
@@ -197,7 +205,7 @@ const MyAccount = ({ navigation, route }) => {
       
     </ScrollView>
 
-    <View className="absolute bottom-16 w-full px-5">
+    <View className="absolute bottom-20 w-full px-6">
         <Button 
             mode="contained" 
             onPress={handleLogout} 

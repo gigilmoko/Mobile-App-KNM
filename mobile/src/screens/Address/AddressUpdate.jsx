@@ -74,7 +74,7 @@ const AddressUpdate = ({ navigation }) => {
 
     useEffect(() => {
         if (isProfileChanged) {
-            navigation.replace("confirmorder");
+            navigation.replace("myaccount");
         }
     }, [isProfileChanged, navigation]);
 
@@ -260,150 +260,153 @@ const AddressUpdate = ({ navigation }) => {
     };
 
     return (
-        <View style={{ flex: 1, backgroundColor: "#fff" }}>
-            <View style={styles.headerContainer}>
-                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                    <MaterialCommunityIcons name="arrow-left" size={24} color="#000" />
-                </TouchableOpacity>
-                <Text style={styles.headerText}>Update Address</Text>
-            </View>
-            <ScrollView style={{ flex: 1 }}>
-                <View style={styles.formContainer}>
-                    <View style={styles.addressBox}>
-                        <Text style={styles.label}>House Number: {houseNo}</Text>
-                        <Text style={styles.label}>Street Name: {streetName}</Text>
-                        <Text style={styles.label}>Barangay: {barangay}</Text>
-                        <Text style={styles.label}>City: {city}</Text>
-                    </View>
-
-                    <View style={styles.inputContainer}>
-                        <Text style={styles.label}>House Number</Text>
-                        <TextInput
-                            placeholder="Enter house number"
-                            value={houseNo}
-                            onChangeText={setHouseNo}
-                            style={styles.input}
-                        />
-                    </View>
-
-                    <View style={styles.inputContainer}>
-                        <Text style={styles.label}>Street Name</Text>
-                        <TextInput
-                            placeholder="Enter street name"
-                            value={streetName}
-                            onChangeText={setStreetName}
-                            style={styles.input}
-                        />
-                    </View>
-
-                    <View style={styles.inputContainer}>
-                        <Text style={styles.label}>City</Text>
-                        <View style={styles.pickerContainer}>
-                            <Picker
-                                selectedValue={selectedCity?.value}
-                                onValueChange={(itemValue) => {
-                                    const city = cities.find(c => c.value === itemValue);
-                                    if (city) handleCitySelect(city);
-                                }}
-                                enabled={!isLoadingCities}
-                            >
-                                <Picker.Item 
-                                    label={isLoadingCities ? "Loading Cities..." : "Select City"} 
-                                    value="" 
-                                />
-                                {cities.map(city => (
-                                    <Picker.Item
-                                        key={city.value}
-                                        label={city.label}
-                                        value={city.value}
-                                    />
-                                ))}
-                            </Picker>
-                        </View>
-                    </View>
-
-                    <View style={styles.inputContainer}>
-                        <Text style={styles.label}>Barangay</Text>
-                        <View style={styles.pickerContainer}>
-                            <Picker
-                                selectedValue={selectedBarangay?.value}
-                                onValueChange={async (itemValue) => {
-                                    const barangay = barangays.find(b => b.value === itemValue);
-                                    setSelectedBarangay(barangay);
-                                    
-                                    if (barangay && selectedCity) {
-                                        try {
-                                            const addressData = {
-                                                streetName,
-                                                barangay: barangay.label,
-                                                city: selectedCity.label
-                                            };
-                                            
-                                            const location = await addressService.getGeoLocation(addressData);
-                                            setLatitude(location.latitude.toString());
-                                            setLongitude(location.longitude.toString());
-                                            setRegion({
-                                                latitude: location.latitude,
-                                                longitude: location.longitude,
-                                                zoom: 15
-                                            });
-                                        } catch (error) {
-                                            Toast.show({
-                                                type: "error",
-                                                text1: "Failed to get location for selected barangay"
-                                            });
-                                        }
-                                    }
-                                }}
-                                enabled={!!selectedCity && !isLoadingBarangays}
-                            >
-                                <Picker.Item
-                                    label={
-                                        isLoadingBarangays
-                                            ? "Loading Barangays..."
-                                            : !selectedCity
-                                            ? "Select a city first"
-                                            : "Select Barangay"
-                                    }
-                                    value=""
-                                />
-                                {barangays.map(barangay => (
-                                    <Picker.Item
-                                        key={barangay.value}
-                                        label={barangay.label}
-                                        value={barangay.value}
-                                    />
-                                ))}
-                            </Picker>
-                        </View>
-                    </View>
-
-                    <View style={styles.mapContainer}>
-                        <WebView
-                            source={{ html: mapHtml }}
-                            style={styles.map}
-                            onMessage={handleMapMessage}
-                            scrollEnabled={false}
-                            javaScriptEnabled={true}
-                            domStorageEnabled={true}
-                            geolocationEnabled={true}
-                        />
-                    </View>
-
-                    <TouchableOpacity
-                        style={[styles.submitButton, loading && styles.disabledButton]}
-                        onPress={submitHandler}
-                        disabled={loading}
-                    >
-                        {loading ? (
-                            <ActivityIndicator color="#fff" />
-                        ) : (
-                            <Text style={styles.submitButtonText}>Update Address</Text>
-                        )}
-                    </TouchableOpacity>
-                </View>
-            </ScrollView>
+        <View className="flex-1 bg-white">
+        <View className="flex-row items-center justify-center p-2.5 bg-white border-b border-gray-300">
+            <TouchableOpacity onPress={() => navigation.goBack()} className="absolute left-2.5">
+                <MaterialCommunityIcons name="arrow-left" size={24} color="#000" />
+            </TouchableOpacity>
+            <Text className="text-lg font-bold">Update Address</Text>
         </View>
+        <ScrollView className="flex-1">
+            <View className="h-48 rounded-lg overflow-hidden border border-gray-300 my-2 mx-4">
+                        <WebView source={{ html: mapHtml }} className="flex-1" onMessage={handleMapMessage} javaScriptEnabled domStorageEnabled geolocationEnabled />
+                    </View>
+            <View className="flex-1 bg-white rounded-t-3xl p-5">
+
+                
+    
+                <View className="mb-3.5">
+                    <Text className="text-base font-medium text-gray-800">House Number</Text>
+                    <TextInput
+                        placeholder="Enter house number"
+                        value={houseNo}
+                        onChangeText={setHouseNo}
+                        className="bg-gray-100 rounded-lg border border-gray-300 p-2"
+                    />
+                </View>
+    
+                <View className="mb-3.5">
+                    <Text className="text-base font-medium text-gray-800">Street Name</Text>
+                    <TextInput
+                        placeholder="Enter street name"
+                        value={streetName}
+                        onChangeText={setStreetName}
+                        className="bg-gray-100 rounded-lg border border-gray-300 p-2"
+                    />
+                </View>
+    
+                <View className="mb-3.5">
+    <Text className="text-base font-medium text-gray-800">City</Text>
+    <View className="bg-gray-100 rounded-lg border border-gray-300">
+        <Picker
+            selectedValue={selectedCity?.value}
+            onValueChange={(itemValue) => {
+                const city = cities.find(c => c.value === itemValue);
+                if (city) handleCitySelect(city);
+            }}
+            enabled={!isLoadingCities}
+        >
+            <Picker.Item 
+                label={selectedCity ? selectedCity.label : isLoadingCities ? "Loading Cities..." : "Select City"} 
+                value="" 
+            />
+            {cities.map(city => (
+                <Picker.Item
+                    key={city.value}
+                    label={city.label}
+                    value={city.value}
+                />
+            ))}
+        </Picker>
+    </View>
+</View>
+
+<View className="mb-3.5">
+    <Text className="text-base font-medium text-gray-800">Barangay</Text>
+    <View className="bg-gray-100 rounded-lg border border-gray-300">
+        <Picker
+            selectedValue={selectedBarangay?.value}
+            onValueChange={async (itemValue) => {
+                const barangay = barangays.find(b => b.value === itemValue);
+                setSelectedBarangay(barangay);
+
+                if (barangay && selectedCity) {
+                    try {
+                        const addressData = {
+                            streetName,
+                            barangay: barangay.label,
+                            city: selectedCity.label
+                        };
+
+                        const location = await addressService.getGeoLocation(addressData);
+                        setLatitude(location.latitude.toString());
+                        setLongitude(location.longitude.toString());
+                        setRegion({
+                            latitude: location.latitude,
+                            longitude: location.longitude,
+                            zoom: 15
+                        });
+                    } catch (error) {
+                        Toast.show({
+                            type: "error",
+                            text1: "Failed to get location for selected barangay"
+                        });
+                    }
+                }
+            }}
+            enabled={!!selectedCity && !isLoadingBarangays}
+        >
+            <Picker.Item
+                label={
+                    selectedBarangay
+                        ? selectedBarangay.label
+                        : isLoadingBarangays
+                        ? "Loading Barangays..."
+                        : !selectedCity
+                        ? "Select a city first"
+                        : "Select Barangay"
+                }
+                value=""
+            />
+            {barangays.map(barangay => (
+                <Picker.Item
+                    key={barangay.value}
+                    label={barangay.label}
+                    value={barangay.value}
+                />
+            ))}
+        </Picker>
+    </View>
+</View>
+
+    
+                <View className="h-50 rounded-lg overflow-hidden my-2.5 border border-gray-300">
+                    <WebView
+                        source={{ html: mapHtml }}
+                        className="flex-1"
+                        onMessage={handleMapMessage}
+                        scrollEnabled={false}
+                        javaScriptEnabled={true}
+                        domStorageEnabled={true}
+                        geolocationEnabled={true}
+                    />
+                </View>
+    
+                <TouchableOpacity
+                    className={`bg-orange-700 p-2.5 rounded-lg items-center mt-2.5 mb-7.5 ${loading ? "opacity-70" : ""}`}
+                    onPress={submitHandler}
+                    disabled={loading}
+                >
+                    {loading ? (
+                        <ActivityIndicator color="#fff" />
+                    ) : (
+                        <Text className="text-white text-lg">Update Address</Text>
+                    )}
+                </TouchableOpacity>
+                
+            </View>
+        </ScrollView>
+    </View>
     );
 };
 

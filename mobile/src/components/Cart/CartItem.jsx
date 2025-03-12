@@ -19,160 +19,149 @@ const CartItem = ({
     decrementHandler,
     incrementHandler,
     navigate,
+    addToWishlistHandler, // Ensure this prop is received
 }) => {
     return (
         <TouchableOpacity
-            onPress={() => navigate.navigate('productdetail', { id })}
+        onPress={() => navigate.navigate('productdetail', { id })}
+        style={{
+            width: '100%',
+            marginVertical: 6,
+            // borderColor: '#F4B546',
+            // borderWidth: 1,
+            // borderRadius: 10,
+            backgroundColor: '#f9f9f9',
+            padding: 10,
+            height: 120, // Adjusted height for better spacing
+            position: 'relative',
+        }}
+    >
+        <View
             style={{
-                width: '100%',
-                marginVertical: 6,
-                borderColor: '#F4B546',
-                borderWidth: 1,
-                borderRadius: 10, 
-                backgroundColor: '#f9f9f9',
-                padding: 10,
-                height: 100, // Fixed height to ensure consistent size
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
             }}
         >
+            {/* Product Image */}
             <View
                 style={{
-                    flexDirection: 'row',
+                    width: 80, // Fixed width for 1:1 aspect ratio
+                    height: 80, // Fixed height for 1:1 aspect ratio
+                    justifyContent: 'center',
                     alignItems: 'center',
+                    borderRadius: 10,
+                    borderWidth: 2,
+                    borderColor: '#ff7895', // Border applied to image
+                    overflow: 'hidden',
                 }}
             >
-                {/* Product Image */}
-                <View
-                    style={{
-                        width: '30%',
-                        height: '100%',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        borderRadius: 10,
-                        marginRight: 22,
+                <Image
+                    source={{
+                        uri: imgSrc,
                     }}
-                >
-                    <Image
-                        source={{
-                            uri: imgSrc,
-                        }}
-                        style={{
-                            width: '100%',
-                            height: '100%',
-                            resizeMode: 'contain',
-                        }}
-                    />
-                </View>
-
-                {/* Product Details */}
-                <View
                     style={{
-                        flex: 1,
+                        width: '100%',
                         height: '100%',
-                        justifyContent: 'space-around',
+                        resizeMode: 'cover',
                     }}
-                >
-                    {/* Product Name */}
-                    <Text
-                        style={{
-                            fontSize: 14,
-                            color: '#000',
-                            fontWeight: '600',
-                            letterSpacing: 1,
-                        }}
-                    >
-                        {name}
-                    </Text>
-
-                    {/* Price */}
-                    <View
-                        style={{
-                            marginTop: 4,
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                            opacity: 0.6,
-                        }}
-                    >
-                        <Text
-                            style={{
-                                fontSize: 14,
-                                fontWeight: '400',
-                                marginRight: 4,
-                                color: '#000000',
-                            }}
-                        >
-                            ${amount}
-                        </Text>
-                    </View>
-
-                    {/* Quantity Controls */}
-                    <View
-                        style={{
-                            flexDirection: 'row',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                        }}
-                    >
-                        <View
-                            style={{
-                                flexDirection: 'row',
-                                alignItems: 'center',
-                            }}
-                        >
-                            {/* Decrement Button */}
-                            <TouchableOpacity
-                                onPress={() => decrementHandler(id, name, amount, imgSrc, stock, qty)}
-                            >
-                                <View
-                                    style={{
-                                        borderRadius: 100,
-                                        marginRight: 20,
-                                        padding: 4,
-                                        borderWidth: 1,
-                                        borderColor: '#B9B9B9',
-                                        opacity: 0.5,
-                                    }}
-                                >
-                                    <MaterialCommunityIcons
-                                        name="minus"
-                                        style={{
-                                            fontSize: 16,
-                                            color: '#777777',
-                                        }}
-                                    />
-                                </View>
-                            </TouchableOpacity>
-
-                            {/* Quantity Text */}
-                            <Text style={{ color: '#9b0000' }}>{qty}</Text>
-
-                            {/* Increment Button */}
-                            <TouchableOpacity
-                                onPress={() => incrementHandler(id, name, amount, imgSrc, stock, qty)}
-                            >
-                                <View
-                                    style={{
-                                        borderRadius: 50,
-                                        marginLeft: 20,
-                                        padding: 4,
-                                        borderColor: '#B9B9B9',
-                                        borderWidth: 1,
-                                        opacity: 0.5,
-                                    }}
-                                >
-                                    <MaterialCommunityIcons
-                                        name="plus"
-                                        style={{
-                                            fontSize: 16,
-                                            color: '#777777',
-                                        }}
-                                    />
-                                </View>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-                </View>
+                />
             </View>
-        </TouchableOpacity>
+    
+            {/* Product Details */}
+            <View style={{ flex: 1, paddingLeft: 12, justifyContent: 'center' }}>
+                {/* Product Name */}
+                <Text
+                    style={{
+                        fontSize: 14,
+                        color: '#000',
+                        fontWeight: '600',
+                        letterSpacing: 1,
+                    }}
+                >
+                    {name}
+                </Text>
+    
+                {/* Category */}
+                <Text
+                    style={{
+                        fontSize: 12,
+                        color: '#777',
+                        marginTop: 2,
+                    }}
+                >
+                    {/* Category: {category} */}
+                </Text>
+    
+                {/* Price */}
+                <Text
+                    style={{
+                        fontSize: 16,
+                        fontWeight: '700',
+                        color: '#9b0000',
+                        marginTop: 4,
+                    }}
+                >
+                    ₱{amount}
+                </Text>
+            </View>
+    
+            {/* Heart Icon (Wishlist) */}
+            <TouchableOpacity
+                onPress={() => addToWishlistHandler(id, name, price, imgSrc, stock)} // Use the handler
+                style={{
+                    position: 'absolute',
+                    top: 10,
+                    right: 10,
+                    padding: 6,
+                }}
+            >
+                <MaterialCommunityIcons
+                    name="heart-outline" // Change to "heart" if added to wishlist
+                    style={{ fontSize: 20, color: '#ff5252' }}
+                />
+            </TouchableOpacity>
+        </View>
+    
+        {/* Quantity Selector (Lower Right) */}
+        <View
+            style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                borderWidth: 1,
+                borderColor: '#B9B9B9',
+                borderRadius: 25, // Rounded edges
+                paddingHorizontal: 10,
+                paddingVertical: 4,
+                position: 'absolute',
+                bottom: 10,
+                right: 10,
+            }}
+        >
+            {/* Minus Button */}
+            <TouchableOpacity
+                onPress={() => decrementHandler(id, name, amount, imgSrc, stock, qty)}
+                style={{ padding: 6 }}
+            >
+                <MaterialCommunityIcons name="minus" style={{ fontSize: 16, color: '#777' }} />
+            </TouchableOpacity>
+    
+            {/* Quantity Display */}
+            <Text style={{ color: '#000', fontSize: 16, fontWeight: '600', marginHorizontal: 12 }}>
+                {qty}
+            </Text>
+    
+            {/* Plus Button */}
+            <TouchableOpacity
+                onPress={() => incrementHandler(id, name, amount, imgSrc, stock, qty)}
+                style={{ padding: 6 }}
+            >
+                <MaterialCommunityIcons name="plus" style={{ fontSize: 16, color: '#777' }} />
+            </TouchableOpacity>
+        </View>
+    </TouchableOpacity>
+    
+    
     );
 };
 

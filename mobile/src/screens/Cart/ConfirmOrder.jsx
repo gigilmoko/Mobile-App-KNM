@@ -4,7 +4,6 @@ import {
   Text,
   ScrollView,
   TouchableOpacity,
-  StyleSheet,
   Alert,
   Linking,
 } from "react-native";
@@ -15,7 +14,7 @@ import ConfirmOrderItem from "../../components/Cart/ConfirmOrderItem";
 import { useNavigation } from "@react-navigation/native";
 import { useMessageAndErrorOrder } from "../../../utils/hooks";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
-
+import { Ionicons } from "@expo/vector-icons";
 const methods = [
   { name: "Cash on Delivery", value: "COD" },
   { name: "GCash", value: "GCash" },
@@ -105,182 +104,102 @@ const ConfirmOrder = () => {
   );
 
   return (
-    <ScrollView style={styles.scrollView}>
-      <View style={styles.headerContainer}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <MaterialCommunityIcons name="arrow-left" size={24} color="#000" />
-        </TouchableOpacity>
-        <Text style={styles.headerText}>Order Summary</Text>
-      </View>
-      <View style={styles.container}>
-        <View style={styles.card}>
-          <View style={styles.customerDetailsHeader}>
-            <Text style={styles.subheading}>Customer Details</Text>
-            <TouchableOpacity onPress={() => navigation.navigate("addressupdate")}>
-              <MaterialCommunityIcons name="pencil" size={24} color="#000" />
-            </TouchableOpacity>
-          </View>
-          <Text style={styles.text}>Name: {user?.fname} {user?.lname}</Text>
-          <Text style={styles.text}>Phone: {user?.phone}</Text>
-          <Text style={styles.text}>
-          Address: {user?.deliveryAddress?.[0]?.houseNo}, {user?.deliveryAddress?.[0]?.streetName}, {user?.deliveryAddress?.[0]?.barangay}, {user?.deliveryAddress?.[0]?.city}
+    <ScrollView className="bg-white">
+    <View className="absolute top-5 left-5 right-5 z-10 flex-row items-center py-3">
+      {/* Back Button */}
+      <TouchableOpacity 
+        onPress={() => navigation.goBack()} 
+        className="p-2 bg-[#ff7895] rounded-full items-center justify-center w-9 h-9"
+      >
+        <Ionicons name="arrow-back" size={20} color="#ffffff" />
+      </TouchableOpacity>
+  
+      <View className="flex-1 mr-10">
+        <Text className="text-2xl font-bold text-[#e01d47] text-center">
+          Check Out
         </Text>
-        </View>
-
-        <View style={styles.card}>
-          <Text style={styles.subheading}>Products</Text>
-          {cartItems.map((i) => (
-            <ConfirmOrderItem key={i.product} price={i.price} image={i.image} name={i.name} quantity={i.quantity} />
-          ))}
-        </View>
-
-        <View style={styles.card}>
-          <Text style={styles.subheading}>Order Summary</Text>
-          <View style={styles.row}>
-            <Text>Subtotal:</Text>
-            <Text>₱{itemsPrice.toFixed(2)}</Text>
-          </View>
-          <View style={styles.row}>
-            <Text>Shipping:</Text>
-            <Text>₱{shippingCharges.toFixed(2)}</Text>
-          </View>
-          <View style={styles.divider} />
-          <View style={styles.row}>
-            <Text>Total:</Text>
-            <Text>₱{totalAmount.toFixed(2)}</Text>
-          </View>
-        </View>
-
-        <View style={styles.card}>
-          <Text style={styles.subheading}>Payment Method</Text>
-          {methods.map((item, index) => (
-            <TouchableOpacity
-              key={index}
-              style={styles.radioContainer}
-              onPress={() => setPaymentInfo(item.value)}
-            >
-              <View style={styles.radioCircle}>
-                {paymentInfo === item.value && <View style={styles.selectedRb} />}
-              </View>
-              <Text style={styles.radioText}>{item.name}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        <View style={{ width: "100%", alignItems: "center", paddingTop: 30 }}>
-          <TouchableOpacity
-            style={[styles.button, loading && styles.disabledButton]}
-            onPress={handlePlaceOrder}
-            disabled={loading}
-          >
-            <Text style={styles.buttonText}>Place Order</Text>
+      </View>
+    </View>
+  
+    <View className="flex-1 bg-white p-5 pt-50">
+      {/* Customer Details */}
+      <View className="p-4 rounded-lg bg-[#f9fafb] mb-4 mt-16">
+        <View className="flex-row items-center justify-between mb-2">
+          <Text className="text-lg font-semibold">Customer Details</Text>
+          <TouchableOpacity onPress={() => navigation.navigate("addressupdate")}>
+            <MaterialCommunityIcons name="pencil" size={24} color="#000" />
           </TouchableOpacity>
         </View>
+        <Text className="text-base mb-1">Name: {user?.fname} {user?.lname}</Text>
+        <Text className="text-base mb-1">Phone: {user?.phone}</Text>
+        <Text className="text-base mb-1">
+          Address: {user?.deliveryAddress?.[0]?.houseNo}, {user?.deliveryAddress?.[0]?.streetName}, {user?.deliveryAddress?.[0]?.barangay}, {user?.deliveryAddress?.[0]?.city}
+        </Text>
       </View>
-    </ScrollView>
+  
+      {/* Products */}
+      <View className="p-4 border border-gray-300 rounded-lg bg-[#f9fafb] mb-4">
+        <Text className="text-lg font-semibold mb-2">Products</Text>
+        {cartItems.map((i) => (
+          <ConfirmOrderItem key={i.product} price={i.price} image={i.image} name={i.name} quantity={i.quantity} />
+        ))}
+      </View>
+  
+      {/* Payment Method */}
+      <View className="p-4 border border-gray-300 rounded-lg bg-[#f9fafb] mb-4">
+        <Text className="text-lg font-semibold mb-2">Payment Method</Text>
+        {methods.map((item, index) => (
+          <TouchableOpacity
+            key={index}
+            className="flex-row items-center mb-2"
+            onPress={() => setPaymentInfo(item.value)}
+          >
+            <View className="h-5 w-5 border border-[#ff7895] rounded-full items-center justify-center mr-2">
+              {paymentInfo === item.value && <View className="h-3 w-3 bg-[#ff7895] rounded-full" />}
+            </View>
+            <Text className="text-base">{item.name}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+  
+      {/* Order Summary (Full Width) */}
+      <View className="border-t border-gray-300 my-2 w-full ">
+        <Text className="text-lg font-semibold mb-2">Order Summary</Text>
+  
+        <View className="flex-row justify-between mb-1">
+          <Text className="text-base">Subtotal</Text>
+          <Text className="text-base">₱{itemsPrice.toFixed(2)}</Text>
+        </View>
+        
+        <View className="flex-row justify-between mb-1">
+          <Text className="text-base">Shipping</Text>
+          <Text className="text-base">₱{shippingCharges.toFixed(2)}</Text>
+        </View>
+  
+        {/* Divider */}
+        <View className="border-t border-gray-300 my-2" />
+  
+        {/* Total (Left-Right Alignment) */}
+        <View className="flex-row justify-between">
+          <Text className="text-xl font-medium">Total</Text>
+          <Text className="text-xl text-[#e01d47] font-medium">₱{totalAmount.toFixed(2)}</Text>
+        </View>
+      </View>
+  
+      {/* Button Outside the Box */}
+      <View className="w-full items-center pt-2">
+        <TouchableOpacity
+          className={`w-full bg-[#e01d47] rounded-lg items-center justify-center ${loading && 'opacity-50'}`}
+          onPress={handlePlaceOrder}
+          disabled={loading}
+        >
+          <Text className="text-white text-base font-semibold p-2">Place Order</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  </ScrollView>
+  
   );
 };
-
-const styles = StyleSheet.create({
-  scrollView: {
-    backgroundColor: "#fff",
-  },
-  headerContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 10,
-    backgroundColor: "#fff",
-    borderBottomWidth: 1,
-    borderBottomColor: "#ccc",
-  },
-  backButton: {
-    position: "absolute",
-    left: 10,
-  },
-  headerText: {
-    fontSize: 20,
-    fontWeight: "bold",
-  },
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-    padding: 20,
-  },
-  customerDetailsHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 10,
-  },
-  subheading: {
-    fontSize: 18,
-    fontWeight: "600",
-    paddingBottom: 10,
-  },
-  text: {
-    fontSize: 16,
-    marginBottom: 8,
-  },
-  card: {
-    padding: 16,
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 8,
-    backgroundColor: "#f9f9f9",
-    marginBottom: 16,
-  },
-  row: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 8,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: "#ddd",
-    marginVertical: 8,
-  },
-  radioContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 8,
-  },
-  radioCircle: {
-    height: 20,
-    width: 20,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "#c70049",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 10,
-  },
-  selectedRb: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: "#c70049",
-  },
-  radioText: {
-    fontSize: 16,
-  },
-  button: {
-    width: '100%',
-    backgroundColor: "#bc430b",
-    // height: 40,
-    borderRadius: 10,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  disabledButton: {
-    opacity: 0.5,
-  },
-  buttonText: {
-    color: "#ffffff",
-    fontSize: 16,
-    fontWeight: "600",
-    padding: 10,
-  },
-});
 
 export default ConfirmOrder;

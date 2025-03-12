@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Alert, TouchableOpacity, ScrollView, ActivityIndicator, Image } from 'react-native';
+import { View, Text, TextInput, Alert, Dimensions, TouchableOpacity, ScrollView, ActivityIndicator, StyleSheet, Image } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchEvent } from '../../redux/actions/calendarActions';
 import { submitEventFeedback } from '../../redux/actions/eventFeedbackActions';
@@ -7,6 +7,7 @@ import { useNavigation } from '@react-navigation/native';
 import Toast from 'react-native-toast-message';
 import Footer from '../../components/Layout/Footer';
 import Header from '../../components/Layout/Header';
+import { Ionicons } from '@expo/vector-icons';
 
 const EventFeedback = ({ route }) => {
   const { eventId } = route.params;
@@ -21,7 +22,6 @@ const EventFeedback = ({ route }) => {
 
   // Get event details from Redux state
   const { event, loading, error } = useSelector((state) => state.calendar);
-//   const { success, error: reviewError } = useSelector((state) => state.eventReview);
 
   // Fetch event details when component mounts
   useEffect(() => {
@@ -73,126 +73,119 @@ const EventFeedback = ({ route }) => {
       });
   };
 
+  const formatDateTime = (dateTimeString) => {
+    const date = new Date(dateTimeString);
+    return `${date.toLocaleDateString()} ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+};
+
   return (
-    <View className="flex-1" style={{ backgroundColor: '#ffb703' }}>
-      <Header back={true} />
+    <View className="flex-1 bg-white">
+      {/* <Header back={true} /> */}
 
       {/* ScrollView added here to enable scrolling */}
-      <ScrollView contentContainerStyle={{ flexGrow: 1, paddingBottom: 50 }}>
-        <View
-          className="flex-1 items-center p-4"
-          style={{
-            backgroundColor: 'white',
-            borderTopRightRadius: 50,
-            borderTopLeftRadius: 50,
-            paddingVertical: 50,
-            paddingHorizontal: 10,
-            marginTop: 30,
-            elevation: 5,
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.3,
-            shadowRadius: 5,
-          }}
-        >
-          <Text
-            className="text-xl font-bold text-gray-800 mb-8 text-center"
-            style={{ position: 'relative', top: 30 }}
-          >
-            Event Review
-          </Text>
-
+      <ScrollView contentContainerStyle={{ flexGrow: 1, paddingBottom: 80 }}>
+        <View className="absolute top-5 left-5 right-5 z-10 flex-row items-center py-3">
+                                {/* Back Button */}
+                                <TouchableOpacity 
+                                onPress={() => navigation.goBack()} 
+                                className="p-2 bg-[#ff7895] rounded-full items-center justify-center w-9 h-9"
+                                >
+                                <Ionicons name="arrow-back" size={20} color="#ffffff" />
+                                </TouchableOpacity>
+        
+                              
+        
+                                <View className="flex-1 mr-10">
+                                    <Text className="text-2xl font-bold text-[#e01d47] text-center">
+                                        Event Review
+                                    </Text>
+                                </View>
+        
+                                </View>
+        <View >
+          
           {/* Event Image (Optional) */}
           {loading ? (
             <ActivityIndicator size="large" color="#0000ff" />
           ) : error ? (
-            <Text style={{ color: 'red' }}>{error}</Text>
+            <Text className="text-red-500">{error}</Text>
           ) : (
-            <View
-              style={{
-                backgroundColor: '#f8f8f8',
-                padding: 20,
-                borderRadius: 10,
-                width: '90%',
-                marginBottom: 20,
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.1,
-                shadowRadius: 5,
-                elevation: 5,
-              }}
-            >
-              {/* Event Image */}
-              {event.image && (
-                <Image
-                  source={{ uri: event.image }}
-                  style={{
-                    width: '100%',
-                    height: 200,
-                    resizeMode: 'contain',
-                    borderRadius: 10,
-                    marginBottom: 15,
-                  }}
-                />
-              )}
-              <Text className="text-lg font-bold text-gray-800 mb-2">{event.title}</Text>
-              <Text className="text-sm text-gray-600 mb-2">{event.description}</Text>
-            </View>
+            <ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false}>
+                                    {event.image ? (
+                                            <Image
+                                                source={{ uri: event.image }}
+                                                style={styles.image}
+                                            />
+                                        ) : (
+                                            <View className="w-full h-[50vh] flex justify-center items-center bg-gray-200 -mt-8">
+                                            <Text className="text-gray-500">No Images Available</Text>
+                                            </View>
+                                        )}
+                                        </ScrollView>
           )}
+            <View className="bg-white border border-[#e01d47] rounded-2xl mx-5 -mt-8 shadow-md p-5">
+                                      <Text className="text-2xl font-bold text-[#e01d47]">{event.title}</Text>
+          
+                                      <View className="flex-row items-center mt-2">
+                                          <Ionicons name="calendar-outline" size={16} color="#e01d47" />
+                                          <Text className="text-gray-600 ml-2">{formatDateTime(event.startDate)}</Text>
+                                      </View>
+                                      
+          
+          
+                                
+                                      
+                                  </View>
+                                  <View className="items-center">
+    {/* Rating Question */}
+    <Text className="text-xl text-gray-700 mb-2 mt-5">
+        How would you rate this event?
+    </Text>
 
-          {/* Rating Stars */}
-          <View className="flex-row justify-center mb-4">
-            {[1, 2, 3, 4, 5].map((star) => (
-              <TouchableOpacity key={star} onPress={() => handleStarClick(star)}>
-                <Text
-                  style={{
-                    fontSize: 24,
-                    color: rating >= star ? '#FFD700' : '#CCCCCC',
-                  }}
-                >
-                  ★
+    {/* Star Rating */}
+    <View className="flex-row justify-center mb-4">
+        {[1, 2, 3, 4, 5].map((star) => (
+            <TouchableOpacity key={star} onPress={() => handleStarClick(star)}>
+                <Text className={`text-2xl ${rating >= star ? 'text-[#FFD700]' : 'text-[#CCCCCC]'}`}>
+                    ★
                 </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
+            </TouchableOpacity>
+        ))}
+    </View>
 
-          {/* Feedback Text Input */}
-          <TextInput
-            style={{
-              borderWidth: 1,
-              borderColor: '#ccc',
-              borderRadius: 8,
-              backgroundColor: '#f5f5f5',
-              padding: 10,
-              width: '90%',
-              height: 150,
-              textAlignVertical: 'top',
-              marginBottom: 30,
-            }}
-            placeholder="Enter your review here"
-            value={feedback}
-            onChangeText={setFeedback}
-            multiline
-            numberOfLines={3}
-            onFocus={() => setIsFocused(true)}
-            onBlur={() => setIsFocused(false)}
-          />
+    <Text className="text-m text-gray-700 mb-2 ml-5 self-start">
+        Your Review
+    </Text>
+    
+    
+    <TextInput
+    className="border border-gray-300 rounded-lg bg-[#f5f5f5] p-3 w-[90%] h-36 "
+    placeholder="Enter your review here"
+    placeholderTextColor="#888"
+    value={feedback}
+    onChangeText={setFeedback}
+    multiline
+    numberOfLines={3}
+    onFocus={() => setIsFocused(true)}
+    onBlur={() => setIsFocused(false)}
+    textAlignVertical="top" // Moves placeholder & text to the top
+/>
+<Text className="text-m text-gray-500  mb-4 mx-5 self-start">
+    Your review should be at least 20 characters long and focus on 
+    the experience and things to improve.
+    </Text>
 
-          {/* Submit Button */}
-          <TouchableOpacity
-            onPress={handleSubmitReview}
-            style={{
-              backgroundColor: '#bc430b',
-              paddingVertical: 10,
-              paddingHorizontal: 15,
-              borderRadius: 8,
-              width: '90%',
-              alignItems: 'center',
-            }}
-          >
-            <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 16 }}>
-              Submit Review
-            </Text>
-          </TouchableOpacity>
+    {/* Submit Button */}
+    <TouchableOpacity
+    onPress={handleSubmitReview}
+    className={`py-3 px-5 rounded-lg w-[90%] items-center ${
+        feedback.length >= 20 ? 'bg-[#ff7895]' : 'bg-gray-400'
+    }`}
+    disabled={feedback.length < 20}
+>
+    <Text className="text-white font-bold text-lg">Submit Review</Text>
+</TouchableOpacity>
+</View>
         </View>
       </ScrollView>
 
@@ -202,3 +195,14 @@ const EventFeedback = ({ route }) => {
 };
 
 export default EventFeedback;
+
+const styles = StyleSheet.create({
+imageWrapper: {
+    flex: 1,
+    alignItems: "center",
+  },
+  image: {
+    width: Dimensions.get("window").width, 
+    height: Dimensions.get("window").height / 2 + 60, 
+  },
+});

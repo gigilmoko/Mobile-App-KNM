@@ -29,7 +29,7 @@ const WishlistCard = ({
         <Swipeable renderRightActions={renderRightActions}>
             <View style={styles.card}>
                 <Text style={styles.productName}>{name}</Text>
-                <Text style={styles.productPrice}>${price.toFixed(2)}</Text>
+                <Text style={styles.productPrice}>₱{price ? price.toFixed(2) : '0.00'}</Text> 
                 <TouchableOpacity
                     onPress={() => addToCartHandler(id, name, price, imgSrc, stock)}
                     style={styles.addToCartButton}

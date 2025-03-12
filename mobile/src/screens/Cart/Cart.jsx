@@ -1,12 +1,12 @@
 import React from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity } from 'react-native';
 import CartItem from "../../components/Cart/CartItem";
 import { useNavigation } from "@react-navigation/native";
 import { useDispatch, useSelector } from "react-redux";
 import Toast from "react-native-toast-message";
 import { GestureHandlerRootView, Swipeable } from 'react-native-gesture-handler';
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
-
+import {Ionicons} from "@expo/vector-icons";
 const Cart = () => {
     const navigation = useNavigation();
     const dispatch = useDispatch();
@@ -37,16 +37,48 @@ const Cart = () => {
         });
     };
 
+    const addToWishlistHandler = (id, name, price, image, stock) => {
+        // if (!user) {
+        //     navigation.navigate("login");
+        //     return Toast.show({
+        //         type: "info",
+        //         text1: "Log in to continue.",
+        //     });
+        // }
+    
+        dispatch({
+            type: "addToWishlist",
+            payload: {
+                product: id,
+                name,
+                price,
+                image,
+                stock,
+            },
+        });
+    
+        Toast.show({
+            type: "success",
+            text1: "Added To Wishlist",
+        });
+    
+        handleDelete(id);
+    };
+
     const handleDelete = (id) => {
         dispatch({ type: "removeFromCart", payload: id });
+        Toast.show({
+            type: "info",
+            text1: "Product moved to wishlist",
+        });
     };
 
     const renderRightActions = (id) => (
         <TouchableOpacity
-            style={styles.swipeActionDelete}
+            className="bg-[#bc430b] justify-center items-center w-15 rounded-lg my-1 h-24 ml-2"
             onPress={() => handleDelete(id)}
         >
-            <Text style={styles.swipeActionText}>Delete</Text>
+            <Text className="text-white font-bold text-lg">Delete</Text>
         </TouchableOpacity>
     );
 
@@ -65,30 +97,48 @@ const Cart = () => {
                 qty={item.quantity}
                 incrementHandler={incrementHandler}
                 decrementHandler={decrementHandler}
+                addToWishlistHandler={addToWishlistHandler} // Pass the handler as a prop
             />
         </Swipeable>
     );
 
     return (
-        <GestureHandlerRootView style={{ flex: 1 }}>
-            <View style={{ width: '100%', height: '100%', backgroundColor: '#fff', position: 'relative' }}>
-                <View style={styles.headerContainer}>
-                    <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                        <MaterialCommunityIcons name="arrow-left" size={24} color="#000" />
+        <GestureHandlerRootView className="flex-1">
+        <View className="w-full h-full bg-white relative">
+            {/* Header */}
+            <View className="flex-row items-center justify-center p-2 bg-white  mb-2">
+                <View className="absolute top-5 left-5 right-5 z-10 flex-row items-center py-3">
+                    {/* Back Button */}
+                    <TouchableOpacity 
+                        onPress={() => navigation.goBack()} 
+                        className="p-2 bg-[#ff7895] rounded-full items-center justify-center w-9 h-9"
+                    >
+                        <Ionicons name="arrow-back" size={20} color="#ffffff" />
                     </TouchableOpacity>
-                    <Text style={styles.headerTitle}>My Cart</Text>
+    
+                    <View className="flex-1 mr-10">
+                        <Text className="text-2xl font-bold text-[#e01d47] text-center">
+                            My Cart ({cartItems.length})
+                        </Text>
+                    </View>
                 </View>
-                <FlatList
-                    data={cartItems}
-                    renderItem={renderItem}
-                    keyExtractor={(item) => item.product}
-                    contentContainerStyle={{ paddingHorizontal: 16 }}
-                    ListEmptyComponent={<Text style={{ textAlign: "center", fontSize: 18 }}>No Items Yet</Text>}
-                />
-                <OrderInfo cartItems={cartItems} />
-                <CheckoutButton cartItems={cartItems} navigation={navigation} />
             </View>
-        </GestureHandlerRootView>
+    
+            {/* Cart Items */}
+            <FlatList
+                data={cartItems}
+                renderItem={renderItem}
+                keyExtractor={(item) => item.product}
+                contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 50 }}
+                ListEmptyComponent={<Text className="text-center text-lg">No Items Yet</Text>}
+            />
+    
+            {/* Order Info & Checkout */}
+            <OrderInfo cartItems={cartItems} />
+            <CheckoutButton cartItems={cartItems} navigation={navigation} />
+        </View>
+    </GestureHandlerRootView>
+    
     );
 };
 
@@ -98,124 +148,45 @@ const OrderInfo = ({ cartItems }) => {
     const shipping = 10; // Example shipping cost
 
     return (
-        <View style={styles.orderInfoContainer}>
-            <Text style={styles.orderInfoTitle}>Order Info</Text>
-            <View style={styles.orderInfoRow}>
-                <Text style={styles.orderInfoLabel}>Subtotal</Text>
-                <Text style={styles.orderInfoValue}>₱{subtotal.toFixed(2)}</Text>
-            </View>
-            <View style={styles.orderInfoRow}>
-                <Text style={styles.orderInfoLabel}>Items</Text>
-                <Text style={styles.orderInfoValue}>{itemsCount}</Text>
-            </View>
-            <View style={styles.orderInfoRow}>
-                <Text style={styles.orderInfoLabel}>Shipping</Text>
-                <Text style={styles.orderInfoValue}>₱{shipping.toFixed(2)}</Text>
-            </View>
-            <View style={styles.orderInfoRow}>
-                <Text style={styles.orderInfoTotalLabel}>Total</Text>
-                <Text style={styles.orderInfoTotalValue}>₱{(subtotal + shipping).toFixed(2)}</Text>
-            </View>
-        </View>
+        <View className="mx-4">
+    {/* Divider */}
+    <View className="border-t border-gray-300 my-2" />
+
+    {/* Order Info */}
+    <View className="flex-row items-center justify-between mb-1">
+        <Text className="text-base">Subtotal</Text>
+        <Text className="text-base">₱{subtotal.toFixed(2)}</Text>
+    </View>
+    <View className="flex-row items-center justify-between mb-1">
+        <Text className="text-base">Items</Text>
+        <Text className="text-base">{itemsCount}</Text>
+    </View>
+    <View className="flex-row items-center justify-between mb-1">
+        <Text className="text-base">Shipping</Text>
+        <Text className="text-base">₱{shipping.toFixed(2)}</Text>
+    </View>
+
+    {/* Divider before Total */}
+    <View className="border-t border-gray-300 my-2" />
+
+    {/* Total */}
+    <View className="flex-row items-center justify-between">
+        <Text className="text-xl font-medium">Total</Text>
+        <Text className="text-xl text-[#e01d47] font-medium">₱{(subtotal + shipping).toFixed(2)}</Text>
+    </View>
+</View>
     );
 };
 
 const CheckoutButton = ({ cartItems, navigation }) => (
     <View>
-        <TouchableOpacity
-            onPress={cartItems.length > 0 ? () => navigation.navigate("confirmorder") : null}
-            style={styles.checkoutButton}
-        >
-            <Text style={styles.checkoutButtonText}>
-                Checkout
-            </Text>
-        </TouchableOpacity>
-    </View>
+    <TouchableOpacity
+        onPress={cartItems.length > 0 ? () => navigation.navigate("confirmorder") : null}
+        className="bg-[#e01d47] rounded-lg justify-center items-center mx-4 my-2"
+    >
+        <Text className="text-lg font-medium text-white py-2">Checkout</Text>
+    </TouchableOpacity>
+</View>
 );
-
-const styles = StyleSheet.create({
-    headerContainer: {
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: 10,
-        backgroundColor: "#fff",
-        borderBottomWidth: 1,
-        borderBottomColor: "#ccc",
-        marginBottom: 10,
-    },
-    backButton: {
-        position: "absolute",
-        left: 10,
-    },
-    headerTitle: {
-        fontSize: 20,
-        fontWeight: "bold",
-    },
-    swipeActionDelete: {
-        backgroundColor: '#bc430b',
-        justifyContent: 'center',
-        alignItems: 'center',
-        width: 60,
-        borderRadius: 10,
-        marginVertical: 6,
-        height: 100,
-        marginLeft: 10,
-    },
-    swipeActionText: {
-        color: 'white',
-        fontWeight: 'bold',
-        fontSize: 16,
-    },
-    orderInfoContainer: {
-        paddingHorizontal: 16,
-        paddingVertical: 10,
-        borderRadius: 10,
-        backgroundColor: '#f9f9f9',
-        marginHorizontal: 15,
-        borderWidth: 1,
-        borderColor: '#ddd',
-        // flex: 1,
-        
-    },
-    orderInfoTitle: {
-        fontSize: 16,
-        color: '#000',
-        fontWeight: '500',
-        marginBottom: 10,
-    },
-    orderInfoRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        marginBottom: 5,
-    },
-    orderInfoTotalLabel: {
-        fontSize: 20,
-        fontWeight: '400',
-        maxWidth: '80%',
-        color: '#000',
-    },
-    orderInfoTotalValue: {
-        fontSize: 24,
-        fontWeight: '500',
-        color: '#000',
-    },
-    checkoutButton: {
-        // height: 40,
-        backgroundColor: '#bc430b',
-        borderRadius: 10,
-        justifyContent: 'center',
-        alignItems: 'center',
-        margin: 15,
-    },
-    checkoutButtonText: {
-        fontSize: 16,
-        fontWeight: '500',
-        letterSpacing: 1,
-        color: '#ffffff',
-        padding: 10,
-    },
-});
 
 export default Cart;

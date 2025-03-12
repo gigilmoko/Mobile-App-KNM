@@ -111,3 +111,45 @@ export const fetchEventFeedback = (eventId) => async (dispatch) => {
       });
     }
   };
+
+export const fetchEventFeedbackMobile = (eventId) => async (dispatch) => {
+    try {
+      dispatch({ type: 'fetchEventFeedbackRequest' });
+  
+      // Retrieve the token from AsyncStorage
+      const token = await AsyncStorage.getItem('token');
+      // console.log("Retrieved Token:", token); // Log the token
+  
+      if (!token) {
+        throw new Error('No token found');
+      }
+  
+      // API call to fetch all feedback for the specific event
+      const { data } = await axios.get(`${server}/event/feedback/${eventId}/mobile`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        withCredentials: true,
+      });
+  
+      // console.log("Response Data:", data); // Log the response data
+  
+      if (data.success) {
+        dispatch({
+          type: 'fetchEventFeedbackSuccess',
+          payload: data.data, // Assuming the feedback data is in 'data' field
+        });
+      } else {
+        dispatch({
+          type: 'fetchEventFeedbackFail',
+          payload: data.message || 'Failed to fetch event feedback',
+        });
+      }
+    } catch (error) {
+      console.error("Error:", error.response?.data || error.message); // Log the error response
+      dispatch({
+        type: 'fetchEventFeedbackFail',
+        payload: error.response?.data.message || 'Network error',
+      });
+    }
+  };

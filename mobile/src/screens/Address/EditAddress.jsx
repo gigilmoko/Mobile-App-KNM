@@ -18,13 +18,14 @@ import { addressService } from "../../../services/addressService";
 import { updateAddress } from "../../redux/actions/userActions";
 import WebView from "react-native-webview";
 import * as Location from "expo-location";
+import Header from "../../components/Layout/Header";
 
 const EditAddress = () => {
     const navigation = useNavigation();
     const dispatch = useDispatch();
     const { user } = useSelector((state) => state.user);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [showMap, setShowMap] = useState(false);
+    const [showMap, setShowMap] = useState(true); // Always show the map
 
     console.log("User:", user); 
     // Current Address
@@ -234,299 +235,165 @@ const EditAddress = () => {
     };
 
     return (
-        <SafeAreaView style={{ flex: 1 }}>
+        <SafeAreaView className="flex-1">
         <ScrollView
-            style={styles.scrollView}
-            contentContainerStyle={styles.contentContainer}
+            className="flex-1 bg-white pb-7.5 pt-5"
+            contentContainerStyle={{ flexGrow: 1, paddingBottom: 20 }}
             keyboardShouldPersistTaps="handled"
         >
-            <View style={styles.container}>
-            <View style={styles.currentAddressContainer}>
-                <Text style={styles.sectionTitle}>Current Address</Text>
-                <View style={styles.currentAddressBox}>
-                <Text style={styles.currentAddressText}>
-                    House No: {currentAddress.houseNo}
-                </Text>
-                <Text style={styles.currentAddressText}>
-                    Street: {currentAddress.streetName}
-                </Text>
-                <Text style={styles.currentAddressText}>
-                    Barangay: {currentAddress.barangay}
-                </Text>
-                <Text style={styles.currentAddressText}>
-                    City: {currentAddress.city}
-                </Text>
+            <View className="px-5 pt-15">
+                        {/* My Account Section */}
+                        <View className="flex items-center">
+                            <Header title="Edit Address"></Header>
+                        </View>
+                        </View>
+            <View className="flex-1 p-5 bg-white">
+                {showMap && (
+                            <View style={styles.mapContainer}>
+                            <WebView
+                                source={{ html: mapHtml }}
+                                style={styles.map}
+                                onMessage={handleMapMessage}
+                            />
+                            </View>
+                        )}
+    
+                <Text className="text-gray-700 mb-1">House No</Text>
+                <TextInput
+                    className="border border-gray-300 rounded-md px-2.5 mb-2.5"
+                    placeholder="House No"
+                    value={houseNo}
+                    onChangeText={setHouseNo}
+                    style={styles.input}
+                />
+    
+                <Text className="text-gray-700 mb-1">Street</Text>
+                <TextInput
+                    className="border border-gray-300 rounded-md px-2.5 mb-2.5"
+                    placeholder="Street"
+                    value={street}
+                    onChangeText={setStreet}
+                    style={styles.input}
+                />
+    
+                <Text className="text-gray-700 mb-1">City</Text>
+                <View className="border border-gray-300 rounded-md mb-2.5" style={styles.pickerContainer}>
+                    <Picker
+                        selectedValue={selectedCity?.value}
+                        onValueChange={(itemValue) => {
+                            const selected = cities.find((c) => c.value === itemValue);
+                            setSelectedCity(selected);
+                            if (selected) {
+                                handleCitySelect(selected);
+                            }
+                        }}
+                        enabled={!isLoadingCities}
+                        style={styles.picker}
+                    >
+                        <Picker.Item
+                            label={isLoadingCities ? "Loading Cities..." : "Select City"}
+                            value=""
+                        />
+                        {cities.map((city) => (
+                            <Picker.Item
+                                key={city.value}
+                                label={city.label}
+                                value={city.value}
+                            />
+                        ))}
+                    </Picker>
                 </View>
-            </View>
-
-            <TouchableOpacity
-                style={styles.mapToggleButton}
-                onPress={() => setShowMap(!showMap)}
-            >
-                <Text style={styles.mapToggleText}>
-                {showMap ? "Hide Map" : "Choose Location on Map"}
-                </Text>
-            </TouchableOpacity>
-
-            {showMap && (
-                <View style={styles.mapContainer}>
-                <WebView
-                    source={{ html: mapHtml }}
-                    style={styles.map}
-                    onMessage={handleMapMessage}
-                />
+    
+                <Text className="text-gray-700 mb-1">Barangay</Text>
+                <View className="border border-gray-300 rounded-md mb-2.5" style={styles.pickerContainer}>
+                    <Picker
+                        selectedValue={selectedBarangay?.value}
+                        onValueChange={async (itemValue) => {
+                            const selected = barangays.find((b) => b.value === itemValue);
+                            setSelectedBarangay(selected);
+    
+                            if (selected && selectedCity) {
+                                try {
+                                    const addressData = {
+                                        streetName: street,
+                                        barangay: selected.label,
+                                        city: selectedCity.label,
+                                    };
+    
+                                    console.log(addressData);
+    
+                                    const location = await addressService.getGeoLocation(addressData);
+                                    setCoordinates((prev) => ({
+                                        ...prev,
+                                        latitude: location.latitude,
+                                        longitude: location.longitude,
+                                    }));
+                                } catch (error) {
+                                    Toast.show({
+                                        type: "error",
+                                        text1: "Failed to get location for selected barangay",
+                                    });
+                                }
+                            }
+                        }}
+                        enabled={!!selectedCity && !isLoadingBarangays}
+                        style={styles.picker}
+                    >
+                        <Picker.Item
+                            label={
+                                isLoadingBarangays
+                                    ? "Loading Barangays..."
+                                    : !selectedCity
+                                    ? "Select a city first"
+                                    : "Select Barangay"
+                            }
+                            value=""
+                        />
+                        {barangays.map((barangay) => (
+                            <Picker.Item
+                                key={barangay.value}
+                                label={barangay.label}
+                                value={barangay.value}
+                            />
+                        ))}
+                    </Picker>
                 </View>
-            )}
-
-            <View style={styles.coordinatesContainer}>
-                <Text style={styles.coordinatesText}>
-                Latitude: {coordinates.latitude.toFixed(6)}
-                </Text>
-                <Text style={styles.coordinatesText}>
-                Longitude: {coordinates.longitude.toFixed(6)}
-                </Text>
-            </View>
-
-            <Text style={styles.sectionTitle}>New Address</Text>
-
-            <TextInput
-                style={styles.input}
-                placeholder="House No"
-                value={houseNo}
-                onChangeText={setHouseNo}
-            />
-
-            <TextInput
-                style={styles.input}
-                placeholder="Street"
-                value={street}
-                onChangeText={setStreet}
-            />
-
-            <View style={styles.pickerContainer}>
-                <Picker
-                selectedValue={selectedCity?.value}
-                onValueChange={(itemValue) => {
-                    const selected = cities.find((c) => c.value === itemValue);
-                    setSelectedCity(selected);
-                    if (selected) {
-                    handleCitySelect(selected);
-                    }
-                }}
-                enabled={!isLoadingCities}
+    
+                <TouchableOpacity
+                    className={`bg-[#e01d47] p-3 rounded-md items-center mt-5 ${isSubmitting ? "opacity-70" : ""}`}
+                    onPress={saveAddress}
+                    disabled={isSubmitting}
                 >
-                <Picker.Item
-                    label={isLoadingCities ? "Loading Cities..." : "Select City"}
-                    value=""
-                />
-                {cities.map((city) => (
-                    <Picker.Item
-                    key={city.value}
-                    label={city.label}
-                    value={city.value}
-                    />
-                ))}
-                </Picker>
-            </View>
-
-            <View style={styles.pickerContainer}>
-                <Picker
-                selectedValue={selectedBarangay?.value}
-                onValueChange={async (itemValue) => {
-                    const selected = barangays.find((b) => b.value === itemValue);
-                    setSelectedBarangay(selected);
-
-                    if (selected && selectedCity) {
-                    try {
-                        const addressData = {
-                        streetName: street,
-                        barangay: selected.label,
-                        city: selectedCity.label,
-                        };
-
-                        console.log(addressData)
-
-                        const location = await addressService.getGeoLocation(
-                        addressData
-                        );
-                        setCoordinates((prev) => ({
-                        ...prev,
-                        latitude: location.latitude,
-                        longitude: location.longitude,
-                        }));
-                    } catch (error) {
-                        Toast.show({
-                        type: "error",
-                        text1: "Failed to get location for selected barangay",
-                        });
-                    }
-                    }
-                }}
-                enabled={!!selectedCity && !isLoadingBarangays}
-                >
-                <Picker.Item
-                    label={
-                    isLoadingBarangays
-                        ? "Loading Barangays..."
-                        : !selectedCity
-                        ? "Select a city first"
-                        : "Select Barangay"
-                    }
-                    value=""
-                />
-                {barangays.map((barangay) => (
-                    <Picker.Item
-                    key={barangay.value}
-                    label={barangay.label}
-                    value={barangay.value}
-                    />
-                ))}
-                </Picker>
-            </View>
-
-            <TouchableOpacity
-                style={[styles.saveButton, isSubmitting && styles.disabledButton]}
-                onPress={saveAddress}
-                disabled={isSubmitting}
-            >
-                {isSubmitting ? (
-                <ActivityIndicator color="#fff" />
-                ) : (
-                <Text style={styles.saveButtonText}>Save Address</Text>
-                )}
-            </TouchableOpacity>
+                    {isSubmitting ? (
+                        <ActivityIndicator color="#fff" />
+                    ) : (
+                        <Text className="text-white text-base font-medium">Save Address</Text>
+                    )}
+                </TouchableOpacity>
             </View>
         </ScrollView>
-        </SafeAreaView>
+    </SafeAreaView>
     );
 };
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        padding: 20,
-        backgroundColor: "#fff",
-    },
-    currentAddressContainer: {
-        marginBottom: 20,
-        padding: 15,
-        backgroundColor: "#f8f8f8",
-        borderRadius: 10,
-        borderWidth: 1,
-        borderColor: "#ddd",
-    },
-    currentAddressBox: {
-        backgroundColor: "#fff",
-        padding: 15,
-        borderRadius: 8,
-        borderWidth: 1,
-        borderColor: "#eee",
-    },
-    currentAddressText: {
-        fontSize: 16,
-        marginBottom: 8,
-        color: "#666",
-    },
-    sectionTitle: {
-        fontSize: 18,
-        fontWeight: "600",
-        marginBottom: 10,
-        color: "#333",
-    },
-    mapToggleButton: {
-        backgroundColor: "#bc430b",
-        padding: 12,
-        borderRadius: 5,
-        alignItems: "center",
-        marginBottom: 10,
-    },
-    mapToggleText: {
-        color: "#fff",
-        fontWeight: "600",
-    },
+    
     mapContainer: {
         height: 300,
         borderRadius: 10,
         overflow: "hidden",
         marginBottom: 10,
     },
-    map: {
-        flex: 1,
-    },
-    coordinatesContainer: {
-        backgroundColor: "#f8f8f8",
-        padding: 10,
-        borderRadius: 5,
-        marginBottom: 15,
-    },
-    coordinatesText: {
-        fontSize: 14,
-        color: "#666",
-    },
     input: {
-        height: 40,
-        borderColor: "#ccc",
-        borderWidth: 1,
-        borderRadius: 5,
-        paddingHorizontal: 10,
-        marginBottom: 10,
+        height: 50, // Match the height of the picker
     },
     pickerContainer: {
-        borderColor: "#ccc",
-        borderWidth: 1,
-        borderRadius: 5,
-        marginBottom: 10,
+        height: 50, // Match the height of the input boxes
     },
-    saveButton: {
-        backgroundColor: "#bc430b",
-        padding: 15,
-        borderRadius: 5,
-        alignItems: "center",
-        marginTop: 20,
+    picker: {
+        height: '100%',
     },
-    saveButtonText: {
-        color: "#fff",
-        fontSize: 16,
-        fontWeight: "500",
-    },
-    disabledButton: {
-        opacity: 0.7,
-    },
-    scrollView: {
-        flex: 1,
-        backgroundColor: "#fff",
-        paddingBottom: 30,
-        paddingTop: 20,
-    },
-    contentContainer: {
-        flexGrow: 1,
-        paddingBottom: 20,
-    },
-    container: {
-        padding: 20,
-    },
-    dropdownContainer: {
-        marginTop: -10,
-        marginBottom: 10,
-        borderWidth: 1,
-        borderColor: "#ccc",
-        borderRadius: 5,
-        maxHeight: 150,
-        backgroundColor: "#fff",
-        zIndex: 1000,
-    },
-    citiesList: {
-        flex: 1,
-    },
-    cityItem: {
-        padding: 12,
-        borderBottomWidth: 1,
-        borderBottomColor: "#eee",
-    },
-    cityItemText: {
-        fontSize: 14,
-        color: "#333",
-    },
+   
 });
 
 export default EditAddress;

@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, TextInput } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, TextInput, Image } from "react-native";
 import Footer from "../../components/Layout/Footer";
 import { useDispatch, useSelector } from "react-redux";
 import { getAllEvents } from "../../redux/actions/calendarActions";
 import moment from "moment-timezone";
+import { Ionicons } from "@expo/vector-icons";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
+import Header from "../../components/Layout/Header";
 
 const EventsList = ({ navigation }) => {
     const [activeTab, setActiveTab] = useState("month");
@@ -53,207 +55,146 @@ const EventsList = ({ navigation }) => {
     }, [events]);
 
     return (
-        <View style={styles.container}>
-            <View style={styles.headerContainer}>
-                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                    <MaterialCommunityIcons name="arrow-left" size={24} color="#000" />
-                </TouchableOpacity>
-                <Text style={styles.headerTitle}>Events</Text>
+        <View className="flex-1 bg-white pb-">
+             <View className="px-5 py-5">
+                <View className="flex items-center">
+                    <Header title="Event List" />
+                </View>
             </View>
-            <View style={styles.mainContent}>
-                <TextInput
-                    style={styles.searchBox}
-                    placeholder="Search events..."
-                    value={searchQuery}
-                    onChangeText={setSearchQuery}
-                />
-
+            <View className="flex-1 px-4 pt-2 mb-10">
+            <View className="mt-[-20px] flex-row items-center border border-[#e01d47] rounded-full px-4 py-2 bg-white">
+    <TextInput
+        className="flex-1 text-gray-700 placeholder-gray-400"
+        placeholder="Search"
+        value={searchQuery}
+        onChangeText={setSearchQuery}
+    />
+    <Ionicons name="search" size={20} color="#e01d47" />
+</View>
                 {upcomingEvent && (
-                    <View style={styles.upcomingEventContainer}>
-                        <Text style={styles.upcomingEventTitle}>Upcoming Event</Text>
-                        <Text style={styles.eventTitle}>Title: {upcomingEvent.title}</Text>
-                        <Text style={styles.eventLocation}>Venue: {upcomingEvent.location}</Text>
-                        <Text style={styles.eventDate}>Date: 
+                    <View className="bg-white rounded p-2 shadow border border-yellow-500">
+                        <Text className="text-lg font-bold text-gray-800 mb-1">Upcoming Event</Text>
+                        <Text className="text-base font-bold">Title: {upcomingEvent.title}</Text>
+                        <Text className="text-sm text-gray-800">Venue: {upcomingEvent.location}</Text>
+                        <Text className="text-sm text-gray-600">Date: 
                              {moment(upcomingEvent.date).format("MM-DD-YYYY")}
                         </Text>
                     
-                        <Text style={styles.eventDescription}>Description: {upcomingEvent.description}</Text>
+                        <Text className="text-sm text-gray-600">Description: {upcomingEvent.description}</Text>
                     </View>
                 )}
 
-                <View style={styles.tabsContainer}>
-                    <TouchableOpacity
-                        style={[styles.tab, activeTab === "past" && styles.activeTab]}
-                        onPress={() => setActiveTab("past")}
-                    >
-                        <Text style={styles.tabText}>Past Events</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        style={[styles.tab, activeTab === "month" && styles.activeTab]}
-                        onPress={() => setActiveTab("month")}
-                    >
-                        <Text style={styles.tabText}>Events for the Month</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        style={[styles.tab, activeTab === "nextMonth" && styles.activeTab]}
-                        onPress={() => setActiveTab("nextMonth")}
-                    >
-                        <Text style={styles.tabText}>Future Events</Text>
-                    </TouchableOpacity>
+                <View className="flex-row justify-around my-4">
+                <TouchableOpacity
+    className={`px-4 py-2 mt-2 rounded-full border ${
+        activeTab === "past"
+            ? "bg-[#e01d47] text-white"
+            : "bg-white border-[#e01d47]"
+    }`}
+    onPress={() => setActiveTab("past")}
+>
+    <Text className={`font-bold ${activeTab === "past" ? "text-white" : "text-[#e01d47]"}`}>
+        Past Events
+    </Text>
+</TouchableOpacity>
+
+<TouchableOpacity
+    className={`px-4 py-2 mt-2 rounded-full border ${
+        activeTab === "month"
+            ? "bg-[#e01d47] text-white"
+            : "bg-white border-[#e01d47]"
+    }`}
+    onPress={() => setActiveTab("month")}
+>
+    <Text className={`font-bold ${activeTab === "month" ? "text-white" : "text-[#e01d47]"}`}>
+        This Month
+    </Text>
+</TouchableOpacity>
+
+<TouchableOpacity
+    className={`px-4 py-2 mt-2 rounded-full border ${
+        activeTab === "nextMonth"
+            ? "bg-[#e01d47] text-white"
+            : "bg-white border-[#e01d47]"
+    }`}
+    onPress={() => setActiveTab("nextMonth")}
+>
+    <Text className={`font-bold ${activeTab === "nextMonth" ? "text-white" : "text-[#e01d47]"}`}>
+        Future Events
+    </Text>
+</TouchableOpacity>
                 </View>
 
                 <ScrollView
-                    contentContainerStyle={styles.scrollContainer}
+                    contentContainerStyle={{ paddingBottom: 10 }}
                     showsVerticalScrollIndicator={false}
                 >
                     {loading ? (
-                        <View style={styles.loadingContainer}>
+                        <View className="justify-center items-center">
                             <Text>Loading...</Text>
                         </View>
                     ) : (
                         <View>
                             {filteredEvents && filteredEvents.length > 0 ? (
-                                filteredEvents.map((event) => (
-                                    <TouchableOpacity
-                                        key={event._id} 
-                                        onPress={() => navigation.navigate("eventinfo", { eventId: event._id })}
-                                        style={styles.eventItem}
-                                    >
-                                        <Text
-                                            style={[
-                                                styles.eventTitle,
-                                                moment(event.date).isBetween(moment(), moment().endOf("month"), "day", "[]") && { color: "#ffb703" },
-                                            ]}
-                                        >
-                                            Title: {event.title}
-                                        </Text>
-                                        <Text style={styles.eventLocation}>{event.location}</Text>
-                                        <Text style={styles.eventDate}>
-                                            {moment(event.date).format("MM-DD-YYYY")}
-                                        </Text>
-                                    </TouchableOpacity>
-                                ))
+    filteredEvents.map((event, index) => (
+        <View key={event._id} className="py-2">
+            {/* Event Content */}
+            <View className="flex-row items-center">
+                {/* Event Image */}
+                <Image
+                    source={{ uri: "https://res.cloudinary.com/dglawxazg/image/upload/v1741731158/image_2025-03-12_061207062-removebg-preview_hsp3wa.png" }}
+                    className="w-12 h-12 mr-3"
+                    resizeMode="contain"
+                />
+
+                {/* Event Details */}
+                <View className="flex-1">
+                    {/* Truncated Title */}
+                    <Text
+                        className={`text-base font-bold ${
+                            moment(event.date).isBetween(moment(), moment().endOf("month"), "day", "[]") ? "text-yellow-500" : ""
+                        }`}
+                    >
+                        {event.title.length > 40 ? `${event.title.substring(0, 40)}...` : event.title}
+                    </Text>
+
+                    {/* Truncated Description */}
+                    <Text className="text-sm text-gray-800">
+                        {event.description.length > 20 ? `${event.description.substring(0, 20)}...` : event.description}
+                    </Text>
+
+                    {/* Calendar Icon + Date */}
+                    <View className="flex-row items-center mt-1">
+                        <Ionicons name="calendar" size={16} color="#e01d47" />
+                        <Text className="text-sm text-gray-600 ml-1">
+                            {moment(event.date).format("MM-DD-YYYY")}
+                        </Text>
+                    </View>
+                </View>
+
+                {/* View Details Button */}
+                <TouchableOpacity
+    onPress={() => navigation.navigate("eventinfo", { eventId: event._id })}
+    className="bg-[#e01d47] px-4 py-2 mt-10 rounded-full"
+>
+    <Text className="text-white text-sm font-bold">View Details</Text>
+</TouchableOpacity>
+            </View>
+
+            {/* Divider (Except for the last item) */}
+            {index !== filteredEvents.length - 1 && <View className="border-b border-gray-300 my-2" />}
+        </View>
+    ))
                             ) : (
-                                <Text style={styles.noEventsText}>No events available</Text>
+                                <Text className="text-base text-gray-500 text-center">No events available</Text>
                             )}
                         </View>
                     )}
                 </ScrollView>
             </View>
-            <Footer style={styles.footer} activeRoute={"home"} />
+            <Footer className="mb-10" activeRoute={"home"} />
         </View>
     );
 };
 
 export default EventsList;
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: "#fff",
-    },
-    mainContent: {
-        flex: 1,
-        paddingHorizontal: 15,
-        paddingTop: 10,
-        marginBottom: 40,
-    },
-    headerContainer: {
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: 10,
-        backgroundColor: "#fff",
-        borderBottomWidth: 1,
-        borderBottomColor: "#ccc",
-    },
-    backButton: {
-        position: "absolute",
-        left: 10,
-    },
-    headerTitle: {
-        fontSize: 20,
-        fontWeight: "bold",
-    },
-    searchBox: {
-        padding: 10,
-        marginBottom: 10,
-        borderColor: "#f4b546",
-        borderWidth: 1,
-        borderRadius: 5,
-    },
-    upcomingEventContainer: {
-        backgroundColor: "#fff",
-        borderRadius: 10,
-        padding: 10,
-        shadowColor: "#000",
-        shadowOpacity: 0.2,
-        shadowRadius: 5,
-        shadowOffset: { width: 0, height: 3 },
-        elevation: 4,
-        borderColor: "#F4B546",
-        borderWidth: 1,
-    },
-    upcomingEventTitle: {
-        fontSize: 18,
-        fontWeight: "bold",
-        color: "#333",
-        marginBottom: 5,
-    },
-    eventTitle: {
-        fontSize: 16,
-        fontWeight: "bold",
-    },
-    eventLocation: {
-        fontSize: 12,
-        color: "#333",
-    },
-    eventDate: {
-        fontSize: 14,
-        color: "#777",
-    },
-    eventDescription: {
-        fontSize: 14,
-        color: "#666",
-    },
-    tabsContainer: {
-        flexDirection: "row",
-        justifyContent: "space-around",
-        marginVertical: 15,
-    },
-    tab: {
-        borderRadius: 5,
-        backgroundColor: "#ffb703",
-        justifyContent: "center",
-        alignItems: "center",
-        marginVertical: 5,
-    },
-    activeTab: {
-        backgroundColor: "#bc430b",
-    },
-    tabText: {
-        fontWeight: "bold",
-        color: "#fff",
-        padding: 8,
-    },
-    scrollContainer: {
-        paddingBottom: 10,
-    },
-    loadingContainer: {
-        justifyContent: "center",
-        alignItems: "center",
-    },
-    noEventsText: {
-        fontSize: 16,
-        color: "#888",
-        textAlign: "center",
-    },
-    eventItem: {
-        marginVertical: 5,
-        borderColor: "#ccc",
-        borderWidth: 1,
-        borderRadius: 10,
-        backgroundColor: "#fff",
-        padding: 10,
-    },
-});

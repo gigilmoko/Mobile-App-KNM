@@ -1,12 +1,13 @@
 import React, { useEffect } from 'react';
-import { View, Text, Image, Button, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, Image, Button, ScrollView, StyleSheet, FlatList, Dimensions, TouchableOpacity } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchEvent } from '../../redux/actions/calendarActions';
 import { loadUser } from '../../redux/actions/userActions';
-import { fetchEventFeedback } from '../../redux/actions/eventFeedbackActions';
+import { fetchEventFeedbackMobile } from '../../redux/actions/eventFeedbackActions';
 import { getUserInterest } from '../../redux/actions/userInterestActions';  // Import the action
 import { expressInterest } from '../../redux/actions/userInterestActions';  // Import the expressInterest action
 import Toast from 'react-native-toast-message';
+import { Ionicons } from '@expo/vector-icons';
 import Footer from '../../components/Layout/Footer';
 import Header from '../../components/Layout/Header';
 import moment from 'moment';
@@ -27,7 +28,7 @@ const EventInfo = ({ route }) => {
 
     useEffect(() => {
         dispatch(fetchEvent(eventId));
-        dispatch(fetchEventFeedback(eventId));
+        dispatch(fetchEventFeedbackMobile(eventId));
         dispatch(loadUser());
         dispatch(getUserInterest(eventId));  // Fetch user interest for the specific event
     }, [eventId, dispatch]);
@@ -67,167 +68,142 @@ const EventInfo = ({ route }) => {
     }
 
     const handleRegister = () => {
-       
-            dispatch(expressInterest(eventId));  // Dispatch expressInterest when the button is pressed
-       
+        dispatch(expressInterest(eventId));  // Dispatch expressInterest when the button is pressed
     };
 
+    console.log("feedback:",eventFeedback);
+
     return (
-        <View style={styles.container}>
-            <Header back={true} />
-
-            <ScrollView contentContainerStyle={styles.scrollViewContent}>
-                {loading ? (
-                    <Text style={styles.loadingText}>Loading event details...</Text>
-                ) : event ? (
-                    <View>
-                        <View style={styles.imageContainer}>
-                            {event.image ? (
-                                <Image
-                                    source={{ uri: event.image }}
-                                    style={styles.eventImage}
-                                    resizeMode="cover"
-                                />
-                            ) : (
-                                <View style={styles.placeholderImage} />
-                            )}
-                        </View>
-                        <Text style={styles.eventTitle}>{event.title}</Text>
-                        <Text style={styles.eventTime}>
-                            Event time: {formatDateTime(event.startDate)} - {formatDateTime(event.endDate)}
-                        </Text>
-                        <Text style={styles.eventDescription}>{event.description}</Text>
-
-                        {loadingInterest ? (
-                            <Text style={styles.loadingText}>Checking your interest...</Text>
-                        ) : (
-                            <Text style={styles.userInterestText}>
-                                {userRegistered ? 'You are interested in this event.' : 'You are not interested in this event.'}
+        <View className="flex-1 bg-white">
+        <ScrollView contentContainerStyle={{ paddingBottom: 90 }}>
+            {loading ? (
+                <Text className="text-center text-gray-500 mt-5">Loading event details...</Text>
+            ) : event ? (
+                <View>
+                    <View className="absolute top-5 left-5 right-5 z-10 flex-row items-center py-3">
+                        {/* Back Button */}
+                        <TouchableOpacity 
+                            onPress={() => navigation.goBack()} 
+                            className="p-2 bg-[#ff7895] rounded-full items-center justify-center w-9 h-9"
+                        >
+                            <Ionicons name="arrow-back" size={20} color="#ffffff" />
+                        </TouchableOpacity>
+                        
+                        <View className="flex-1 mr-10">
+                            <Text className="text-2xl font-bold text-[#e01d47] text-center">
+                                Event Details
                             </Text>
-                        )}
-
-                        {/* Conditional Button Rendering */}
-                        {!isEventPast && !userRegistered && !userAttended && (
-                            <Button
-                                title="Register for Event"
-                                onPress={handleRegister}  // Call the handleRegister function
-                                color="#4CAF50"
+                        </View>
+                    </View>
+                    
+                    <ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false}>
+                        {event.image ? (
+                            <Image
+                                source={{ uri: event.image }}
+                                style={styles.image}
                             />
-                        )}
-
-                        <Button
-                            title={buttonText}
-                            onPress={userRegistered && userAttended ? handleRating : null}
-                            color={userRegistered ? "#FFD700" : "gray"}
-                            disabled={!userRegistered || !userAttended}
-                        />
-
-                        {isEventPast && eventFeedback && eventFeedback.length > 0 && (
-                            <View style={styles.feedbackContainer}>
-                                <Text style={styles.feedbackTitle}>Event Ratings and Feedback:</Text>
-                                {loadingFeedback ? (
-                                    <Text style={styles.loadingFeedback}>Loading feedback...</Text>
-                                ) : (
-                                    eventFeedback.map(feedback => (
-                                        <View key={feedback._id} style={styles.feedbackBox}>
-                                            <Text style={styles.feedbackRating}>Rating: {feedback.rating}</Text>
-                                            <Text style={styles.feedbackDate}>{moment(feedback.date).format('MMMM Do YYYY, h:mm:ss a')}</Text>
-                                            <Text style={styles.feedbackDescription}>{feedback.description}</Text>
-                                        </View>
-                                    ))
-                                )}
+                        ) : (
+                            <View className="w-full h-[50vh] flex justify-center items-center bg-gray-200 -mt-8">
+                                <Text className="text-gray-500">No Images Available</Text>
                             </View>
                         )}
+                    </ScrollView>
+    
+                    <View className="bg-white border border-[#e01d47] rounded-2xl mx-5 -mt-8 shadow-md p-5">
+                        <Text className="text-2xl font-bold text-[#e01d47]">{event.title}</Text>
+    
+                        <View className="flex-row items-center mt-2">
+                            <Ionicons name="calendar-outline" size={16} color="#e01d47" />
+                            <Text className="text-gray-600 ml-2">{formatDateTime(event.startDate)}</Text>
+                        </View>
+    
+                        <View className="flex-row items-center mt-1">
+                            <Ionicons name="time-outline" size={16} color="#e01d47" />
+                            <Text className="text-gray-600 ml-2">
+                                {formatDateTime(event.startDate)} - {formatDateTime(event.endDate)}
+                            </Text>
+                        </View>
+    
+                        <View className="flex-row items-center mt-1">
+                            <Ionicons name="location-outline" size={16} color="#e01d47" />
+                            <Text className="text-gray-600 ml-2">{event.location}</Text>
+                        </View>
+    
+                        <Text className="font-bold text-[#e01d47] mt-4">About this Event</Text>
+                        <Text className="text-gray-700 mt-1">{event.description}</Text>
+    
+                        {/* Conditional Button Rendering */}
+                        <TouchableOpacity
+                            onPress={!isEventPast && !userRegistered && !userAttended ? handleRegister : userRegistered && userAttended ? handleRating : null}
+                            className="mt-5 py-3 rounded-full items-center bg-[#e01d47]"
+                            disabled={isEventPast && (!userRegistered || !userAttended)}
+                        >
+                            <Text className="font-bold text-white">
+                                {isEventPast ? buttonText : "Register Now"}
+                            </Text>
+                        </TouchableOpacity>
                     </View>
-                ) : (
-                    <Text style={styles.noEventDetails}>No event details available.</Text>
-                )}
-            </ScrollView>
-
-            <Footer activeRoute={"eventInfo"} />
-        </View>
+                    <Text className="text-2xl text-[#e01d47] font-bold ml-4 mt-2">Reviews</Text>
+                    {isEventPast && eventFeedback && eventFeedback.length > 0 ? (
+                        <FlatList
+                            data={eventFeedback}
+                            keyExtractor={(item) => item._id}
+                            renderItem={({ item }) => (
+                                <View className=" p-3 bg-white rounded-md flex-row items-start">
+                                    {item.userId?.avatar ? (
+                                        <Image
+                                            source={{ uri: item.userId.avatar }}
+                                            className="w-10 h-10 rounded-full mr-3"
+                                        />
+                                    ) : (
+                                        <View className="w-10 h-10 bg-pink-300 rounded-full flex items-center justify-center mr-3">
+                                            <Text className="text-white font-bold">
+                                                {item.userId?.fname?.charAt(0).toUpperCase() || "U"}
+                                            </Text>
+                                        </View>
+                                    )}
+    
+                                    <View className="flex-1">
+                                        <View className="flex-row justify-between items-center">
+                                            <Text className="font-bold">
+                                                {`${item.userId?.fname || ""} ${item.userId?.middlei || ""} ${item.userId?.lname || ""}`}
+                                            </Text>
+                                            <View className="flex-row">
+                                                {Array.from({ length: item.rating || 0 }).map((_, index) => (
+                                                    <Text key={index} className="text-yellow-500">⭐</Text>
+                                                ))}
+                                            </View>
+                                        </View>
+    
+                                        <Text className="mt-1 text-gray-700">{item.description}</Text>
+    
+                                        <Text className="text-gray-500 text-xs">
+                                            {new Date(item.createdAt).toLocaleDateString()}
+                                        </Text>
+                                    </View>
+                                </View>
+                            )}
+                        />
+                    ) : null}
+                </View>
+            ) : (
+                <Text className="text-center text-gray-500 mt-5">No event details available.</Text>
+            )}
+        </ScrollView>
+        <Footer activeRoute={"eventInfo"} />
+    </View>
     );
 };
 
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: "#f0f0f0",
-    },
-    scrollViewContent: {
-        padding: 16,
-        paddingBottom: 70
-    },
-    loadingText: {
-        textAlign: "center",
-        color: "#888",
-        marginTop: 20,
-    },
-    eventTitle: {
-        fontSize: 24,
-        fontWeight: "bold",
-        color: "#333",
-        marginTop: 16,
-    },
-    imageContainer: {
-        width: "100%",
-        height: 200,
-        marginTop: 16,
-        borderRadius: 8,
-        overflow: "hidden",
-        backgroundColor: "#e0e0e0", 
-    },
-    eventImage: {
-        width: "100%",
-        height: "100%",
-    },
-    placeholderImage: {
-        width: "100%",
-        height: "100%",
-        backgroundColor: "#e0e0e0",
-    },
-    eventTime: {
-        color: "#666",
-        marginTop: 8,
-    },
-    eventDescription: {
-        color: "#444",
-        marginTop: 8,
-    },
-    feedbackContainer: {
-        padding: 15,
-        backgroundColor: "#ffb703",
-        borderTopLeftRadius: 5,
-        borderTopRightRadius: 5,
-        flex: 1, 
-        marginTop: 20, 
-    },
-    feedbackTitle: {
-        fontSize: 20,
-        fontWeight: "bold",
-    },
-    feedbackBox: {
-        marginTop: 10,
-        padding: 10,
-        backgroundColor: "#fff",
-        borderRadius: 5,
-    },
-    feedbackRating: {
-        fontWeight: "bold",
-    },
-    feedbackDate: {
-        color: "gray",
-        fontSize: 12,
-    },
-    feedbackDescription: {
-        color: "#666",
-        marginTop: 4,
-    },
-    noEventDetails: {
-        textAlign: "center",
-        color: "#888",
-        marginTop: 20,
-    },
-});
-
 export default EventInfo;
+
+const styles = StyleSheet.create({
+imageWrapper: {
+    flex: 1,
+    alignItems: "center",
+  },
+  image: {
+    width: Dimensions.get("window").width, 
+    height: Dimensions.get("window").height / 2 + 60, 
+  },
+});

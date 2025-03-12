@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Image } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { getNotifications, deleteNotification, deleteAllNotifications, toggleNotificationReadStatus } from '../../redux/actions/notificationActions';
 import Toast from 'react-native-toast-message';
@@ -9,6 +9,7 @@ import { useNavigation } from '@react-navigation/native';
 import { GestureHandlerRootView, Swipeable } from 'react-native-gesture-handler';
 import moment from 'moment';
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
+import Header from '../../components/Layout/Header';
 
 const NotificationScreen = () => {
     const dispatch = useDispatch();
@@ -51,28 +52,26 @@ const NotificationScreen = () => {
         dispatch(getNotifications());
     };
 
-    const renderRightActions = (item) => {
-        return (
-            <View style={styles.swipeActionsContainer}>
-                <TouchableOpacity
-                    style={styles.swipeActionToggle}
-                    onPress={() => handleToggleUnread(item._id)}
-                >
-                    <Icon name={item.read ? "eye-off" : "eye"} size={24} color="black" />
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={styles.swipeActionDelete}
-                    onPress={() => handleDeleteNotification(item._id)}
-                >
-                    <Icon name="trash-can" size={24} color="red" />
-                </TouchableOpacity>
-            </View>
-        );
-    };
+    const renderRightActions = (item) => (
+        <View className="flex-row">
+            <TouchableOpacity
+                className="p-2 rounded border border-yellow-500 justify-center items-center m-1"
+                onPress={() => handleToggleUnread(item._id)}
+            >
+                <Icon name={item.read ? "eye-off" : "eye"} size={24} color="black" />
+            </TouchableOpacity>
+            <TouchableOpacity
+                className="p-2 rounded border border-yellow-500 justify-center items-center m-1"
+                onPress={() => handleDeleteNotification(item._id)}
+            >
+                <Icon name="trash-can" size={24} color="red" />
+            </TouchableOpacity>
+        </View>
+    );
 
     const formatDate = (date) => {
-        const now = moment();
-        const notificationDate = moment(date);
+        const now = moment().tz("Asia/Manila");
+        const notificationDate = moment(date).tz("Asia/Manila");
         const diff = now.diff(notificationDate, 'minutes');
 
         if (diff < 1) return 'just now';
@@ -83,145 +82,99 @@ const NotificationScreen = () => {
         return notificationDate.format('MM/DD');
     };
 
-    const unreadCount = notifications.filter(notification => !notification.read).length;
+    const today = moment().tz("Asia/Manila").format("YYYY-MM-DD");
+    const todayNotifications = notifications.filter(notif =>
+        moment(notif.createdAt).tz("Asia/Manila").format("YYYY-MM-DD") === today
+    );
+    const otherNotifications = notifications.filter(notif =>
+        moment(notif.createdAt).tz("Asia/Manila").format("YYYY-MM-DD") !== today
+    );
 
     return (
-        <GestureHandlerRootView style={styles.container}>
-            <View style={styles.headerContainer}>
-                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                    <MaterialCommunityIcons name="arrow-left" size={24} color="#000" />
-                </TouchableOpacity>
-                <Text style={styles.headerTitle}>Notifications</Text>
+        <GestureHandlerRootView className="flex-1 bg-white">
+            <View className="px-5 py-5">
+                <View className="flex items-center">
+                    <Header title="Notification" />
+                </View>
             </View>
+
             {loading ? (
-                <Text style={styles.loadingText}>Loading...</Text>
+                <Text className="flex-1 justify-center items-center">Loading...</Text>
             ) : (
-                <>
-                    <View style={styles.unreadCountContainer}>
-                        <Text style={styles.unreadCountText}>Unread Messages: {unreadCount}</Text>
+                <ScrollView contentContainerStyle={{ padding: 20 }}>
+                    {/* Today’s Notifications */}
+                    <View>
+                        <Text className="text-lg font-bold text-[#e01d47] mb-2">Today</Text>
+                        {todayNotifications.length === 0 ? (
+                            <Text className="text-center text-gray-500 mb-4">No notifications for today.</Text>
+                        ) : (
+                            todayNotifications.map((item) => (
+                                <Swipeable key={item._id} renderRightActions={() => renderRightActions(item)}>
+                                    <TouchableOpacity
+                                            onPress={() => handleNotificationPress(item._id, item.event?._id)}
+                                            className={`flex-row items-center p-2 mb-2 rounded`}
+                                            style={{ backgroundColor: item.read ? '#fafaff' : '#fce8ec' }} // Color based on read status
+                                        >
+                                            <Image
+                                                source={{ uri: "https://res.cloudinary.com/dglawxazg/image/upload/v1741731158/image_2025-03-12_061207062-removebg-preview_hsp3wa.png" }}
+                                                className="w-10 h-10 mr-3" // Adjust width & height as needed
+                                                resizeMode="contain"
+                                            />
+                                            {item.event && (
+                                                <View className="flex-1">
+                                                    <Text className="text-[#e01d47] font-bold">
+                                                        {`New event: ${item.event.title}`}
+                                                    </Text>
+                                                    <Text className="text-gray-600 text-sm" numberOfLines={2}>
+                                                        {item.event.description}
+                                                    </Text>
+                                                </View>
+                                            )}
+                                            <Text className="text-gray-500 text-xs pl-2">{formatDate(item.createdAt)}</Text>
+                                        </TouchableOpacity>
+                                                                        </Swipeable>
+                            ))
+                        )}
                     </View>
-                    {notifications.length === 0 ? (
-                        <Text style={styles.noNotificationsText}>No notifications available.</Text>
-                    ) : (
-                        <ScrollView contentContainerStyle={styles.scrollContainer}>
-                            {notifications.map((item) => (
+
+                    {/* Other Notifications */}
+                    {otherNotifications.length > 0 && (
+                        <View className="mt-4">
+                            <Text className="text-lg font-bold text-[#e01d47] mb-2">Other Notifications</Text>
+                            {otherNotifications.map((item) => (
                                 <Swipeable key={item._id} renderRightActions={() => renderRightActions(item)}>
                                     <TouchableOpacity
                                         onPress={() => handleNotificationPress(item._id, item.event?._id)}
-                                        style={[styles.notificationItem, { backgroundColor: item.read ? '#ffffff' : '#f0f0f0', borderRadius: 5 }]}
+                                        className={`flex-row items-center p-2 mb-2 rounded`}
+                                        style={{ backgroundColor: item.read ? '#fafaff' : '#fce8ec' }} // Color based on read status
                                     >
+                                        <Image
+                                            source={{ uri: "https://res.cloudinary.com/dglawxazg/image/upload/v1741731158/image_2025-03-12_061207062-removebg-preview_hsp3wa.png" }}
+                                            className="w-14 h-14 mr-3" // Adjust width & height as needed
+                                            resizeMode="contain"
+                                        />
                                         {item.event && (
-                                            <View style={styles.notificationTextContainer}>
-                                                <Text style={styles.notificationTitle}>
+                                            <View className="flex-1">
+                                                <Text className="text-[#e01d47] font-bold">
                                                     {`New event: ${item.event.title}`}
                                                 </Text>
-                                                <Text style={styles.notificationDescription} numberOfLines={2}>
+                                                <Text className="text-gray-600 text-sm" numberOfLines={2}>
                                                     {item.event.description}
                                                 </Text>
                                             </View>
                                         )}
-                                        <Text style={styles.notificationDate}>{formatDate(item.createdAt)}</Text>
+                                        <Text className="text-gray-500 text-xs pl-2">{formatDate(item.createdAt)}</Text>
                                     </TouchableOpacity>
                                 </Swipeable>
                             ))}
-                        </ScrollView>
+                        </View>
                     )}
-                </>
+                </ScrollView>
             )}
             <Footer activeRoute={"notifications"} />
         </GestureHandlerRootView>
     );
 };
 
-export default NotificationScreen;
 
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: "#fff",
-    },
-    loadingText: {
-        justifyContent: "center",
-        alignItems: "center",
-        flex: 1,
-    },
-    headerContainer: {
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: 10,
-        backgroundColor: "#fff",
-        borderBottomWidth: 1,
-        borderBottomColor: "#ccc",
-    },
-    backButton: {
-        position: "absolute",
-        left: 10,
-    },
-    headerTitle: {
-        fontSize: 20,
-        fontWeight: "bold",
-    },
-    unreadCountText: {
-        fontSize: 14,
-        paddingHorizontal: 20,
-        paddingVertical: 10,
-    },
-    noNotificationsText: {
-        textAlign: "center",
-        color: "#888",
-    },
-    scrollContainer: {
-        padding: 20,
-    },
-    notificationItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        padding: 10,
-        marginBottom: 10,
-        backgroundColor: "#fff",
-    },
-    notificationTextContainer: {
-        flex: 1,
-    },
-    notificationTitle: {
-        color: "#333",
-        fontWeight: "bold",
-    },
-    notificationDescription: {
-        color: "#666",
-        fontSize: 14,
-    },
-    notificationDate: {
-        color: "#888",
-        fontSize: 12,
-        paddingLeft: 10, 
-    },
-    swipeActionsContainer: {
-        flexDirection: 'row',
-    },
-    swipeActionToggle: {
-        padding: 10,
-        borderRadius: 5,
-        borderColor: "#ffb703",
-        borderWidth: 1,
-        justifyContent: "center",
-        alignItems: "center",
-        margin: 3,
-    },
-    swipeActionDelete: {
-        padding: 10,
-        borderRadius: 5,
-        borderColor: "#ffb703",
-        borderWidth: 1,
-        justifyContent: "center",
-        alignItems: "center",
-        margin: 3,
-    },
-    deleteAllText: {
-        color: "red",
-        textAlign: "center",
-        marginVertical: 16,
-        fontSize: 14,
-    },
-});
+export default NotificationScreen;

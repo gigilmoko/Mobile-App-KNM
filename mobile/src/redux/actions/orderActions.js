@@ -170,7 +170,6 @@ export const getAdminOrders = () => async (dispatch) => {
     }
 };
 
-
 export const getUserOrders = () => async (dispatch) => {
     try {
         dispatch({ type: "getUserOrdersRequest" });
@@ -203,6 +202,7 @@ export const getUserOrders = () => async (dispatch) => {
 };
 
 export const getUserOrdersMobile = () => async (dispatch) => {
+    console.log("touched")
     try {
         dispatch({ type: "getUserOrdersMobileRequest" });
 

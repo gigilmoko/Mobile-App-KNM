@@ -120,7 +120,7 @@ const Home = ({ navigation }) => {
         );
     };
 
-    const addToCardHandler = (id, name, price, image, stock) => {
+    const addToCartHandler = (id, name, price, image, stock) => {
         if (!user || user === undefined || Object.keys(user).length === 0) {
             navigate.navigate("login");
             return Toast.show({
@@ -216,7 +216,7 @@ const Home = ({ navigation }) => {
             name={item.name}
             price={item.price}
             image={item.images[0]?.url}
-            addToCardHandler={addToCardHandler}
+            addToCartHandler={addToCartHandler}
             addToWishlistHandler={addToWishlistHandler}
             id={item._id}
             key={item._id}

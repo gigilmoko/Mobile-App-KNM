@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Alert, ActivityIndicator, Image, ScrollView } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
-import { submitProductFeedback } from '../../redux/actions/productFeedbackActions'; // Import the action
+import { submitProductFeedback } from '../../redux/actions/productFeedbackActions'; 
 import { getProductDetails } from '../../redux/actions/productActions';
 import Header from '../../components/Layout/Header';
 import Footer from '../../components/Layout/Footer';
 import Toast from 'react-native-toast-message';
+import { Ionicons } from '@expo/vector-icons';
+import { getOrderDetails } from '../../redux/actions/orderActions';
 
 const ProductFeedback = ({ route }) => {
   const { orderId, productId } = route.params;
@@ -19,20 +21,44 @@ const ProductFeedback = ({ route }) => {
   const dispatch = useDispatch();
   const navigation = useNavigation();
 
-  // Get product details from Redux state
-  const { product, loading, error } = useSelector((state) => state.product);
+ 
+  const { product, loading: productLoading, error: productError } = useSelector((state) => state.product);
 
-  // Fetch product details when component mounts
+
+  const { order, loading: orderLoading, error: orderError } = useSelector((state) => state.order);
+
+
   useEffect(() => {
     dispatch(getProductDetails(productId));
   }, [dispatch, productId]);
 
-  // Handle star click for rating
+
+  useEffect(() => {
+    const fetchOrderDetails = async () => {
+      const translatedOrderId = orderId; 
+      await dispatch(getOrderDetails(translatedOrderId));
+    };
+
+    fetchOrderDetails();
+  }, [dispatch, orderId]);
+
+  useEffect(() => {
+    console.log("Order Details:", order);
+  }, [order]);
+
+  const getOrderDate = (order) => {
+    if (!order || !order.createdAt) return "N/A";
+    const date = new Date(order.createdAt);
+    return date.toLocaleDateString();
+  };
+
+  const orderDate = getOrderDate(order);
+
+ 
   const handleStarClick = (star) => {
     setRating(star);
   };
 
-  // Validate the form
   const validateForm = () => {
     if (!feedbackRegex.test(feedback.trim())) {
       Alert.alert('Validation Error', 'Feedback must be between 5 and 500 characters!');
@@ -45,7 +71,7 @@ const ProductFeedback = ({ route }) => {
     return true;
   };
 
-  // Submit the feedback
+
   const handleSubmitFeedback = () => {
     if (!validateForm()) {
       return;
@@ -72,130 +98,95 @@ const ProductFeedback = ({ route }) => {
       });
   };
 
+  if (productLoading || orderLoading) {
+    return (
+      <View className="flex-1 justify-center items-center">
+        <ActivityIndicator size="large" color="#0000ff" />
+      </View>
+    );
+  }
+
+  if (productError || orderError) {
+    return (
+      <View className="flex-1 justify-center items-center">
+        <Text className="text-red-500">{productError || orderError}</Text>
+      </View>
+    );
+  }
+
   return (
-    <View className="flex-1" style={{ backgroundColor: '#ffb703' }}>
-      <Header back={true} />
-
-      {/* ScrollView added here to enable scrolling */}
-      <ScrollView contentContainerStyle={{ flexGrow: 1, paddingBottom: 50 }}>
-        <View
-          className="flex-1 items-center p-4"
-          style={{
-            backgroundColor: 'white',
-            borderTopRightRadius: 50,
-            borderTopLeftRadius: 50,
-            paddingVertical: 50,
-            paddingHorizontal: 10,
-            marginTop: 30,
-            elevation: 5,
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.3,
-            shadowRadius: 5,
-          }}
-        >
-          <Text
-            className="text-xl font-bold text-gray-800 mb-8 text-center"
-            style={{ position: 'relative', top: 30 }}
-          >
-            Product Feedback
-          </Text>
-
-          {/* Product Card */}
-          {loading ? (
-              <ActivityIndicator size="large" color="#0000ff" />
-            ) : error ? (
-              <Text style={{ color: 'red' }}>{error}</Text>
-            ) : (
-            <View
-              style={{
-                backgroundColor: '#f8f8f8',
-                padding: 20,
-                borderRadius: 10,
-                width: '90%',
-                marginBottom: 20,
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.1,
-                shadowRadius: 5,
-                elevation: 5,
-              }}
-            >
-              {/* Product Image */}
-              <Image
-                source={{ uri: product.images && product.images[0]?.url }} // Safe check for undefined images array
-                style={{
-                  width: '100%',
-                  height: 200,
-                  resizeMode: 'contain',
-                  borderRadius: 10,
-                  marginBottom: 15,
-                }}
+    <View className="flex-1 bg-white">
+    <ScrollView contentContainerClassName="flex-grow pb-32">
+      <View className="px-5 py-5">
+        <View className="flex items-center">
+          <Header title="Write a Review" />
+          <View className="flex-1 w-full">
+            <View className="bg-white p-4 rounded-xl shadow-md m-4">
+              <View className="flex-row items-center mb-4">
+                <Image
+                  source={{ uri: product.images?.[0]?.url }}
+                  className="w-16 h-16 rounded-lg mr-3"
+                />
+                <View>
+                  <Text className="text-lg font-bold">{product.name}</Text>
+                  <Text className="text-sm text-gray-500">Order ID: {orderId}</Text>
+                  <Text className="text-sm text-gray-500">Date Purchased: {orderDate}</Text>
+                </View>
+              </View>
+  
+              <Text className="text-center text-lg font-bold my-6">
+                How would you rate this product?
+              </Text>
+  
+              <View className="flex-row justify-center mb-6">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <TouchableOpacity key={star} onPress={() => setRating(star)}>
+                    <Ionicons
+                      name={star <= rating ? "star" : "star-outline"}
+                      size={32} // Enlarged for better touchability
+                      color={star <= rating ? "#FFD700" : "#ccc"}
+                      className="mx-2"
+                    />
+                  </TouchableOpacity>
+                ))}
+              </View>
+  
+              <Text className="text-sm font-bold mb-1">Your Review</Text>
+              <TextInput
+                className="border border-gray-300 rounded-lg p-3 text-base"
+                placeholder="Share your experience with this product"
+                multiline
+                value={feedback}
+                onChangeText={setFeedback}
+                style={{ minHeight: 150, textAlignVertical: "top" }} // Ensures text starts from the top
               />
-              <Text className="text-lg font-bold text-gray-800 mb-2">{product.name}</Text>
-              <Text className="text-sm text-gray-600 mb-2">{product.description}</Text>
-              <Text className="text-md font-semibold text-gray-800">Price: ${product.price}</Text>
+              <Text className="text-xs text-gray-500 mt-2">
+                Your review should be at least 20 characters long and focus on the product quality, functionality, and your experience using it.
+              </Text>
             </View>
-          )}
-
-          {/* Rating Stars */}
-          <View className="flex-row justify-center mb-4">
-            {[1, 2, 3, 4, 5].map((star) => (
-              <TouchableOpacity key={star} onPress={() => handleStarClick(star)}>
-                <Text
-                  style={{
-                    fontSize: 24,
-                    color: rating >= star ? '#FFD700' : '#CCCCCC',
-                  }}
-                >
-                  ★
-                </Text>
-              </TouchableOpacity>
-            ))}
           </View>
-
-          {/* Feedback Text Input */}
-          <TextInput
-            style={{
-              borderWidth: 1,
-              borderColor: '#ccc',
-              borderRadius: 8,
-              backgroundColor: '#f5f5f5',
-              padding: 10,
-              width: '90%',
-              height: 150,
-              textAlignVertical: 'top',
-              marginBottom: 30,
-            }}
-            placeholder="Enter your feedback here"
-            value={feedback}
-            onChangeText={setFeedback}
-            multiline
-            numberOfLines={3}
-            onFocus={() => setIsFocused(true)}
-            onBlur={() => setIsFocused(false)}
-          />
-
-          {/* Submit Button */}
-          <TouchableOpacity
-            onPress={handleSubmitFeedback}
-            style={{
-              backgroundColor: '#bc430b',
-              paddingVertical: 10,
-              paddingHorizontal: 15,
-              borderRadius: 8,
-              width: '90%',
-              alignItems: 'center',
-            }}
-          >
-            <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 16 }}>
-              Submit Feedback
-            </Text>
-          </TouchableOpacity>
         </View>
-      </ScrollView>
-
-      {!isFocused && <Footer />}
-    </View>
+      </View>
+    </ScrollView>
+  
+    {/* Fixed Submit Button at Bottom */}
+    <View className="absolute bottom-20 left-0 right-0 bg-white p-4 shadow-lg">
+  <TouchableOpacity
+    onPress={handleSubmitFeedback}
+    className="py-3 px-4 rounded-lg w-full items-center"
+    style={{
+      backgroundColor: feedback.trim().length >= 20 ? "#ff7895" : "#ccc", // Disabled color if less than 20 characters
+      opacity: feedback.trim().length >= 20 ? 1 : 0.6, // Reduce opacity if disabled
+    }}
+    disabled={feedback.trim().length < 20} // Disable button conditionally
+  >
+    <Text className="text-white font-bold text-lg">Submit Feedback</Text>
+  </TouchableOpacity>
+</View>
+  
+    {!isFocused && <Footer />}
+  </View>
+  
   );
 };
 
