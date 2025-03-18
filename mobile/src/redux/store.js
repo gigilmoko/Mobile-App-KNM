@@ -14,7 +14,7 @@ import { eventFeedbackReducer } from "./reducers/eventFeedbackReducers";
 import { riderReducer } from "./reducers/riderReducer";
 import { truckReducer } from "./reducers/truckReducers";
 import { deliveryReducer } from "./reducers/deliverySessionReducers";
-
+import { dashboardReducer } from "./reducers/dashboardReducers";
 export const store = configureStore({
     reducer: {
         user: userReducer,
@@ -31,7 +31,8 @@ export const store = configureStore({
         eventFeedback: eventFeedbackReducer,
         rider: riderReducer,
         truck: truckReducer,
-        deliverySession: deliveryReducer
+        deliverySession: deliveryReducer,
+        dashboard: dashboardReducer
     },
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware({

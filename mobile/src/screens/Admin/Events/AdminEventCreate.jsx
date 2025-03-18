@@ -19,7 +19,8 @@ import * as ImagePicker from 'expo-image-picker';
 import axios from 'axios';
 import mime from 'mime';
 import { useNavigation } from "@react-navigation/native";
-import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons"; // Import MaterialCommunityIcons
+import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
+import { Ionicons } from "@expo/vector-icons"; // Import Ionicons
 
 const AdminCreateEvent = () => {
   const [title, setTitle] = useState("");
@@ -81,7 +82,6 @@ const AdminCreateEvent = () => {
         image: response.data.secure_url,
       };
 
-      // console.log("Data sent to newEvent frontend:", eventData);
       dispatch(newEvent(eventData));
 
       setIsUpdating(false);
@@ -90,7 +90,6 @@ const AdminCreateEvent = () => {
         text1: "Event Created Successfully!",
       });
 
-      // Navigate to admin events screen after successful creation
       navigation.navigate("adminevents");
     } catch (error) {
       console.error('Failed to upload image or create event', error);
@@ -155,86 +154,67 @@ const AdminCreateEvent = () => {
   };
 
   return (
-    <View style={{ flex: 1,  }}>
-      <Header back={true} />
-
+    <View className="flex-1 bg-white">
       <ScrollView
         contentContainerStyle={{
-          flexGrow: 1,
           justifyContent: "center",
           alignItems: "center",
-          backgroundColor: "#F5F5F5",
-          borderTopRightRadius: 30,
-          borderTopLeftRadius: 30,
-          paddingBottom: 100,
         }}
       >
-        <View
-          style={{
-            backgroundColor: "#F5F5F5",
-            width: "90%",
-            padding: 20,
-            borderRadius: 10,
-            shadowColor: "#000",
-            shadowOpacity: 0.2,
-            shadowRadius: 5,
-            shadowOffset: { width: 0, height: 3 },
-            elevation: 4,
-          }}
-        >
-          <Text
-            style={{
-              fontSize: 24,
-              fontWeight: "bold",
-              marginBottom: 20,
-              textAlign: "center",
-              color: "#333333",
-              paddingTop: 5,
-            }}
-          >
-            Create Event
-          </Text>
+        <View className="w-11/12 rounded-lg p-5">
+          <Header title="Create Event" />
 
-          {/* Event Title */}
-          <Text style={{ fontSize: 14, color: "#666666", marginBottom: 10 }}>
-            Event Title*
-          </Text>
+          {/* Basic Information */}
+          <View className="flex-row items-center mb-2">
+            <Ionicons name="alert-circle-outline" size={20} color="#e01d47" />
+            <Text className="text-sm text-gray font-bold ml-2">Basic Information</Text>
+          </View>
+
+          <Text className="text-md font-bold text-gray-600 mb-2">Event Title <Ionicons name="star" size={12} color="#e01d47" /></Text>
           <TextInput
-            style={{
-              borderWidth: 1,
-              borderColor: "#CCCCCC",
-              borderRadius: 5,
-              padding: 10,
-              marginBottom: 15,
-            }}
+            className="border border-gray-300 rounded-md p-2 mb-4"
             placeholder="Enter event title"
             value={title}
             onChangeText={setTitle}
           />
 
-          {/* Description */}
-          <Text style={{ fontSize: 14, color: "#666666", marginBottom: 10 }}>
-            Description*
-          </Text>
+          <Text className="text-sm font-bold text-gray-600 mb-2">Description <Ionicons name="star" size={12} color="#e01d47" /></Text>
           <TextInput
-            style={{
-              borderWidth: 1,
-              borderColor: "#CCCCCC",
-              borderRadius: 5,
-              padding: 10,
-              marginBottom: 15,
-              height: 100,
-              textAlignVertical: "top",
-            }}
+            className="border border-gray-300 rounded-md p-2 mb-4 h-24 text-top"
             placeholder="Enter event description"
             value={description}
             onChangeText={setDescription}
             multiline
           />
 
-          {/* Event Date */}
-          <Text style={{ fontSize: 14, color: "#666666", marginBottom: 10 }}>
-            Event Date*
+          <Text className="text-sm font-bold text-gray-600 mb-2">Location <Ionicons name="star" size={12} color="#e01d47" /></Text>
+          <TextInput
+            className="border border-gray-300 rounded-md p-2 mb-4"
+            placeholder="Enter event location"
+            value={location}
+            onChangeText={setLocation}
+          />
+
+          <Text className="text-sm font-bold text-gray-600 mb-2">Audience <Ionicons name="star" size={12} color="#e01d47" /></Text>
+          <View className="border border-gray-300 rounded-md mb-4">
+            <Picker
+              selectedValue={audience}
+              onValueChange={setAudience}
+              style={{ height: 50, width: '100%' }}
+            >
+              <Picker.Item label="All" value="all" />
+              <Picker.Item label="Members" value="member" />
+            </Picker>
+          </View>
+
+          {/* Event Date and Time */}
+          <View className="flex-row items-center mb-2">
+            <Ionicons name="alert-circle-outline" size={20} color="#e01d47" />
+            <Text className="text-sm text-gray font-bold ml-2">Event Date and Time</Text>
+          </View>
+
+          <Text className="text-sm font-bold text-gray-600 mb-2">
+            Event Date <Ionicons name="star" size={12} color="#e01d47" />
           </Text>
           <TouchableOpacity onPress={showDatePicker} style={styles.dateTimeInput}>
             <TextInput
@@ -253,8 +233,8 @@ const AdminCreateEvent = () => {
           />
 
           {/* Start Time */}
-          <Text style={{ fontSize: 14, color: "#666666", marginBottom: 10 }}>
-            Start Time*
+          <Text className="text-sm font-bold text-gray-600 mb-2">
+            Start Time <Ionicons name="star" size={12} color="#e01d47" />
           </Text>
           <TouchableOpacity onPress={showStartTimePicker} style={styles.dateTimeInput}>
             <TextInput
@@ -273,8 +253,8 @@ const AdminCreateEvent = () => {
           />
 
           {/* End Time */}
-          <Text style={{ fontSize: 14, color: "#666666", marginBottom: 10 }}>
-            End Time*
+          <Text className="text-sm font-bold text-gray-600 mb-2">
+            End Time <Ionicons name="star" size={12} color="#e01d47" />
           </Text>
           <TouchableOpacity onPress={showEndTimePicker} style={styles.dateTimeInput}>
             <TextInput
@@ -292,61 +272,25 @@ const AdminCreateEvent = () => {
             onCancel={hideEndTimePicker}
           />
 
-          {/* Location */}
-          <Text style={{ fontSize: 14, color: "#666666", marginBottom: 10 }}>
-            Location*
-          </Text>
-          <TextInput
-            style={{
-              borderWidth: 1,
-              borderColor: "#CCCCCC",
-              borderRadius: 5,
-              padding: 10,
-              marginBottom: 15,
-            }}
-            placeholder="Enter event location"
-            value={location}
-            onChangeText={setLocation}
-          />
-
-          {/* Audience Dropdown */}
-          <Text style={{ fontSize: 14, color: "#666666", marginBottom: 10 }}>
-            Audience*
-          </Text>
-          <View style={{ borderWidth: 1, borderColor: '#CCCCCC', borderRadius: 5, marginBottom: 15 }}>
-            <Picker
-              selectedValue={audience}
-              onValueChange={setAudience}
-              style={{ height: 50, width: '100%' }}
-            >
-              <Picker.Item label="All" value="all" />
-              <Picker.Item label="Members" value="member" />
-            </Picker>
+          {/* Event Image */}
+          <View className="flex-row items-center mb-2">
+            <Ionicons name="camera-outline" size={20} color="#e01d47" />
+            <Text className="text-sm text-gray font-bold ml-2">Event Image</Text>
           </View>
 
-          {/* Image Picker */}
-          <Text style={{ fontSize: 14, color: "#666666", marginBottom: 10 }}>
-            Event Image*
-          </Text>
-          <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 15 }}>
+          <View className="flex-row items-center mb-4">
             <TouchableOpacity
               onPress={openImagePicker}
-              style={{
-                backgroundColor: "#ffb703",
-                padding: 12,
-                borderRadius: 5,
-                marginRight: 10,
-                alignItems: "center",
-                justifyContent: "center",
-              }}
+              className="border border-gray-400 rounded-lg w-24 h-24 flex items-center justify-center"
             >
-              <MaterialCommunityIcons name="plus" size={18} color="#000" />
+              <Ionicons name="cloud-upload-outline" size={30} color="gray" />
+              <Text className="text-gray-500 text-xs mt-1">Upload</Text>
             </TouchableOpacity>
 
             {image && (
               <Image
                 source={{ uri: image }}
-                style={{ width: 100, height: 100, borderRadius: 10, marginRight: 10 }}
+                className="w-24 h-24 rounded-md ml-2"
               />
             )}
           </View>
@@ -354,28 +298,22 @@ const AdminCreateEvent = () => {
           {/* Submit Button */}
           <TouchableOpacity
             onPress={handleSubmit}
-            style={{
-              backgroundColor: "#bc430b",
-              padding: 12,
-              borderRadius: 5,
-              alignItems: "center",
-            }}
+            className={`bg-[#e01d47] p-3 rounded-md items-center ${isUpdating ? 'opacity-50' : ''}`}
             disabled={isUpdating}
           >
-            <Text style={{ color:"#fff",fontWeight: "bold" }}>
+            <Text className="text-white font-bold">
               {isUpdating ? 'Creating...' : 'Create Event'}
             </Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
 
-      {/* Footer */}
-      <View style={{ position: "absolute", bottom: 0, width: "100%" }}>
-        <Footer activeRoute={"home"} />
-      </View>
+     
     </View>
   );
 };
+
+export default AdminCreateEvent;
 
 const styles = StyleSheet.create({
   dateTimeInput: {
@@ -388,5 +326,3 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
 });
-
-export default AdminCreateEvent;

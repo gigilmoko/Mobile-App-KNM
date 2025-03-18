@@ -150,15 +150,36 @@ export const deleteCategory = (id) => async (dispatch) => {
     try {
         dispatch({ type: "DELETE_CATEGORY_REQUEST" });
 
-        const { data } = await axios.delete(`${server}/category/delete/${id}`);
+        // Retrieve token from AsyncStorage
+        const token = await AsyncStorage.getItem('token');
+        // console.log('Retrieved token:', token);
+
+        if (!token) {
+            throw new Error("User is not authenticated");
+        }
+
+        // Make the request to delete the category
+        const { data } = await axios.delete(`${server}/category/delete/${id}`, {
+            headers: {
+                "Authorization": `Bearer ${token}`,
+            },
+            withCredentials: true,
+        });
+
+        // console.log("Category deleted successfully:", data);
+
+        // Dispatch success action with deleted category ID
         dispatch({
             type: "DELETE_CATEGORY_SUCCESS",
             payload: id,
         });
+
     } catch (error) {
+        console.error("Error deleting category:", error.response || error);
+
         dispatch({
             type: "DELETE_CATEGORY_FAIL",
-            payload: error.response.data.message,
+            payload: error.response ? error.response.data.message : error.message,
         });
     }
 };

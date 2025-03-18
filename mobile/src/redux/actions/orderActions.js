@@ -1,6 +1,7 @@
 import axios from "axios";
 import { server } from "../store";
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { ToastAndroid } from "react-native";
 
 export const placeOrder = (
     orderProducts,
@@ -143,7 +144,7 @@ export const getAdminOrders = () => async (dispatch) => {
         if (!token) {
             throw new Error("No token found");
         }
-        const { data } = await axios.get(`${server}/orders/list`, {
+        const { data } = await axios.get(`${server}/orders/list/mobile`, {
             withCredentials: true,
             headers: {
                 Authorization: `Bearer ${token}`,
@@ -293,4 +294,46 @@ export const notConfirmProofOfDelivery = (orderId) => async (dispatch) => {
             payload: error.response?.data?.message || error.message,
         });
     }
+};
+export const processOrderAny = (id, status, navigation) => async (dispatch) => {
+    try {
+        dispatch({
+            type: "processOrderAnyRequest",
+        });
+
+        const token = await AsyncStorage.getItem('token');
+        if (!token) {
+            throw new Error("No token found");
+        }
+
+        const { data } = await axios.put(
+            `${server}/orders/update/status/${id}`,
+            { status },
+            {
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                },
+                withCredentials: true,
+            }
+        );
+
+        dispatch({
+            type: "processOrderAnySuccess",
+            payload: data.message,
+        });
+
+        ToastAndroid.show("Order updated successfully!", ToastAndroid.SHORT);
+        navigation.navigate("adminorders");
+    } catch (error) {
+        dispatch({
+            type: "processOrderAnyFail",
+            payload: error.response?.data?.message || error.message,
+        });
+    }
+};
+
+export const clearAdminOrders = () => (dispatch) => {
+    dispatch({
+        type: "clearAdminOrders",
+    });
 };

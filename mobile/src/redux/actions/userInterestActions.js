@@ -92,6 +92,7 @@ export const expressInterest = (eventId) => async (dispatch) => {
         });
     }
 };
+
 // Get user interest for a specific event
 export const getUserInterest = (eventId) => async (dispatch) => {
     console.log("get user interest");
@@ -151,3 +152,99 @@ export const getUserInterest = (eventId) => async (dispatch) => {
         });
     }
 };
+
+// Get all interested users for a specific event
+export const getAllInterestedUsers = (eventId) => async (dispatch) => {
+    dispatch({ type: 'GET_ALL_INTERESTED_USERS_REQUEST' });
+
+    try {
+        const token = await AsyncStorage.getItem('token');
+        const { data } = await axios.get(`${server}/interested/${eventId}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+            },
+        });
+
+        dispatch({
+            type: 'GET_ALL_INTERESTED_USERS_SUCCESS',
+            payload: data.interestedUsers,
+        });
+    } catch (error) {
+        dispatch({
+            type: 'GET_ALL_INTERESTED_USERS_FAIL',
+            payload: error.response ? error.response.data.message : error.message,
+        });
+
+        Toast.show({
+            type: 'error',
+            text1: 'Error fetching interested users',
+            text2: error.response ? error.response.data.message : error.message,
+        });
+    }
+};
+
+// Change attendance status for a user in an event
+export const changeAttended = (userId, eventId) => async (dispatch) => {
+    dispatch({ type: 'CHANGE_ATTENDED_REQUEST' });
+
+    try {
+        const token = await AsyncStorage.getItem('token');
+        const { data } = await axios.put(`${server}/event/change-attendance`, { userId, eventId }, {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+            },
+        });
+
+        dispatch({
+            type: 'CHANGE_ATTENDED_SUCCESS',
+            payload: data.userInterest,
+        });
+
+        Toast.show({
+            type: 'success',
+            text1: 'Attendance status changed successfully',
+        });
+    } catch (error) {
+        dispatch({
+            type: 'CHANGE_ATTENDED_FAIL',
+            payload: error.response ? error.response.data.message : error.message,
+        });
+
+        Toast.show({
+            type: 'error',
+            text1: 'Error changing attendance status',
+            text2: error.response ? error.response.data.message : error.message,
+        });
+    }
+};
+
+// Get user interested and attended status for a specific event
+export const getUserInterestedAndAttended = (userId, eventId) => async (dispatch) => {
+    dispatch({ type: 'GET_USER_INTERESTED_ATTENDED_REQUEST' });
+
+    try {
+        const token = await AsyncStorage.getItem('token');
+        const { data } = await axios.get(`${server}/interested-attended/${userId}/${eventId}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+            },
+        });
+
+        dispatch({
+            type: 'GET_USER_INTERESTED_ATTENDED_SUCCESS',
+            payload: data,
+        });
+    } catch (error) {
+        dispatch({
+            type: 'GET_USER_INTERESTED_ATTENDED_FAIL',
+            payload: error.response ? error.response.data.message : error.message,
+        });
+
+        Toast.show({
+            type: 'error',
+            text1: 'Error fetching user interest and attendance status',
+            text2: error.response ? error.response.data.message : error.message,
+        });
+    }
+};
+

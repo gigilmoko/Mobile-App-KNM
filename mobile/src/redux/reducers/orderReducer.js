@@ -35,6 +35,17 @@ export const orderReducer = createReducer(
                 state.loading = false;
                 state.error = action.payload;
             })
+            .addCase("processOrderAnyRequest", (state) => {
+                state.loading = true;
+            })
+            .addCase("processOrderAnySuccess", (state, action) => {
+                state.loading = false;
+                state.message = action.payload; // Use the payload for success message
+            })
+            .addCase("processOrderAnyFail", (state, action) => {
+                state.loading = false;
+                state.error = action.payload;
+            })
             .addCase("getOrderDetailsRequest", (state) => {
                 state.loading = true;
             })

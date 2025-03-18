@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   ScrollView,
   Image,
-  StyleSheet,
 } from "react-native";
 import { Picker } from '@react-native-picker/picker';
 import Footer from "../../../components/Layout/Footer";
@@ -20,6 +19,8 @@ import axios from 'axios';
 import mime from 'mime';
 import { useNavigation } from "@react-navigation/native";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons"; // Import MaterialCommunityIcons
+import { Ionicons } from "@expo/vector-icons";
+import { getAllEvents } from "../../../redux/actions/calendarActions"; // Import getAllEvents action
 
 const AdminProductsCreate = () => {
   const [productName, setProductName] = useState("");
@@ -96,7 +97,8 @@ const AdminProductsCreate = () => {
         text1: "Product Created Successfully!",
       });
 
-      // Navigate to adminproducts screen after successful creation
+      // Refresh AdminEvents data before navigating
+      dispatch(getAllEvents());
       navigation.navigate("adminproducts");
     } catch (error) {
       console.error('Failed to upload images or create product', error);
@@ -129,172 +131,122 @@ const AdminProductsCreate = () => {
   };
 
   return (
-    <View style={{ flex: 1 }}>
-      <Header back={true} />
-      <ScrollView
-        contentContainerStyle={{
-          justifyContent: "center",
-          alignItems: "center",
-        }}
+    <View className="flex-1 bg-white">
+  <ScrollView
+    contentContainerStyle={{
+      justifyContent: "center",
+      alignItems: "center",
+    }}
+  >       
+    <View className="w-11/12 rounded-lg p-5">
+      <Header title="Create Product" />
+
+      {/* Basic Information */}
+      <View className="flex-row items-center mb-2">
+        <Ionicons name="alert-circle-outline" size={20} color="#e01d47" />
+        <Text className="text-sm text-gray font-bold ml-2">Basic Information</Text>
+      </View>
+
+      <Text className="text-md font-bold text-gray-600 mb-2">Product Name <Ionicons name="star" size={12} color="#e01d47" /></Text>
+      <TextInput
+        className="border border-gray-300 rounded-md p-2 mb-4"
+        placeholder="Enter product name"
+        value={productName}
+        onChangeText={setProductName}
+      />
+
+      <Text className="text-sm font-bold text-gray-600 mb-2">Description <Ionicons name="star" size={12} color="#e01d47" /></Text>
+      <TextInput
+        className="border border-gray-300 rounded-md p-2 mb-4 h-24 text-top"
+        placeholder="Enter product description"
+        value={description}
+        onChangeText={setDescription}
+        multiline
+      />
+
+      <Text className="text-sm font-bold text-gray-600 mb-2">Category <Ionicons name="star" size={12} color="#e01d47" /></Text>
+      <View className="border border-gray-300 rounded-md mb-4">
+        <Picker
+          selectedValue={category}
+          onValueChange={setCategory}
+          style={{ height: 50, width: '100%' }}
+        >
+          <Picker.Item label="Select Category" value="" />
+          {categories && categories.map((cat) => (
+            <Picker.Item key={cat._id} label={cat.name} value={cat._id} />
+          ))}
+        </Picker>
+      </View>
+
+      {/* Pricing and Inventory */}
+      <View className="flex-row items-center mb-2">
+        <Ionicons name="alert-circle-outline" size={20} color="#e01d47" />
+        <Text className="text-sm text-gray font-bold ml-2">Pricing and Inventory</Text>
+      </View>
+
+      <Text className="text-sm text-gray-600 font-bold mb-2">Price <Ionicons name="star" size={12} color="#e01d47" /></Text>
+      <TextInput
+        className="border border-gray-300 rounded-md p-2 mb-4"
+        placeholder="Enter price"
+        value={price}
+        onChangeText={setPrice}
+        keyboardType="numeric"
+      />
+
+      <Text className="text-sm text-gray-600 font-bold mb-2">Stock <Ionicons name="star" size={12} color="#e01d47" /></Text>
+      <TextInput
+        className="border border-gray-300 rounded-md p-2 mb-4"
+        placeholder="Enter stock quantity"
+        value={stock}
+        onChangeText={setStock}
+        keyboardType="numeric"
+      />
+
+      {/* Product Images */}
+      <View className="flex-row items-center mb-2">
+        <Ionicons name="camera-outline" size={20} color="#e01d47" />
+        <Text className="text-sm text-gray font-bold ml-2">Product Images</Text>
+      </View>
+
+      <View className="flex-row items-center mb-4">
+  <TouchableOpacity
+    onPress={openImagePicker}
+    className="border border-gray-400 rounded-lg w-24 h-24 flex items-center justify-center"
+  >
+    <Ionicons name="cloud-upload-outline" size={30} color="gray" />
+    <Text className="text-gray-500 text-xs mt-1">Upload</Text>
+  </TouchableOpacity>
+
+  {images.length > 0 && (
+    <ScrollView horizontal>
+      <View className="flex-row ml-2">
+        {images.map((imageUri, index) => (
+          <Image
+            key={index}
+            source={{ uri: imageUri }}
+            className="w-24 h-24 rounded-md mr-2"
+          />
+        ))}
+      </View>
+    </ScrollView>
+  )}
+</View>
+
+      {/* Submit Button */}
+      <TouchableOpacity
+        onPress={handleSubmit}
+        className={`bg-[#e01d47] p-3 rounded-md items-center ${isUpdating ? 'opacity-50' : ''}`}
+        disabled={isUpdating}
       >
-        <View style={styles.formContainer}>
-          <Text style={styles.title}>Create Product</Text>
-
-          {/* Product Name */}
-          <Text style={styles.label}>Product Name*</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter product name"
-            value={productName}
-            onChangeText={setProductName}
-          />
-
-          {/* Description */}
-          <Text style={styles.label}>Description*</Text>
-          <TextInput
-            style={[styles.input, { height: 100, textAlignVertical: "top" }]}
-            placeholder="Enter product description"
-            value={description}
-            onChangeText={setDescription}
-            multiline
-          />
-
-          {/* Price */}
-          <Text style={styles.label}>Price*</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter price"
-            value={price}
-            onChangeText={setPrice}
-            keyboardType="numeric"
-          />
-
-          {/* Stock */}
-          <Text style={styles.label}>Stock*</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter stock quantity"
-            value={stock}
-            onChangeText={setStock}
-            keyboardType="numeric"
-          />
-
-          {/* Category Dropdown */}
-          <Text style={styles.label}>Category*</Text>
-          <View style={styles.pickerContainer}>
-            <Picker
-              selectedValue={category}
-              onValueChange={setCategory}
-              style={{ height: 50, width: '100%' }}
-            >
-              <Picker.Item label="Select Category" value="" />
-              {categories && categories.map((cat) => (
-                <Picker.Item key={cat._id} label={cat.name} value={cat._id} />
-              ))}
-            </Picker>
-          </View>
-
-          {/* Image Picker */}
-          <Text style={styles.label}>Product Images*</Text>
-          <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 15 }}>
-            <TouchableOpacity
-              onPress={openImagePicker}
-              style={styles.imagePickerButton}
-            >
-              <MaterialCommunityIcons name="plus" size={24} color="#000" />
-            </TouchableOpacity>
-
-            {images.length > 0 && (
-              <ScrollView horizontal>
-                <View style={{ flexDirection: "row" }}>
-                  {images.map((imageUri, index) => (
-                    <Image
-                      key={index}
-                      source={{ uri: imageUri }}
-                      style={styles.selectedImage}
-                    />
-                  ))}
-                </View>
-              </ScrollView>
-            )}
-          </View>
-
-          {/* Submit Button */}
-          <TouchableOpacity
-            onPress={handleSubmit}
-            style={styles.submitButton}
-            disabled={isUpdating}
-          >
-            <Text style={styles.submitButtonText}>
-              {isUpdating ? 'Creating...' : 'Create Product'}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
+        <Text className="text-white font-bold">
+          {isUpdating ? 'Creating...' : 'Create Product'}
+        </Text>
+      </TouchableOpacity>
     </View>
+  </ScrollView>
+</View>
+
   );
 };
-
-const styles = StyleSheet.create({
-  formContainer: {
-    width: "90%",
-    backgroundColor: "#f9f9f9",
-    borderRadius: 10,
-    padding: 20,
-    elevation: 5, 
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 20,
-    textAlign: "center",
-    color: "#333333",
-    paddingTop: 15,
-  },
-  label: {
-    fontSize: 14,
-    color: "#666666",
-    marginBottom: 10,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: "#CCCCCC",
-    borderRadius: 5,
-    padding: 10,
-    marginBottom: 15,
-  },
-  pickerContainer: {
-    borderWidth: 1,
-    borderColor: '#CCCCCC',
-    borderRadius: 5,
-    marginBottom: 15,
-  },
-  imagePickerButton: {
-    backgroundColor: "#DDDDDD",
-    padding: 12,
-    borderRadius: 5,
-    marginRight: 10,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  selectedImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 10,
-    marginRight: 10,
-  },
-  submitButton: {
-    backgroundColor: "#bc430b",
-    padding: 12,
-    borderRadius:10,
-    alignItems: "center",
-  },
-  submitButtonText: {
-    color: "#fff",
-    fontWeight: "bold",
-  },
-});
 
 export default AdminProductsCreate;

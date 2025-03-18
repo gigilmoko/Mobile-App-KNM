@@ -37,12 +37,16 @@ const Login = ({ navigation }) => {
 
   const userSubmitHandler = () => {
     dispatch(userLogin(email, password, playerId))
-      .then(() => {
-        Toast.show({
-          type: "success",
-          text2: "Welcome back!",
-        });
-        navigation.navigate("myaccount");
+      .then((response) => {
+        if (response === 'success') {
+          Toast.show({
+            type: "success",
+            text2: "Welcome back!",
+          });
+          navigation.navigate("myaccount");
+        } else {
+          throw new Error("Invalid credentials");
+        }
       })
       .catch((error) => {
         Toast.show({
@@ -55,12 +59,16 @@ const Login = ({ navigation }) => {
 
   const riderSubmitHandler = () => {
     dispatch(riderLogin(email, password, playerId))
-      .then(async () => {
-        Toast.show({
-          type: "success",
-          text2: "Welcome back, Rider!",
-        });
-        navigation.navigate("loadingrider");
+      .then((response) => {
+        if (response === 'success') {
+          Toast.show({
+            type: "success",
+            text2: "Welcome back, Rider!",
+          });
+          navigation.navigate("loadingrider");
+        } else {
+          throw new Error("Invalid credentials");
+        }
       })
       .catch((error) => {
         Toast.show({
@@ -155,4 +163,4 @@ const Login = ({ navigation }) => {
 
 
 
-export default Login; 
+export default Login;

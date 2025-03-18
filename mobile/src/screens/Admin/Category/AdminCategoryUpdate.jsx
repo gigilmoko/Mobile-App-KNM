@@ -12,6 +12,7 @@ import Toast from "react-native-toast-message"; // Import Toast
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { getSingleCategory, updateCategory } from "../../../redux/actions/categoryActions";
+import { Ionicons } from "@expo/vector-icons";
 
 const AdminCategoryUpdate = () => {
   const dispatch = useDispatch();
@@ -76,116 +77,60 @@ const AdminCategoryUpdate = () => {
   };
 
   return (
-    <View style={{ flex: 1 }}>
-      <Header back={true} />
+    <View className="flex-1 bg-white">
       {loading ? (
-        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <View className="flex-1 justify-center items-center">
           <ActivityIndicator size="large" color="#0000ff" />
-          <Text style={{ fontSize: 18 }}>Loading category details...</Text>
+          <Text className="text-lg">Loading category details...</Text>
         </View>
       ) : (
-        <ScrollView
-          contentContainerStyle={{
-            flexGrow: 1,
-            justifyContent: "center",
-            alignItems: "center",
-            borderRadius: 10,
-          }}
-        >
-          <View
-            style={{
-              backgroundColor: "#F5F5F5",
-              width: "90%",
-              padding: 20,
-              shadowColor: "#000",
-              shadowOpacity: 0.2,
-              shadowRadius: 5,
-              shadowOffset: { width: 0, height: 3 },
-              elevation: 4,
+        <>
+          <ScrollView
+            contentContainerStyle={{
+              justifyContent: "center",
+              alignItems: "center",
+              paddingBottom: 100, // Prevents content from being cut off
             }}
+            keyboardShouldPersistTaps="handled"
           >
-            <Text
-              style={{
-                fontSize: 24,
-                fontWeight: "bold",
-                marginBottom: 20,
-                textAlign: "center",
-                color: "#333333",
-                paddingTop: 15,
-              }}
-            >
-              Update Category
-            </Text>
+            <View className="w-11/12 rounded-lg p-5">
+              <Header title="Update Category" />
 
-            <Text style={{ fontSize: 14, color: "#666666", marginBottom: 10 }}>
-              Category Name*
-            </Text>
-            <TextInput
-              style={{
-                borderWidth: 1,
-                borderColor: "#CCCCCC",
-                borderRadius: 5,
-                padding: 10,
-                marginBottom: 15,
-              }}
-              placeholder="Enter category name"
-              value={updatedCategory.name}
-              onChangeText={(text) => handleInputChange("name", text)}
-            />
+              <Text className="text-sm text-gray-600 font-bold mb-2 mt-5">
+                Name <Ionicons name="star" size={12} color="#e01d47" />
+              </Text>
+              <TextInput
+                className="border border-[#CCCCCC] rounded p-2 mb-4"
+                placeholder="Enter category name"
+                value={updatedCategory.name}
+                onChangeText={(text) => handleInputChange("name", text)}
+              />
 
-            <Text style={{ fontSize: 14, color: "#666666", marginBottom: 10 }}>
-              Description*
-            </Text>
-            <TextInput
-              style={{
-                borderWidth: 1,
-                borderColor: "#CCCCCC",
-                borderRadius: 5,
-                padding: 10,
-                marginBottom: 15,
-                height: 100,
-                textAlignVertical: "top",
-              }}
-              placeholder="Enter category description"
-              value={updatedCategory.description}
-              onChangeText={(text) => handleInputChange("description", text)}
-              multiline
-            />
-
-            <View style={{ flexDirection: "row", justifyContent: "space-between", paddingTop: "20" }}>
-              <TouchableOpacity
-                style={{
-                  backgroundColor: "#DDDDDD",
-                  padding: 12,
-                  borderRadius: 5,
-                  flex: 1,
-                  marginRight: 10,
-                }}
-                onPress={() => {
-                  navigation.navigate("admincategory");
-                }}
-              >
-                <Text style={{ textAlign: "center", color: "#666666" }}>
-                  Cancel
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={{
-                  backgroundColor: "#bc430b",
-                  padding: 12,
-                  borderRadius: 5,
-                  flex: 1,
-                }}
-                onPress={handleUpdate}
-              >
-                <Text style={{ textAlign: "center", color: "#fff" }}>
-                  Update Category
-                </Text>
-              </TouchableOpacity>
+              <Text className="text-sm text-gray-600 font-bold mb-2">
+                Description <Ionicons name="star" size={12} color="#e01d47" />
+              </Text>
+              <TextInput
+                className="border border-[#CCCCCC] rounded p-2 mb-4 h-24 text-top"
+                placeholder="Enter category description"
+                value={updatedCategory.description}
+                onChangeText={(text) => handleInputChange("description", text)}
+                multiline
+              />
             </View>
+          </ScrollView>
+
+          {/* Button Fixed at Bottom */}
+          <View className="p-5">
+            <TouchableOpacity
+              className="bg-[#e01d47] p-3 rounded"
+              onPress={handleUpdate}
+            >
+              <Text className="text-center text-white font-bold">
+                Update Category
+              </Text>
+            </TouchableOpacity>
           </View>
-        </ScrollView>
+        </>
       )}
     </View>
   );

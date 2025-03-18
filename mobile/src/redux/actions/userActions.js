@@ -76,11 +76,15 @@ export const userLogin = (email, password, playerId) => async (dispatch) => {
             type: "loginSuccess",
             payload: data.user,
         });
+
+        return 'success';
     } catch (error) {
         dispatch({
             type: "loginFail", 
             payload: error.response?.data.message || 'Network error',
         });
+
+        return 'fail';
     }
 };
 

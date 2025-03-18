@@ -1,201 +1,213 @@
-import React, { useEffect } from "react";
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert } from "react-native";
-import Footer from "../../../components/Layout/Footer";
-import Header from "../../../components/Layout/Header";
-import { useNavigation } from "@react-navigation/native";
+import React, { useEffect, useState } from "react";
+import { View, Text, Image, FlatList, TouchableOpacity, Dimensions, TextInput, ScrollView, ImageBackground } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 import { getAllProducts, deleteProduct } from "../../../redux/actions/productActions";
-import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons"; 
-import { GestureHandlerRootView, Swipeable } from "react-native-gesture-handler";
+import { getAllCategories } from "../../../redux/actions/categoryActions";
+import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
+import { Picker } from '@react-native-picker/picker';
+import Icon from "react-native-vector-icons/Ionicons"; 
 
 const AdminProducts = () => {
   const dispatch = useDispatch();
   const navigation = useNavigation();
+  const { products = [], loading } = useSelector((state) => state.product);
+  const { categories } = useSelector((state) => state.category);
+  const [screenWidth, setScreenWidth] = useState(Dimensions.get("window").width);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedProducts, setSelectedProducts] = useState({});
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectAll, setSelectAll] = useState(false);
 
-  const { products = [], loading } = useSelector((state) => state.product); 
   useEffect(() => {
     dispatch(getAllProducts());
+    dispatch(getAllCategories());
   }, [dispatch]);
 
-  const handleProductClick = (productId) => {
+  // useEffect(() => {
+  //   console.log("Fetched products:", products);
+  // }, [products]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setScreenWidth(Dimensions.get("window").width);
+    };
+
+    const subscription = Dimensions.addEventListener("change", handleResize);
+    return () => {
+      subscription?.remove();
+    };
+  }, []);
+
+  const handleProductPress = (productId) => {
     navigation.navigate("adminproductsupdate", { productId });
   };
 
-  const handleNewProductClick = () => {
-    navigation.navigate("adminproductscreate");
+  const handleCheckboxPress = (productId) => {
+    setSelectedProducts((prevState) => ({
+      ...prevState,
+      [productId]: !prevState[productId],
+    }));
   };
 
-  const handleDelete = (productId) => {
-    // Confirm delete action
-    Alert.alert("Delete Product", "Are you sure you want to delete this product?", [
-      { text: "Cancel" },
-      {
-        text: "Delete",
-        onPress: () => {
-          dispatch(deleteProduct(productId));
-        },
-      },
-    ]);
+  const handleDeleteSelected = () => {
+    const selectedProductIds = Object.keys(selectedProducts).filter((id) => selectedProducts[id]);
+    selectedProductIds.forEach((productId) => {
+      dispatch(deleteProduct(productId));
+    });
+    setSelectedProducts({});
   };
 
-  const renderRightActions = (productId) => (
-    <View style={styles.swipeActionContainer}>
-      <TouchableOpacity
-        style={styles.swipeActionEdit}
-        onPress={() => handleProductClick(productId)}
-      >
-        <MaterialCommunityIcons name="pencil" size={24} color="#000" />
-      </TouchableOpacity>
-      <TouchableOpacity
-        style={styles.swipeActionDelete}
-        onPress={() => handleDelete(productId)}
-      >
-        <MaterialCommunityIcons name="trash-can" size={24} color="#000" />
-      </TouchableOpacity>
-    </View>
+  const handleSelectAll = () => {
+    const newSelectedProducts = {};
+    filteredProducts.forEach((product) => {
+      newSelectedProducts[product._id] = !selectAll;
+    });
+    setSelectedProducts(newSelectedProducts);
+    setSelectAll(!selectAll);
+  };
+
+  const columnWidths = {
+    checkbox: screenWidth * 0.1,
+    product: screenWidth * 0.45,
+    price: screenWidth * 0.2,
+    stock: screenWidth * 0.1,
+  };
+
+  const filteredProducts = products.filter(product =>
+    product.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
+    (selectedCategory ? product.category?._id === selectedCategory : true)
   );
+
+  const isAnyProductSelected = Object.values(selectedProducts).some((isSelected) => isSelected);
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <View style={{ flex: 1, backgroundColor: "#fff" }}>
-        <View style={styles.headerContainer}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <MaterialCommunityIcons name="arrow-left" size={24} color="#000" />
-          </TouchableOpacity>
-          <Text style={styles.headerText}>Products</Text>
+    <View className="flex-1 bg-white">
+      <View className="flex-row items-center py-5 px-5">
+        {/* Back Button */}
+        <TouchableOpacity 
+          onPress={() => navigation.goBack()} 
+          className="p-2 bg-[#ff7895] rounded-full items-center justify-center w-9 h-9"
+        >
+          <Ionicons name="arrow-back" size={20} color="#ffffff" />
+        </TouchableOpacity>
+
+        {/* Title */}
+        <View className="flex-1">
+          <Text className="text-2xl font-bold text-[#e01d47] text-center">
+            Product 
+          </Text>
         </View>
 
-        {loading ? (
-          <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-            <Text style={{ fontSize: 18 }}>Loading...</Text>
-          </View>
-        ) : (
-          <ScrollView contentContainerStyle={{ flexGrow: 1, paddingBottom: 30 }}>
-            <View style={styles.container}>
-              <View>
-                {products.length > 0 ? (
-                  products.map((product) => (
-                    <Swipeable
-                      key={product._id}
-                      renderRightActions={() => renderRightActions(product._id)}
-                      overshootRight={false}
-                    >
-                      <TouchableOpacity
-                        style={styles.productCard}
-                        onPress={() => handleProductClick(product._id)}
-                      >
-                        <Text style={styles.productTitle}>{product.name}</Text>
-                        <Text style={styles.productDescription}>Price: ₱{product.price}</Text>
-                        <Text style={styles.productDescription}>Description: {product.description}</Text>
-                        <Text style={styles.productDescription}>Stock: {product.stock}</Text>
-                      </TouchableOpacity>
-                    </Swipeable>
-                  ))
-                ) : (
-                  <Text style={{ textAlign: "center", color: "#666666" }}>No products found</Text>
-                )}
-              </View>
-            </View>
-          </ScrollView>
-        )}
-
-        {/* Floating + Icon Button */}
-        <TouchableOpacity
-          style={styles.floatingButton}
-          onPress={handleNewProductClick}
-        >
-          <MaterialCommunityIcons name="plus" size={30} color="#FFF" />
-        </TouchableOpacity>
+        {/* Spacer */}
+        <View className="w-10" />
       </View>
-    </GestureHandlerRootView>
+
+      {/* Search Box */}
+        <View className=" flex-row items-center border border-[#e01d47] rounded-full px-4 py-2 mx-5 bg-white">
+          <TextInput
+              className="flex-1 text-gray-700 placeholder-gray-400"
+              placeholder="Search"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+          />
+          <Ionicons name="search" size={20} color="#e01d47" />
+      </View>
+
+{/* Delete Button and Filter */}
+<View className="flex-row items-center px-5">
+  <TouchableOpacity onPress={handleSelectAll} className="p-2 bg-white rounded-md items-center justify-center flex-row  py-2 mr-2">
+    <Ionicons name={selectAll ? "checkbox" : "square-outline"} size={20} color="gray" />
+    <Text className="text-gray-700 ml-2">Select All</Text>
+  </TouchableOpacity>
+  <View className="flex-1" />
+  <View className ="mr-2">
+  {isAnyProductSelected && (
+      <TouchableOpacity 
+        onPress={handleDeleteSelected} 
+        className="p-2 border border-[#e01d47] bg-white rounded-md items-center justify-center flex-row px-4 py-2"
+      >
+        <Ionicons name="trash" size={20} color="#e01d47" />
+      </TouchableOpacity>
+    )}
+    </View>
+  <View className="flex-row items-center space-x-2 border border-gray-300 rounded-md px-2 my-5">
+  
+    <Picker
+      selectedValue={selectedCategory}
+      onValueChange={(itemValue) => setSelectedCategory(itemValue)}
+      style={{ height: 40, width: 40, fontSize: 12 }}
+    >
+      <Picker.Item label="Filter" value="" style={{ fontSize: 12 }} />
+      {categories.map((category) => (
+        <Picker.Item key={category._id} label={category.name} value={category._id} style={{ fontSize: 12 }} />
+      ))}
+    </Picker>
+
+   
+  </View>
+</View>
+
+
+      {loading ? (
+        <View className="flex-1 justify-center items-center">
+          <Text className="text-lg text-gray-600">Loading...</Text>
+        </View>
+      ) : (
+        <ScrollView contentContainerStyle={{ paddingHorizontal: 20 }}>
+          {/* Table Header */}
+          <View className="flex-row bg-[#fce8ec] p-2.5 rounded-md">
+            <Text className="font-bold text-gray-800" style={{ width: columnWidths.checkbox }}> </Text>
+            <Text className="font-bold text-gray-800" style={{ width: columnWidths.product }}>Product</Text>
+            <Text className="font-bold text-gray-800" style={{ width: columnWidths.price }}>Price</Text>
+            <Text className="font-bold text-gray-800" style={{ width: columnWidths.stock }}>Stock</Text>
+          </View>
+
+          {/* Product List */}
+          {filteredProducts.map((item) => (
+            <View key={item._id} className="flex-row items-center py-2.5  border-b border-gray-300">
+              {/* Checkbox */}
+              <TouchableOpacity onPress={() => handleCheckboxPress(item._id)} style={{ width: columnWidths.checkbox }}>
+                <Ionicons name={selectedProducts[item._id] ? "checkbox" : "square-outline"} size={24} color="black" />
+              </TouchableOpacity>
+
+              {/* Product Info */}
+              <TouchableOpacity onPress={() => handleProductPress(item._id)} style={{ width: columnWidths.product }} className="flex-row items-center">
+                <ImageBackground
+                  source={{ uri: item.images?.[0]?.url || "https://via.placeholder.com/150" }}
+                  style={{ width: 50, height: 50, marginRight: 10 }}
+                  imageStyle={{ borderRadius: 8 }} 
+                />
+                <View>
+                  <Text className="font-bold text-gray-800">{item.name}</Text>
+                  <Text className="text-gray-500 text-xs">{item.category?.name}</Text>
+                  <View className="flex-row mt-1.25">
+                    <View className={`py-0.75 px-2 rounded-full ${item.stock === 0 ? 'bg-red-100' : 'bg-green-100'}`}>
+                      <Text className={`text-xs ${item.stock === 0 ? 'text-red-800' : 'text-green-800'}`}>
+                        {item.stock === 0 ? 'Out of Stock' : 'Active'}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              </TouchableOpacity>
+
+              {/* Price and Stock */}
+              <Text className="text-center text-gray-800" style={{ width: columnWidths.price }}>₱{item.price.toFixed(2)}</Text>
+              <Text className="text-center text-gray-800" style={{ width: columnWidths.stock }}>{item.stock}</Text>
+            </View>
+          ))}
+        </ScrollView>
+      )}
+
+       <TouchableOpacity
+                  className="absolute bottom-8 right-6 bg-[#e01d47] p-4 rounded-full shadow-lg"
+                  onPress={() => navigation.navigate("adminproductscreate")}
+              >
+                  <Ionicons name="add" size={24} color="#fff" />
+              </TouchableOpacity>
+      
+    </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: "#ffffff",
-    flex: 1,
-    padding: 20,
-  },
-  headerContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 10,
-    backgroundColor: "#fff",
-    borderBottomWidth: 1,
-    borderBottomColor: "#ccc",
-  },
-  backButton: {
-    position: "absolute",
-    left: 10,
-  },
-  headerText: {
-    fontSize: 20,
-    fontWeight: "bold",
-  },
-  productCard: {
-    backgroundColor: "#f5f5f5",
-    padding: 15,
-    borderRadius: 10,
-    borderColor: "#ccc",
-    borderWidth: 1,
-    marginBottom: 10,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    shadowOffset: { width: 0, height: 3 },
-    elevation: 2,
-  },
-  productTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  productDescription: {
-    fontSize: 14,
-    color: "#666",
-  },
-  floatingButton: {
-    position: "absolute",
-    bottom: 70, // Adjust to stay above the footer
-    right: 20,
-    backgroundColor: "#bc430b",
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    justifyContent: "center",
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-    shadowOffset: { width: 0, height: 3 },
-    elevation: 4,
-  },
-  swipeActionContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingLeft: 10,
-    paddingRight: 10,
-    borderRadius: 10,
-    height: 100,
-  },
-  swipeActionEdit: {
-    padding: 10,
-    borderRadius: 5,
-    borderColor: "#ccc",
-    borderWidth: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 10,
-  },
-  swipeActionDelete: {
-    padding: 10,
-    borderRadius: 5,
-    borderColor: "#ccc",
-    borderWidth: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-});
 
 export default AdminProducts;

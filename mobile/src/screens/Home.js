@@ -121,6 +121,13 @@ const Home = ({ navigation }) => {
     };
 
     const addToCartHandler = (id, name, price, image, stock) => {
+        if (stock === 0) {
+            return Toast.show({
+                type: "error",
+                text1: "Out Of Stock",
+            });
+        }
+
         if (!user || user === undefined || Object.keys(user).length === 0) {
             navigate.navigate("login");
             return Toast.show({
@@ -168,12 +175,6 @@ const Home = ({ navigation }) => {
                 text1: "Added To Cart",
             });
         }
-
-        if (stock === 0)
-            return Toast.show({
-                type: "error",
-                text1: "Out Of Stock",
-        });
     };
 
     const addToWishlistHandler = (id, name, price, image, stock) => {
@@ -327,7 +328,7 @@ const Home = ({ navigation }) => {
             }
         />
         <TouchableOpacity
-            className="absolute bottom-20 right-6 bg-[#bc430b] p-4 rounded-full shadow-lg"
+            className="absolute bottom-20 right-6 bg-[#e01d47] p-4 rounded-full shadow-lg"
             onPress={() => navigation.navigate("wishlist")}
         >
             <Icon name="heart-outline" size={24} color="#fff" />

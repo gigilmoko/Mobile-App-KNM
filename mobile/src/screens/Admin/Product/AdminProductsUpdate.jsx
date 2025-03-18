@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, ScrollView, ActivityIndicator, TextInput, Image, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, ScrollView, ActivityIndicator, TextInput, Image, TouchableOpacity } from "react-native";
 import Header from "../../../components/Layout/Header";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { useDispatch, useSelector } from "react-redux";
@@ -11,6 +11,7 @@ import Toast from 'react-native-toast-message'; // For notifications
 import mime from 'mime';
 import { Picker } from '@react-native-picker/picker'; // Import Picker from @react-native-picker/picker
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons"; // Import MaterialCommunityIcons
+import { Ionicons } from "@expo/vector-icons";
 
 const AdminProductsUpdate = () => {
   const dispatch = useDispatch();
@@ -53,7 +54,7 @@ const AdminProductsUpdate = () => {
         stock: product.stock || "",
         description: product.description || "",
         category: product.category || "",
-        images: product.images.map((img) => img.url) || [], // Initial images from the product
+        images: product.images ? product.images.map((img) => img.url) : [], // Handle undefined images
       });
     }
   }, [product]);
@@ -106,8 +107,8 @@ const AdminProductsUpdate = () => {
 
       const productData = {
         ...updatedProduct,
-        images: uploadResponses, // Add uploaded images with URLs and public_ids
-        id: productId, // Add the productId here
+        images: uploadResponses, 
+        id: productId, 
       };
 
       dispatch(updateProduct(productData));
@@ -159,227 +160,128 @@ const AdminProductsUpdate = () => {
   // If either product or categories are loading, show a loading screen
   if (loadingProduct || loadingCategories) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+      <View className="flex-1 justify-center items-center">
         <ActivityIndicator size="large" color="#0000ff" />
-        <Text style={{ fontSize: 18 }}>Loading...</Text>
+        <Text className="text-lg">Loading...</Text>
       </View>
     );
   }
 
   return (
-    <View style={{ flex: 1, }}>
-      <Header back={true} />
-      <ScrollView
-        contentContainerStyle={{
-          flexGrow: 1,
-          justifyContent: "center",
-          alignItems: "center",
-          paddingBottom: 100, // Add padding to avoid overlap with footer
-        }}
-      >
-        <View
-          style={{
-            backgroundColor: "#F5F5F5",
-            width: "90%",
-            padding: 20,
-            shadowColor: "#000",
-            shadowOpacity: 0.2,
-            shadowRadius: 5,
-            shadowOffset: { width: 0, height: 3 },
-            elevation: 4,
-          }}
-        >
-          <Text
-            style={{
-              fontSize: 24,
-              fontWeight: "bold",
-              marginBottom: 20,
-              textAlign: "center",
-              color: "#333333",
-              paddingTop: 15,
-            }}
-          >
-            Update Product
-          </Text>
+    <View className="flex-1 bg-white">
+      <ScrollView contentContainerStyle={{ justifyContent: "center", alignItems: "center" }}>
+        <View className="w-11/12 rounded-lg p-5">
+          <Header title="Update Product" />
 
-          {/* Product Name */}
-          <Text style={{ fontSize: 14, color: "#666666", marginBottom: 10 }}>
-            Product Name*
-          </Text>
+          {/* Basic Information */}
+          <View className="flex-row items-center mb-2">
+            <Ionicons name="alert-circle-outline" size={20} color="#e01d47" />
+            <Text className="text-sm text-gray font-bold ml-2">Basic Information</Text>
+          </View>
+
+          <Text className="text-md font-bold text-gray-600 mb-2">Product Name <Ionicons name="star" size={12} color="#e01d47" /></Text>
           <TextInput
-            style={{
-              borderWidth: 1,
-              borderColor: "#CCCCCC",
-              borderRadius: 5,
-              padding: 10,
-              marginBottom: 15,
-            }}
+            className="border border-gray-300 rounded-md p-2 mb-4"
             placeholder="Enter product name"
             value={updatedProduct.name}
             onChangeText={(text) => handleInputChange("name", text)}
           />
 
-          {/* Description */}
-          <Text style={{ fontSize: 14, color: "#666666", marginBottom: 10 }}>
-            Description*
-          </Text>
+          <Text className="text-sm font-bold text-gray-600 mb-2">Description <Ionicons name="star" size={12} color="#e01d47" /></Text>
           <TextInput
-            style={{
-              borderWidth: 1,
-              borderColor: "#CCCCCC",
-              borderRadius: 5,
-              padding: 10,
-              marginBottom: 15,
-              height: 100,
-              textAlignVertical: "top",
-            }}
+            className="border border-gray-300 rounded-md p-2 mb-4 h-24 text-top"
             placeholder="Enter product description"
             value={updatedProduct.description}
             onChangeText={(text) => handleInputChange("description", text)}
             multiline
           />
 
-          {/* Price */}
-          <Text style={{ fontSize: 14, color: "#666666", marginBottom: 10 }}>
-            Price*
-          </Text>
+          <Text className="text-sm font-bold text-gray-600 mb-2">Category <Ionicons name="star" size={12} color="#e01d47" /></Text>
+          <View className="border border-gray-300 rounded-md mb-4">
+            <Picker
+              selectedValue={updatedProduct.category}
+              onValueChange={(itemValue) => handleInputChange("category", itemValue)}
+              style={{ height: 50, width: '100%' }}
+            >
+              <Picker.Item label="Select Category" value="" />
+              {categories && categories.map((cat) => (
+                <Picker.Item key={cat._id} label={cat.name} value={cat._id} />
+              ))}
+            </Picker>
+          </View>
+
+          {/* Pricing and Inventory */}
+          <View className="flex-row items-center mb-2">
+            <Ionicons name="alert-circle-outline" size={20} color="#e01d47" />
+            <Text className="text-sm text-gray font-bold ml-2">Pricing and Inventory</Text>
+          </View>
+
+          <Text className="text-sm text-gray-600 font-bold mb-2">Price <Ionicons name="star" size={12} color="#e01d47" /></Text>
           <TextInput
-            style={{
-              borderWidth: 1,
-              borderColor: "#CCCCCC",
-              borderRadius: 5,
-              padding: 10,
-              marginBottom: 15,
-            }}
+            className="border border-gray-300 rounded-md p-2 mb-4"
             placeholder="Enter price"
             value={String(updatedProduct.price)}
             onChangeText={(text) => handleInputChange("price", text)}
             keyboardType="numeric"
           />
 
-          {/* Stock */}
-          <Text style={{ fontSize: 14, color: "#666666", marginBottom: 10 }}>
-            Stock*
-          </Text>
+          <Text className="text-sm text-gray-600 font-bold mb-2">Stock <Ionicons name="star" size={12} color="#e01d47" /></Text>
           <TextInput
-            style={{
-              borderWidth: 1,
-              borderColor: "#CCCCCC",
-              borderRadius: 5,
-              padding: 10,
-              marginBottom: 15,
-            }}
+            className="border border-gray-300 rounded-md p-2 mb-4"
             placeholder="Enter stock quantity"
             value={String(updatedProduct.stock)}
             onChangeText={(text) => handleInputChange("stock", text)}
             keyboardType="numeric"
           />
 
-          {/* Category */}
-          <Text style={{ fontSize: 14, color: "#666666", marginBottom: 10 }}>
-            Category*
-          </Text>
-          <Picker
-            selectedValue={updatedProduct.category}
-            onValueChange={(itemValue) => handleInputChange("category", itemValue)}
-            style={{
-              height: 40,
-              width: "100%",
-              borderColor: "#CCCCCC",
-              borderWidth: 1,
-              borderRadius: 5,
-              marginBottom: 15,
-            }}
-          >
-            {categories.map((category) => (
-              <Picker.Item key={category._id} label={category.name} value={category._id} />
-            ))}
-          </Picker>
+          {/* Product Images */}
+          <View className="flex-row items-center mb-2">
+            <Ionicons name="camera-outline" size={20} color="#e01d47" />
+            <Text className="text-sm text-gray font-bold ml-2">Product Images</Text>
+          </View>
 
-          {/* Image Picker */}
-          <Text style={{ fontSize: 14, color: "#666666", marginBottom: 10 }}>
-            Product Images*
-          </Text>
-          <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 15 }}>
-            <TouchableOpacity onPress={openImagePicker} style={styles.imagePickerButton}>
-              <MaterialCommunityIcons name="plus" size={24} color="#000" />
+          <View className="flex-row items-center mb-4">
+            <TouchableOpacity
+              onPress={openImagePicker}
+              className="border border-gray-400 rounded-lg w-24 h-24 flex items-center justify-center"
+            >
+              <Ionicons name="cloud-upload-outline" size={30} color="gray" />
+              <Text className="text-gray-500 text-xs mt-1">Upload</Text>
             </TouchableOpacity>
 
-            {/* Display Selected Images */}
-            <ScrollView horizontal>
-              <View style={{ flexDirection: "row" }}>
-                {updatedProduct.images.map((imageUri, index) => (
-                  <View key={index} style={styles.imageContainer}>
-                    <Image source={{ uri: imageUri }} style={styles.selectedImage} />
-                    <TouchableOpacity
-                      onPress={() => removeImage(imageUri)}
-                      style={styles.removeImageButton}
-                    >
-                      <MaterialCommunityIcons name="delete" size={24} color="#ff0000" />
-                    </TouchableOpacity>
-                  </View>
-                ))}
-              </View>
-            </ScrollView>
+            {updatedProduct.images.length > 0 && (
+              <ScrollView horizontal>
+                <View className="flex-row ml-2">
+                  {updatedProduct.images.map((imageUri, index) => (
+                    <View key={index} className="relative mr-2 mb-2">
+                      <Image source={{ uri: imageUri }} className="w-24 h-24 rounded-md" />
+                      <TouchableOpacity
+                        onPress={() => removeImage(imageUri)}
+                        className="absolute top-0 right-0 bg-black bg-opacity-50 p-1 rounded-full"
+                      >
+                        <MaterialCommunityIcons name="delete" size={24} color="#ff0000" />
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                </View>
+              </ScrollView>
+            )}
           </View>
 
           {/* Update Button */}
           <TouchableOpacity
-            style={styles.updateButton}
+            className={`bg-[#e01d47] p-3 rounded-md items-center ${isUpdating ? 'opacity-50' : ''}`}
             onPress={handleUpdate}
             disabled={isUpdating}
           >
-            {isUpdating ? (
-              <ActivityIndicator size="small" color="#fff" />
-            ) : (
-              <Text style={styles.updateButtonText}>Update Product</Text>
-            )}
+            <Text className="text-white font-bold">
+              {isUpdating ? 'Updating...' : 'Update Product'}
+            </Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  imagePickerButton: {
-    backgroundColor: "#DDDDDD",
-    padding: 12,
-    borderRadius: 5,
-    marginRight: 10,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  imageContainer: {
-    position: "relative",
-    marginRight: 10,
-    marginBottom: 10,
-  },
-  selectedImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 5,
-  },
-  removeImageButton: {
-    position: "absolute",
-    top: 0,
-    right: 0,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    padding: 5,
-    borderRadius: 50,
-  },
-  updateButton: {
-    backgroundColor: "#bc430b",
-    padding: 10,
-    borderRadius: 5,
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 20,
-  },
-  updateButtonText: {
-    color: "#fff",
-    fontWeight: "bold",
-  },
-});
 
 export default AdminProductsUpdate;

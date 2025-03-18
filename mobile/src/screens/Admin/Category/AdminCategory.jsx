@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, Alert, TextInput, Dimensions } from "react-native";
 import Footer from "../../../components/Layout/Footer";
 import Header from "../../../components/Layout/Header";
 import { useDispatch, useSelector } from "react-redux";
@@ -7,16 +7,33 @@ import { getAllCategories, deleteCategory } from "../../../redux/actions/categor
 import { useNavigation } from "@react-navigation/native";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons"; // Import MaterialCommunityIcons
 import { GestureHandlerRootView, Swipeable } from "react-native-gesture-handler"; // Import Swipeable for swipe actions
+import { Ionicons } from "@expo/vector-icons";
+import { Picker } from '@react-native-picker/picker';
 
 const AdminCategory = () => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const [isDeleting, setIsDeleting] = useState(false);
   const { categories, loading } = useSelector((state) => state.category);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategories, setSelectedCategories] = useState({});
+  const [selectAll, setSelectAll] = useState(false);
+  const [screenWidth, setScreenWidth] = useState(Dimensions.get("window").width);
 
   useEffect(() => {
     dispatch(getAllCategories());
   }, [dispatch]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setScreenWidth(Dimensions.get("window").width);
+    };
+
+    const subscription = Dimensions.addEventListener("change", handleResize);
+    return () => {
+      subscription?.remove();
+    };
+  }, []);
 
   const handleCategoryClick = (categoryId) => {
     navigation.navigate("admincategoryupdate", { categoryId });
@@ -27,7 +44,6 @@ const AdminCategory = () => {
   };
 
   const handleDelete = (categoryId) => {
-    // Confirm delete action
     Alert.alert("Delete Category", "Are you sure you want to delete this category?", [
       { text: "Cancel" },
       {
@@ -40,155 +56,152 @@ const AdminCategory = () => {
     ]);
   };
 
-  const renderRightActions = (categoryId) => (
-    <View style={styles.swipeActionContainer}>
-      <TouchableOpacity
-        style={styles.swipeActionEdit}
-        onPress={() => handleCategoryClick(categoryId)}
-      >
-        <MaterialCommunityIcons name="pencil" size={24} color="#000" />
-      </TouchableOpacity>
-      <TouchableOpacity
-        style={styles.swipeActionDelete}
-        onPress={() => handleDelete(categoryId)}
-      >
-        <MaterialCommunityIcons name="trash-can" size={24} color="#000" />
-      </TouchableOpacity>
-    </View>
+  const handleCheckboxPress = (categoryId) => {
+    setSelectedCategories((prevState) => ({
+      ...prevState,
+      [categoryId]: !prevState[categoryId],
+    }));
+  };
+
+  const handleDeleteSelected = () => {
+    const selectedCategoryIds = Object.keys(selectedCategories).filter((id) => selectedCategories[id]);
+    selectedCategoryIds.forEach((categoryId) => {
+      dispatch(deleteCategory(categoryId));
+    });
+    setSelectedCategories({});
+  };
+
+  const handleSelectAll = () => {
+    const newSelectedCategories = {};
+    categories.forEach((category) => {
+      newSelectedCategories[category._id] = !selectAll;
+    });
+    setSelectedCategories(newSelectedCategories);
+    setSelectAll(!selectAll);
+  };
+
+  const columnWidths = {
+    checkbox: screenWidth * 0.1,
+    category: screenWidth * 0.45,
+    description: screenWidth * 0.45,
+  };
+
+  const filteredCategories = categories.filter(category =>
+    category.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const isAnyCategorySelected = Object.values(selectedCategories).some((isSelected) => isSelected);
+
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <View style={{ flex: 1, backgroundColor: "#fff" }}>
-        <Header back={true} />
+    <GestureHandlerRootView className="flex-1">
+      <View className="flex-1 bg-white">
+        <View className="flex-row items-center py-5 px-5">
+          {/* Back Button */}
+          <TouchableOpacity 
+            onPress={() => navigation.goBack()} 
+            className="p-2 bg-[#ff7895] rounded-full items-center justify-center w-9 h-9"
+          >
+            <Ionicons name="arrow-back" size={20} color="#ffffff" />
+          </TouchableOpacity>
+
+          {/* Title */}
+          <View className="flex-1">
+            <Text className="text-2xl font-bold text-[#e01d47] text-center">
+              Categories
+            </Text>
+          </View>
+
+          {/* Spacer */}
+          <View className="w-10" />
+        </View>
+
+        {/* Search Box */}
+        <View className="flex-row items-center border border-[#e01d47] rounded-full px-4 py-2 mx-5 bg-white">
+          <TextInput
+            className="flex-1 text-gray-700 placeholder-gray-400"
+            placeholder="Search"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+          <Ionicons name="search" size={20} color="#e01d47" />
+        </View>
+
+        {/* Delete Button and Filter */}
+        <View className="flex-row items-center px-5 my-2">
+          <TouchableOpacity onPress={handleSelectAll} className="p-2 bg-white rounded-md items-center justify-center flex-row py-2 mr-2">
+            <Ionicons name={selectAll ? "checkbox" : "square-outline"} size={20} color="gray" />
+            <Text className="text-gray-700 ml-2">Select All</Text>
+          </TouchableOpacity>
+          <View className="flex-1" />
+          <View className="mr-2">
+            {isAnyCategorySelected && (
+              <TouchableOpacity 
+                onPress={handleDeleteSelected} 
+                className="p-2 border border-[#e01d47] bg-white rounded-md items-center justify-center flex-row px-4 py-2"
+              >
+                <Ionicons name="trash" size={20} color="#e01d47" />
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
 
         {loading ? (
-          <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-            <Text style={{ fontSize: 18 }}>Loading...</Text>
+          <View className="flex-1 justify-center items-center">
+            <Text className="text-lg text-gray-600">Loading...</Text>
           </View>
         ) : (
-          <ScrollView contentContainerStyle={{ flexGrow: 1, paddingBottom: 30 }}>
-            <View style={styles.container}>
-              <View style={{ alignItems: "center" }}>
-                <Text style={styles.headerText}>Categories</Text>
-              </View>
-
-              <View style={styles.categoryListContainer}>
-                {categories.map((category) => (
-                  <Swipeable
-                    key={category._id}
-                    renderRightActions={() => renderRightActions(category._id)}
-                    overshootRight={false}
-                  >
-                    <TouchableOpacity
-                      style={styles.categoryCard}
-                      onPress={() => handleCategoryClick(category._id)}
-                    >
-                      <Text style={styles.categoryTitle}>{category.name}</Text>
-                      <Text style={styles.categoryDescription}>{category.description}</Text>
-                    </TouchableOpacity>
-                  </Swipeable>
-                ))}
-              </View>
+          <ScrollView contentContainerStyle={{ paddingHorizontal: 20 }}>
+            {/* Table Header */}
+            <View className="flex-row bg-[#fce8ec] p-2.5 rounded-md">
+              <Text className="font-bold text-gray-800" style={{ width: columnWidths.checkbox }}> </Text>
+              <Text className="font-bold text-gray-800" style={{ width: columnWidths.category }}>Category</Text>
+              <Text className="font-bold text-gray-800" style={{ width: columnWidths.description }}>Description</Text>
             </View>
+
+            {/* Category List */}
+            {filteredCategories.map((category) => (
+              <View key={category._id} className="flex-row items-center py-2.5 border-b border-gray-300">
+                {/* Checkbox */}
+                <TouchableOpacity onPress={() => handleCheckboxPress(category._id)} style={{ width: columnWidths.checkbox }}>
+                  <Ionicons name={selectedCategories[category._id] ? "checkbox" : "square-outline"} size={24} color="black" />
+                </TouchableOpacity>
+
+                {/* Category Info */}
+                <TouchableOpacity onPress={() => handleCategoryClick(category._id)} style={{ width: columnWidths.category }} className="flex-row items-center">
+                  <View>
+                    <Text className="font-bold text-gray-800">{category.name}</Text>
+                  </View>
+                </TouchableOpacity>
+
+                {/* Description */}
+                <Text 
+  className="text-left text-gray-800"
+  style={{ width: columnWidths.description }}
+  numberOfLines={1} 
+  ellipsizeMode="tail"
+>
+  {category.description}
+</Text>
+
+                {/* Delete Button */}
+                <TouchableOpacity onPress={() => handleDelete(category._id)} style={{ marginLeft: 10 }}>
+                  <Ionicons name="trash" size={24} color="red" />
+                </TouchableOpacity>
+              </View>
+            ))}
           </ScrollView>
         )}
 
         {/* Floating + Icon Button */}
         <TouchableOpacity
-          style={styles.floatingButton}
+          className="absolute bottom-8 right-6 bg-[#e01d47] p-4 rounded-full shadow-lg"
           onPress={handleNewCategoryClick}
         >
-          <MaterialCommunityIcons name="plus" size={30} color="#FFF" />
+          <Ionicons name="add" size={24} color="#fff" />
         </TouchableOpacity>
       </View>
     </GestureHandlerRootView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: "#ffffff",
-    flex: 1,
-    padding: 20,
-    borderRadius: 10,
-    margin: 20,
-    elevation: 5, // For Android shadow
-    shadowColor: "#000", // For iOS shadow
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-  },
-  headerText: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginTop: 0,
-  },
-  categoryListContainer: {
-    marginTop: 20,
-  },
-  categoryCard: {
-    backgroundColor: "#f5f5f5",
-    padding: 15,
-    borderRadius: 10,
-    borderColor: "#ccc",
-    borderWidth: 1,
-    marginBottom: 10,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    shadowOffset: { width: 0, height: 3 },
-    elevation: 2,
-  },
-  categoryTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  categoryDescription: {
-    fontSize: 14,
-    color: "#666",
-  },
-  floatingButton: {
-    position: "absolute",
-    bottom: 70, // Adjust to stay above the footer
-    right: 20,
-    backgroundColor: "#bc430b",
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    justifyContent: "center",
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-    shadowOffset: { width: 0, height: 3 },
-    elevation: 4,
-  },
-  swipeActionContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingLeft: 10,
-    paddingRight: 10,
-    borderRadius: 10,
-    height: 100,
-  },
-  swipeActionEdit: {
-    padding: 10,
-    borderRadius: 5,
-    borderColor: "#ccc",
-    borderWidth: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 10,
-  },
-  swipeActionDelete: {
-    padding: 10,
-    borderRadius: 5,
-    borderColor: "#ccc",
-    borderWidth: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-});
 
 export default AdminCategory;

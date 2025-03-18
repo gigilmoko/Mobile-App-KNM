@@ -47,7 +47,7 @@ import EditAddress from "./src/screens/Address/EditAddress";
 import LoadingRider from "./src/screens/Rider/LoadingRider";
 import RiderStack from "./src/screens/Rider/RiderStack";
 import ForgetPassword from "./src/screens/User/ForgetPassword";
-
+import AdminEventAttendees from "./src/screens/Admin/Events/AdminEventAttendees";
 const Stack = createNativeStackNavigator();
 
 // OneSignal.Debug.setLogLevel(LogLevel.Verbose);
@@ -97,6 +97,7 @@ const HomeStack = () => {
             <Stack.Screen name="adminorders" component={AdminOrders} />
             <Stack.Screen name="adminordersdetails" component={AdminOrdersDetails} />
             <Stack.Screen name="adminevents" component={AdminEvents} />
+            <Stack.Screen name="admineventattendees" component={AdminEventAttendees} />
             <Stack.Screen name="admineventcreate" component={AdminCreateEvent} />
             <Stack.Screen name="admineventupdate" component={AdminEventUpdate} />
 

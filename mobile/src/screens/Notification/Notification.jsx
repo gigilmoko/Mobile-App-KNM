@@ -10,6 +10,7 @@ import { GestureHandlerRootView, Swipeable } from 'react-native-gesture-handler'
 import moment from 'moment';
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import Header from '../../components/Layout/Header';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const NotificationScreen = () => {
     const dispatch = useDispatch();
@@ -18,12 +19,25 @@ const NotificationScreen = () => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const fetchNotifications = async () => {
-            await dispatch(getNotifications());
-            setLoading(false);
+        const checkLoginStatus = async () => {
+            const token = await AsyncStorage.getItem('token');
+            if (!token) {
+                navigation.navigate('login');
+                return false;
+            }
+            return true;
         };
+
+        const fetchNotifications = async () => {
+            const isLoggedIn = await checkLoginStatus();
+            if (isLoggedIn) {
+                await dispatch(getNotifications());
+                setLoading(false);
+            }
+        };
+
         fetchNotifications();
-    }, [dispatch]);
+    }, [dispatch, navigation]);
 
     const handleToggleUnread = async (notifId) => {
         try {

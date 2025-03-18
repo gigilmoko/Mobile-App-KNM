@@ -1,10 +1,10 @@
 const initialState = {
-    event: null,                  // State for a single event
-    events: [],                   // State for all events
-    beforeCurrentDayEvents: [],   // Events before the current day
-    afterCurrentDayEvents: [],    // Events after the current day
-    loading: false,               // Loading state
-    error: null,                  // Error state
+    event: null,                  
+    events: [],                   
+    beforeCurrentDayEvents: [],  
+    afterCurrentDayEvents: [],   
+    loading: false,              
+    error: null,                  
 };
 
 const calendarReducer = (state = initialState, action) => {
