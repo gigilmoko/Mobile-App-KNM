@@ -13,7 +13,7 @@ export const getPendingSessionsByRider = (riderId) => async (dispatch) => {
             withCredentials: true,
         });
         dispatch({ type: 'GET_PENDING_SESSIONS', pendingSessions: data.sessions });
-        console.log(data.sessions)
+        console.log('Pending Sessions:', JSON.stringify(data.sessions, null, 2)); // Updated
     } catch (error) {
         console.error('Error fetching pending sessions:', error);
         dispatch({ type: 'DELIVERY_SESSION_ERROR', error });
@@ -37,7 +37,7 @@ export const getSessionsByRider = (riderId) => async (dispatch) => {
             rejectedSessions: data.rejectedSessions,
         });
 
-        // console.log('Fetched sessions:', data);
+        console.log('Fetched Sessions:', JSON.stringify(data, null, 2)); // Updated
     } catch (error) {
         console.error('Error fetching sessions:', error);
         dispatch({ type: 'DELIVERY_SESSION_ERROR', error: error.response?.data?.message || error.message });

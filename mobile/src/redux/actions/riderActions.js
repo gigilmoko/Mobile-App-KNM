@@ -79,6 +79,7 @@ export const deleteRider = (id) => async (dispatch) => {
 };
 
 export const riderLogin = (email, password, playerId) => async (dispatch) => {
+  console.log('Rider login action:', email, password, playerId);
   try {
       dispatch({ type: "loginRequest" });
 
@@ -107,12 +108,16 @@ export const riderLogin = (email, password, playerId) => async (dispatch) => {
       });
 
       console.log('Rider login successful:', data.user);
+
+      return 'success'; // Return 'success' after successful login
   } catch (error) {
       dispatch({
           type: "riderLoginFail",
           payload: error.response?.data.message || 'Network error',
       });
       console.error('Login error:', error);
+
+      throw error; // Re-throw the error to handle it in the calling function
   }
 };
 
@@ -168,7 +173,7 @@ export const getRiderProfile = () => async (dispatch) => {
     console.log('Rider profile data:', data.rider);
     dispatch({ type: "GET_RIDER_PROFILE_SUCCESS", payload: data.rider });
   } catch (error) {
-    console.error("Error fetching rider profile:", error.response?.data || error.message);
+    // console.error("Error fetching rider profile:", error.response?.data || error.message);
 
     // Handle specific error for invalid token
     if (error.response && error.response.status === 401) {
@@ -223,7 +228,7 @@ export const getPendingTruck = (riderId) => async (dispatch) => {
 
     const token = await AsyncStorage.getItem('riderToken');
     console.log('Token:', token); // Log the token to confirm
-    console.log(riderId); // Log the rider ID to confirm
+    console.log('Rider ID:', riderId); // Log the rider ID to confirm
 
     // Construct the URL and log it
     const url = `${server}rider/get-work/${riderId}`;
@@ -236,6 +241,9 @@ export const getPendingTruck = (riderId) => async (dispatch) => {
       },
       withCredentials: true,
     });
+
+    // Log the full data with proper formatting
+    console.log('Pending Truck Data:', JSON.stringify(data, null, 2));
 
     dispatch({
       type: "GET_PENDING_TRUCK_SUCCESS",

@@ -1,23 +1,20 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Dimensions, ActivityIndicator } from "react-native";
-import Footer from "./Footer";
+import { View, Text, TouchableOpacity, ScrollView } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
-import { Ionicons } from "@expo/vector-icons";
-import { CameraIcon } from "react-native-heroicons/outline";
-import OptionList from "../../components/User/OptionList";
 import { Avatar, Button } from "react-native-paper";
+import { CameraIcon } from "react-native-heroicons/outline";
+import Footer from "../../components/Layout/Footer";
 import Header from "../../components/Layout/Header";
+import OptionList from "../../components/User/OptionList";
 import { getRiderProfile, riderLogout, updateRiderAvatar } from "../../redux/actions/riderActions";
-import * as ImagePicker from 'expo-image-picker';
-import mime from 'mime';
-import axios from 'axios';
-import Toast from 'react-native-toast-message';
-
-const { height } = Dimensions.get("window");
-
-const MyAccountRider = ({ navigation }) => {
+import * as ImagePicker from "expo-image-picker";
+import mime from "mime";
+import axios from "axios";
+import Toast from "react-native-toast-message";
+import { Ionicons } from "@expo/vector-icons";
+const MyAccountRider = ({ navigation }) => {    
     const dispatch = useDispatch();
-    const { rider, loading, error } = useSelector((state) => state.rider);
+    const { rider } = useSelector((state) => state.rider);
     const [avatar, setAvatar] = useState(rider?.avatar || "");
     const [isAvatarChanged, setIsAvatarChanged] = useState(false);
     const [isUpdating, setIsUpdating] = useState(false);
@@ -25,10 +22,6 @@ const MyAccountRider = ({ navigation }) => {
     useEffect(() => {
         dispatch(getRiderProfile());
     }, [dispatch]);
-
-    if (loading) {
-        return <ActivityIndicator size="large" color="#219ebc" style={styles.loader} />;
-    }
 
     const openImagePicker = async () => {
         const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -46,20 +39,20 @@ const MyAccountRider = ({ navigation }) => {
     const handleAvatarUpdate = async () => {
         if (!avatar || !isAvatarChanged) return;
         const formData = new FormData();
-        formData.append('file', {
+        formData.append("file", {
             uri: avatar,
             type: mime.getType(avatar),
             name: avatar.split("/").pop(),
         });
-        formData.append('upload_preset', 'ml_default');
+        formData.append("upload_preset", "ml_default");
         try {
             setIsUpdating(true);
             const response = await axios.post(
-                'https://api.cloudinary.com/v1_1/dglawxazg/image/upload',
+                "https://api.cloudinary.com/v1_1/dglawxazg/image/upload",
                 formData,
                 {
                     headers: {
-                        'Content-Type': 'multipart/form-data',
+                        "Content-Type": "multipart/form-data",
                     },
                 }
             );
@@ -68,20 +61,18 @@ const MyAccountRider = ({ navigation }) => {
             setIsAvatarChanged(false);
             setIsUpdating(false);
 
-            // Display success toast notification
             Toast.show({
-                type: 'success',
-                text1: 'Avatar Updated Successfully',
+                type: "success",
+                text1: "Avatar Updated Successfully",
             });
         } catch (error) {
-            console.error('Failed to upload avatar', error);
-            alert('Failed to upload avatar. Please try again.');
+            console.error("Failed to upload avatar", error);
+            alert("Failed to upload avatar. Please try again.");
             setIsUpdating(false);
 
-            // Display error toast notification
             Toast.show({
-                type: 'error',
-                text1: 'Avatar Update Failed',
+                type: "error",
+                text1: "Avatar Update Failed",
             });
         }
     };
@@ -92,133 +83,123 @@ const MyAccountRider = ({ navigation }) => {
     };
 
     return (
-        <View style={{ flex: 1, backgroundColor: "#fff" }}>
-            <Header back={true} />
-
+        <View className="flex-1 bg-white">
             <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-                <View style={styles.boxContainer}>
-                    <View style={styles.UserContainer}>
-                        <View style={styles.screenNameContainer}>
-                            <Text style={styles.screenNameText}>My Account</Text>
-                        </View>
-                        <View style={styles.avatarContainer}>
+                <View className="px-5 py-5">
+                    <View className="flex items-center">
+                        <Header title="My Account" />
+
+                        <View className="relative flex items-center justify-center mb-8">
                             <Avatar.Image
-                                source={{ uri: avatar || "https://via.placeholder.com/150" }}
+                                source={{ uri: avatar.toString() }}
                                 size={100}
-                                style={{ backgroundColor: "#c70049" }}
+                                className="bg-[#c70049]"
                             />
-                            <TouchableOpacity style={styles.cameraIconContainer} onPress={openImagePicker}>
-                                <CameraIcon size={24} color="#219ebc" />
+                            <TouchableOpacity
+                                onPress={openImagePicker}
+                                className="absolute bg-white rounded-full p-1 shadow-md right-0 bottom-0"
+                            >
+                                <CameraIcon size={24} color="#e01d47" />
                             </TouchableOpacity>
                             {isAvatarChanged && (
                                 <TouchableOpacity onPress={handleAvatarUpdate} disabled={isUpdating}>
-                                    <Button loading={isUpdating} textColor="#fff" style={styles.updateButton}>
+                                    <Button
+                                        loading={isUpdating}
+                                        textColor="#fff"
+                                        className="bg-[#e01d47] mb-2 rounded-lg px-5 py-2"
+                                    >
                                         {isUpdating ? "Updating..." : "Update"}
                                     </Button>
                                 </TouchableOpacity>
                             )}
                         </View>
 
-                        <View style={styles.infoContainer}>
-                            <Text style={styles.usernameText}>
+                        <View className="flex items-center">
+                            <Text className="text-xl font-bold -mt-2 ">
                                 {rider?.fname} {rider?.middlei}. {rider?.lname}
                             </Text>
-                            <Text style={styles.secondaryText}>{rider?.email}</Text>
-                            <Text style={styles.addressText}>{rider?.phone}</Text>
-                        </View>
-                    </View>
-
-                    <View style={styles.OptionsContainer}>
-                        <OptionList text={"Change Password"} Icon={Ionicons} iconName={"key-sharp"} onPress={() => navigation.navigate("changepassword")} />
-                        <OptionList text={" Camera"} Icon={Ionicons} iconName={"key-sharp"} onPress={() => navigation.navigate("cameracomponent")} />
-                        <OptionList text={" Leaflet"} Icon={Ionicons} iconName={"key-sharp"} onPress={() => navigation.navigate("leaflet")} />
-                        <OptionList text={" Leaflet Update"} Icon={Ionicons} iconName={"key-sharp"} onPress={() => navigation.navigate("leafletupdate")} />
-                    </View>
-                    
                         
-               
+                        </View>
 
-                    <Button mode="contained" onPress={handleLogout} style={styles.logoutButton} >
-                        Logout
-                    </Button>
-                </View>
+                        <View className="mt-6 w-full">
+  <Text className="text-lg font-medium px-3 py-2 text-[#c5c5c5]">Personal Information</Text>
 
-                <View style={styles.footer}>
-                    <Footer activeRoute={"home"} />
+  {/* Email Box */}
+  <View className="bg-white rounded-lg shadow-sm px-4 py-3 flex-row items-center mb-3">
+    <View className="bg-pink-100 rounded-full p-3 mr-4">
+      <Ionicons name="mail" size={20} color="#e01d47" />
+    </View>
+    <View>
+      <Text className="text-sm font-medium text-gray-500">Email</Text>
+      <Text className="text-base font-semibold text-gray-800">{rider?.email}</Text>
+    </View>
+  </View>
+
+  {/* Phone Box */}
+  <View className="bg-white rounded-lg shadow-sm px-4 py-3 flex-row items-center">
+    <View className="bg-pink-100 rounded-full p-3 mr-4">
+      <Ionicons name="call" size={20} color="#e01d47" />
+    </View>
+    <View>
+      <Text className="text-sm font-medium text-gray-500">Phone</Text>
+      <Text className="text-base font-semibold text-gray-800">{rider?.phone}</Text>
+    </View>
+  </View>
+</View>
+                    </View>
+
+                    <Text className="text-lg font-medium px-3 py-2 text-[#c5c5c5] mb-2">Account Settings</Text>
+
+                    <OptionList
+                        text={"Change Password"}
+                        Icon={CameraIcon}
+                        iconName={"key-sharp"}
+                        onPress={() => navigation.navigate("changepassword")}
+                        iconColor="#e01d47"
+                        textColor="#e01d47"
+                    />
+                    {/* <OptionList
+                        text={"Camera"}
+                        Icon={CameraIcon}
+                        iconName={"camera"}
+                        onPress={() => navigation.navigate("cameracomponent")}
+                        iconColor="#e01d47"
+                        textColor="#e01d47"
+                    /> */}
+                    <OptionList
+                        text={"Leaflet"}
+                        Icon={CameraIcon}
+                        iconName={"map"}
+                        onPress={() => navigation.navigate("leaflet")}
+                        iconColor="#e01d47"
+                        textColor="#e01d47"
+                    />
+                    <OptionList
+                        text={"Leaflet Update"}
+                        Icon={CameraIcon}
+                        iconName={"map"}
+                        onPress={() => navigation.navigate("leafletupdate")}
+                        iconColor="#e01d47"
+                        textColor="#e01d47"
+                    />
                 </View>
             </ScrollView>
+
+            <View className="absolute bottom-8 w-full px-6">
+                <Button
+                    mode="contained"
+                    onPress={handleLogout}
+                    className="bg-[#e01d47] rounded-lg py-2"
+                >
+                    Logout
+                </Button>
+            </View>
+
+            {/* <View className="absolute bottom-0 w-full">
+                <Footer activeRoute={"home"} />
+            </View> */}
         </View>
     );
 };
-
-const styles = StyleSheet.create({
-    loader: {
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-    },
-    screenNameContainer: {
-        marginTop: 20,
-        padding: 16,
-        alignItems: "center",
-    },
-    screenNameText: {
-        fontSize: 24,
-        fontWeight: "bold",
-    },
-    UserContainer: {
-        alignItems: "center",
-    },
-    avatarContainer: {
-        alignItems: "center",
-        justifyContent: "center",
-        marginBottom: 20,
-        position: "relative",
-    },
-    cameraIconContainer: {
-        position: "absolute",
-        bottom: 0,
-        right: 0,
-        backgroundColor: "#fff",
-        borderRadius: 50,
-        padding: 5,
-    },
-    infoContainer: {
-        alignItems: "center",
-    },
-    usernameText: {
-        fontSize: 20,
-        fontWeight: "bold",
-        marginBottom: 5,
-    },
-    secondaryText: {
-        fontSize: 16,
-        color: "#888",
-        marginBottom: 5,
-    },
-    addressText: {
-        fontSize: 14,
-        color: "#888",
-    },
-    updateButton: {
-        backgroundColor: "#219ebc",
-        marginBottom: 10,
-        borderRadius: 20,
-    },
-    OptionsContainer: {
-        marginTop: 30,
-        paddingHorizontal: 20,
-    },
-    logoutButton: {
-        backgroundColor: "#bc430b",
-        borderRadius: 10,
-        margin: 20,
-    },
-    footer: {
-        position: "absolute",
-        bottom: 0,
-        width: "100%",
-    },
-});
 
 export default MyAccountRider;

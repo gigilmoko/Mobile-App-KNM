@@ -3,7 +3,7 @@ import { View, Text, ScrollView, StyleSheet, Alert } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { getHistoryByRider } from '../../redux/actions/deliverySessionActions';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import Footer from './Footer';
+import Footer from "../../components/Footer"; // Import the new Footer component
 
 const History = () => {
     const dispatch = useDispatch();
@@ -62,7 +62,7 @@ const History = () => {
                     <Text>No delivery history available.</Text>
                 )}
             </ScrollView>
-            <Footer />
+            <Footer /> 
         </View>
     );
 };
