@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { View, ActivityIndicator, ToastAndroid, Text, ScrollView, Button, Modal, TouchableOpacity, Image, Alert } from "react-native";
+import { View, ActivityIndicator, ToastAndroid, Text, ScrollView, Button, Modal, TouchableOpacity, Image, Alert, RefreshControl } from "react-native";
 import { WebView } from "react-native-webview";
 import * as Location from "expo-location";
 import * as ImagePicker from 'expo-image-picker';
@@ -9,6 +9,7 @@ import axios from 'axios';
 import { getRiderProfile, updateRiderLocation } from "../../redux/actions/riderActions";
 import { getSessionsByRider, submitProofDeliverySession, completeDeliverySession, startDeliverySession, cancelOrder } from "../../redux/actions/deliverySessionActions";
 import { useNavigation } from '@react-navigation/native';
+import { Ionicons } from "@expo/vector-icons";
 
 const LeafletTry = () => {
   const dispatch = useDispatch();
@@ -24,6 +25,12 @@ const LeafletTry = () => {
   const [showStartModal, setShowStartModal] = useState(false);
   const [showCompleteModal, setShowCompleteModal] = useState(false);
   const [currentSessionId, setCurrentSessionId] = useState(null);
+  const [showFullOrderId, setShowFullOrderId] = useState({});
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [selectedGroup, setSelectedGroup] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const [uploading, setUploading] = useState(false); // Add state for loader
+
   useEffect(() => {
     dispatch(getRiderProfile());
   }, [dispatch]);
@@ -64,6 +71,7 @@ const LeafletTry = () => {
       name: imageUri.split("/").pop(),
     });
     formData.append('upload_preset', 'ml_default');
+    setUploading(true); // Show loader
     try {
       const response = await axios.post(
         'https://api.cloudinary.com/v1_1/dglawxazg/image/upload',
@@ -80,6 +88,8 @@ const LeafletTry = () => {
     } catch (error) {
       console.error('Failed to upload image', error);
       Alert.alert('Error', 'Failed to upload image. Please try again.');
+    } finally {
+      setUploading(false); // Hide loader
     }
   };
   const handleDelivered = (sessionId, group, orderId) => {
@@ -111,6 +121,46 @@ const LeafletTry = () => {
   const removeCapturedImage = (orderId) => {
     setCapturedImages((prev) => ({ ...prev, [orderId]: null }));
     setImageUrls((prev) => ({ ...prev, [orderId]: null }));
+  };
+  const handleCancelOrder = (sessionId, orderId) => {
+    Alert.alert(
+      "Cancel Order",
+      "Are you sure you want to cancel this order?",
+      [
+        {
+          text: "No",
+          style: "cancel",
+        },
+        {
+          text: "Yes",
+          onPress: () => {
+            dispatch(cancelOrder(sessionId, orderId));
+            Alert.alert("Success", "Order has been cancelled.");
+          },
+        },
+      ],
+      { cancelable: false }
+    );
+  };
+  const handleViewDetails = (group) => {
+    setSelectedGroup(group);
+    setShowDetailsModal(true);
+  };
+  const closeDetailsModal = () => {
+    setShowDetailsModal(false);
+    setSelectedGroup(null);
+  };
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+      if (rider?._id) {
+        await dispatch(getSessionsByRider(rider._id));
+      }
+    } catch (error) {
+      console.error("Failed to refresh data", error);
+    } finally {
+      setRefreshing(false);
+    }
   };
   useEffect(() => {
     const getCurrentLocation = async () => {
@@ -211,100 +261,172 @@ const LeafletTry = () => {
   const groupOrdersByUserAndLocation = (orders) => {
     const groupedOrders = {};
     orders.forEach(order => {
-      if (order.proofOfDelivery === null) {
-        const key = `${order.user.email}-${JSON.stringify(order.user.deliveryAddress)}`;
-        if (!groupedOrders[key]) {
-          groupedOrders[key] = {
-            user: order.user,
-            deliveryAddress: order.user.deliveryAddress,
-            orders: [],
-          };
-        }
-        groupedOrders[key].orders.push(order);
+      const key = `${order.user.email}-${JSON.stringify(order.user.deliveryAddress)}`;
+      if (!groupedOrders[key]) {
+        groupedOrders[key] = {
+          user: order.user,
+          deliveryAddress: order.user.deliveryAddress,
+          orders: [],
+        };
       }
+      groupedOrders[key].orders.push(order);
     });
     return Object.values(groupedOrders);
   };
   return (
     <View className="flex-1">
-      <ScrollView className="flex-1 bg-gray-100">
+      <ScrollView
+        className="flex-1 bg-gray-100"
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
         {ongoingSessions.map((session) => (
-          <View key={session._id} className="p-2 mb-1 bg-gray-300 rounded">
-            <Text className="text-sm">Session ID: {session._id}</Text>
-            <Text className="text-sm">Status: {session.status}</Text>
-            <Text className="text-sm">
-              Start Time: {session.startTime ? new Date(session.startTime).toLocaleString() : "Not Started"}
-            </Text>
-            <Text className="text-sm">Rider Status: {session.riderAccepted}</Text>
-            {session.truck && (
-              <Text className="text-sm">
-                Truck Model: {session.truck.model}, Plate No: {session.truck.plateNo}
-              </Text>
+          <View key={session._id} className="p-5 mb-2 bg-white rounded">
+            {groupOrdersByUserAndLocation(session.orders).map((group, idx) => (
+              <View key={idx} className="p-4 mb-4 bg-[#fafafa] rounded border border-[#d9d9d9] shadow">
+
+                <Text className="text-lg font-bold flex-row items-center">
+                  Order ID:{" "}
+                  {showFullOrderId[group.orders[0]._id]
+                    ? group.orders[0]._id
+                    : `${group.orders[0]._id.slice(0, 6)}...`}
+                  <TouchableOpacity
+                    onPress={() =>
+                      setShowFullOrderId((prev) => ({
+                        ...prev,
+                        [group.orders[0]._id]: !prev[group.orders[0]._id],
+                      }))
+                    }
+                  >
+                    <Ionicons name="eye" size={16} color="#000" />
+                  </TouchableOpacity>
+                </Text>
+                <Text className="text-base font-semibold flex-row items-center mb-2">
+                 {group.user.fname} {group.user.lname}
+                </Text>
+                <Text className="text-sm text-gray-600 ml-2 flex-row items-center">
+                  <Ionicons name="location" size={16} color="#000" />{" "}
+                  {group.deliveryAddress
+                    .map(
+                      (address) =>
+                        `${address.houseNo} ${address.streetName}, ${address.barangay}, ${address.city}`
+                    )
+                    .join(", ")}
+                </Text>
+                <Text className="text-sm ml-2 text-gray-600 flex-row items-center">
+                  <Ionicons name="cart" size={16} color="#000" /> {group.orders.length} items
+                </Text>
+                <View className="flex-row justify-between mt-3">
+                  <TouchableOpacity
+                    className="flex-1 px-4 py-2 bg-gray-200 rounded mr-2"
+                    onPress={() => handleViewDetails(group)}
+                  >
+                    <Text className="text-sm text-gray-800 text-center">View Details</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    className="flex-1 px-4 py-2 bg-gray-200 rounded ml-2"
+                    onPress={() => handleShowRoute(group.orders[0])}
+                  >
+                    <Text className="text-sm text-gray-800 text-center">Navigate</Text>
+                  </TouchableOpacity>
+                </View>
+                <TouchableOpacity
+                  className={`mt-3 px-4 py-2 rounded ${
+                    group.orders[0].proofOfDelivery || group.orders[0].status === "Cancelled"
+                      ? "bg-gray-300"
+                      : "bg-[#e01d47]"
+                  }`}
+                  onPress={() =>
+                    !group.orders[0].proofOfDelivery &&
+                    group.orders[0].status !== "Cancelled" &&
+                    handleDelivered(session._id, group, group.orders[0]._id)
+                  }
+                  disabled={!!group.orders[0].proofOfDelivery || group.orders[0].status === "Cancelled"}
+                >
+                  <Text className="text-sm text-white text-center">
+                    {group.orders[0].proofOfDelivery
+                      ? "Delivery Completed"
+                      : group.orders[0].status === "Cancelled"
+                      ? "Order Cancelled"
+                      : "Complete Delivery"}
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  className={`mt-3 px-4 py-2 rounded ${
+                    group.orders[0].status === "Cancelled" || group.orders[0].proofOfDelivery
+                      ? "bg-gray-300"
+                      : "bg-gray-500"
+                  }`}
+                  onPress={() =>
+                    group.orders[0].status !== "Cancelled" &&
+                    !group.orders[0].proofOfDelivery &&
+                    handleCancelOrder(session._id, group.orders[0]._id)
+                  }
+                  disabled={group.orders[0].status === "Cancelled" || !!group.orders[0].proofOfDelivery}
+                >
+                  <Text className="text-sm text-white text-center">
+                    {group.orders[0].status === "Cancelled"
+                      ? "Order Cancelled"
+                      : group.orders[0].proofOfDelivery
+                      ? "Delivery Completed"
+                      : "Cancel Order"}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            ))}
+            {!session.startTime && (
+              <TouchableOpacity
+                className="mt-3 px-4 py-2 rounded bg-[#e01d47]"
+                onPress={() => handleStartSession(session._id)}
+              >
+                <Text className="text-sm text-white text-center">Start Session</Text>
+              </TouchableOpacity>
             )}
-            <View className="mt-1 bg-white rounded p-1">
-              <Text className="text-sm">Orders:</Text>
-              {session.orders.length > 0 ? (
-                groupOrdersByUserAndLocation(session.orders).map((group, idx) => (
-                  <View key={idx} className="mb-2">
-                    <Text className="text-sm">
-                      User: {group.user.fname} {group.user.lname}
-                    </Text>
-                    <Text className="text-sm">Email: {group.user.email}</Text>
-                    {group.deliveryAddress.map((address, i) => (
-                      <Text key={i} className="text-sm">
-                        Delivery Address: {address.houseNo} {address.streetName}, {address.barangay}, {address.city}, {address.latitude}, {address.longitude}
-                      </Text>
-                    ))}
-                    {group.orders.map((order, index) => (
-                      <View key={index} className="p-1 bg-gray-200 my-1 rounded">
-                        <Text className="text-sm">Order Status: {order.status}</Text>
-                        <Text className="text-sm">Payment Method: {order.paymentInfo}</Text>
-                        <Text className="text-sm">Total Price: ₱{order.totalPrice}</Text>
-                        {session.startTime && order.status !== 'Cancelled' && order.status !== 'Delivered' && !capturedImages[order._id] && (
-                          <Button title="Capture Proof" onPress={() => handleCaptureProof(order._id)} />
-                        )}
-                        {capturedImages[order._id] && (
-                          <View className="relative items-center">
-                            <TouchableOpacity className="absolute top-0 right-0 bg-red-500 rounded-full w-7 h-7 justify-center items-center z-10" onPress={() => removeCapturedImage(order._id)}>
-                              <Text className="text-white font-bold">X</Text>
-                            </TouchableOpacity>
-                            <Image source={{ uri: capturedImages[order._id] }} className="w-24 h-24 mt-2 mb-2" />
-                            {imageUrls[order._id] && (
-                              <Button title="Delivered" onPress={() => handleDelivered(session._id, group, order._id)} />
-                            )}
-                          </View>
-                        )}
-                        {order.status !== 'Cancelled' && order.status !== 'Delivered' && (
-                          <Button title="Cancel Order" onPress={() => handleCancelOrder(session._id, order._id)} />
-                        )}
-                      </View>
-                    ))}
-                    {group.orders.some(order => order.status !== 'Cancelled' && order.status !== 'Delivered') && (
-                      <View className="mt-2">
-                        <Button title="Show Route" onPress={() => handleShowRoute(group.orders[0])} />
-                      </View>
-                    )}
-                  </View>
-                ))
-              ) : (
-                <Text className="text-sm text-gray-500">No Orders Available</Text>
-              )}
-            </View>
-            {!session.startTime && <Button title="Start Session" onPress={() => handleStartSession(session._id)} />}
-            {session.startTime && <Button title="Complete Session" onPress={() => handleCompleteSession(session._id)} />}
+            {session.startTime && (
+              <TouchableOpacity
+                className="mt-3 px-4 py-2 rounded bg-[#e01d47]"
+                onPress={() => handleCompleteSession(session._id)}
+              >
+                <Text className="text-sm text-white text-center">Complete Session</Text>
+              </TouchableOpacity>
+            )}
           </View>
         ))}
       </ScrollView>
-      <Modal visible={showMapModal} animationType="slide">
-        <View className="flex-1">
-          <TouchableOpacity onPress={handleCloseModal}>
-            <Text className="p-2 text-lg text-blue-500">Close Map</Text>
-          </TouchableOpacity>
-          <WebView ref={webViewRef} originWhitelist={["*"]} source={{ html: htmlContent }} className="flex-1" />
+      <Modal visible={showMapModal} animationType="slide" transparent={true}>
+        <View className="flex-1 justify-center items-center" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
+          <View className="w-11/12 h-5/6 bg-white rounded-lg overflow-hidden">
+            <View className="flex-1">
+              <WebView
+                ref={webViewRef}
+                originWhitelist={["*"]}
+                source={{ html: htmlContent }}
+                style={{ flex: 1 }}
+              />
+            </View>
+            <View className="p-4 bg-white">
+              <Text className="text-sm text-gray-800 flex-row items-center">
+                <Ionicons name="location" size={16} color="#e01d47" />{" "}
+                {selectedOrder?.user?.deliveryAddress
+                  ?.map(
+                    (address) =>
+                      `${address.houseNo} ${address.streetName}, ${address.barangay}, ${address.city}`
+                  )
+                  .join(", ")}
+              </Text>
+            </View>
+            <TouchableOpacity
+              className="absolute top-2 right-2"
+              onPress={handleCloseModal}
+            >
+              <Ionicons name="close-circle" size={24} color="#e01d47" />
+            </TouchableOpacity>
+          </View>
         </View>
       </Modal>
       <Modal visible={showStartModal} animationType="slide" transparent={true}>
-        <View className="flex-1 justify-center items-center bg-black bg-opacity-50">
+        <View className="flex-1 justify-center items-center style={{ backgroundColor: 'rgba(191, 191, 191, 0.5)' }}">
           <View className="w-72 p-5 bg-white rounded items-center">
             <Text className="text-lg mb-5">Are you sure you want to start this session?</Text>
             <View className="flex-row justify-between w-full">
@@ -315,7 +437,7 @@ const LeafletTry = () => {
         </View>
       </Modal>
       <Modal visible={showCompleteModal} animationType="slide" transparent={true}>
-        <View className="flex-1 justify-center items-center bg-black bg-opacity-50">
+        <View className="flex-1 justify-center items-center style={{ backgroundColor: 'rgba(191, 191, 191, 0.5)' }}">
           <View className="w-72 p-5 bg-white rounded items-center">
             <Text className="text-lg mb-5">Are you sure you want to complete this session?</Text>
             <View className="flex-row justify-between w-full">
@@ -325,6 +447,117 @@ const LeafletTry = () => {
           </View>
         </View>
       </Modal>
+      <Modal visible={showDetailsModal} animationType="slide" transparent={true}>
+  <View className="flex-1 justify-center items-center" style={{ backgroundColor: 'rgba(191, 191, 191, 0.5)' }}>
+    <View className="w-80 p-5 bg-white rounded-lg border border-[#d9d9d9] shadow">
+      {selectedGroup && (
+        <>
+          <Text className="text-xl font-bold mb-4">Order Details</Text>
+
+          <Text className="text-sm">Customer</Text>
+          <Text className="text-lg font-bold mb-1">
+            {selectedGroup.user.fname} {selectedGroup.user.lname}
+          </Text>
+          <Text className="text-sm text-gray-600 mb-2">{selectedGroup.user.phone}</Text>
+
+          <Text className="text-base font-semibold">Delivery Location</Text>
+          <Text className="text-sm text-gray-700 mb-2">
+            📍 {selectedGroup.deliveryAddress
+              .map((address) => `${address.houseNo} ${address.streetName}, ${address.barangay}, ${address.city}`)
+              .join(", ")}
+          </Text>
+
+          <Text className="text-base font-semibold mb-1">Order Items</Text>
+          {selectedGroup.orders.map((order, idx) =>
+            order.orderProducts.map((product, pIdx) => (
+              <View key={`${idx}-${pIdx}`} className="flex-row justify-between mb-1">
+                <Text className="text-sm">
+                  {product.quantity}x {product.product ? product.product.name : "Unknown Product"}
+                </Text>
+                <Text className="text-sm" style={{ color: '#e01d47' }}>
+                  ₱{parseFloat(product.price).toFixed(2)}
+                </Text>
+              </View>
+            ))
+          )}
+
+          <View className="border-b border-gray-300 my-2" />
+
+          <View className="flex-row justify-between">
+            <Text className="text-sm font-semibold">Delivery Fee</Text>
+            <Text className="text-sm text-gray-700">
+              ₱{parseFloat(selectedGroup.orders[0].shippingCharges).toFixed(2)}
+            </Text>
+          </View>
+
+          <View className="flex-row justify-between mb-1">
+            <Text className="text-sm font-semibold">Payment Method</Text>
+            <Text className="text-sm text-gray-700">{selectedGroup.orders[0].paymentInfo}</Text>
+          </View>
+
+          <View className="border-b border-gray-300 my-2" />
+
+          <View className="flex-row justify-between items-center">
+            <Text className="text-base font-bold">Total</Text>
+            <Text className="text-base font-bold" style={{ color: '#e01d47' }}>
+              ₱{parseFloat(selectedGroup.orders[0].totalPrice).toFixed(2)}
+            </Text>
+          </View>
+
+          <View className="border-b border-gray-300 my-2" />
+
+          {uploading ? (
+            <ActivityIndicator size="large" color="#e01d47" className="mt-3" />
+          ) : selectedGroup.orders[0].proofOfDelivery ? (
+            <View className="mt-3 items-center">
+              <Image
+                source={{ uri: selectedGroup.orders[0].proofOfDelivery }}
+                style={{ width: 200, height: 200, borderRadius: 10 }}
+              />
+              <TouchableOpacity
+                className="absolute top-2 right-2"
+                onPress={() => removeCapturedImage(selectedGroup.orders[0]._id)}
+              >
+                <Ionicons name="close-circle" size={24} color="#e01d47" />
+              </TouchableOpacity>
+            </View>
+          ) : capturedImages[selectedGroup.orders[0]._id] ? (
+            <View className="mt-3 items-center">
+              <Image
+                source={{ uri: capturedImages[selectedGroup.orders[0]._id] }}
+                style={{ width: 200, height: 200, borderRadius: 10 }}
+              />
+              <TouchableOpacity
+                className="absolute top-2 right-2"
+                onPress={() => removeCapturedImage(selectedGroup.orders[0]._id)}
+              >
+                <Ionicons name="close-circle" size={24} color="#e01d47" />
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <TouchableOpacity
+              className="flex-row items-center mt-3"
+              onPress={() => handleCaptureProof(selectedGroup.orders[0]._id)}
+            >
+              <Ionicons name="camera" size={20} color="#000" />
+              <Text className="ml-2 text-sm text-gray-800">Capture Proof of Delivery</Text>
+            </TouchableOpacity>
+          )}
+
+          <TouchableOpacity
+            className="mt-5 px-4 py-2 rounded-full"
+            style={{ backgroundColor: '#e01d47' }}
+            onPress={closeDetailsModal}
+          >
+            <Text className="text-sm text-white text-center font-semibold">Close</Text>
+          </TouchableOpacity>
+        </>
+      )}
+    </View>
+  </View>
+</Modal>
+
+
     </View>
   );
 };

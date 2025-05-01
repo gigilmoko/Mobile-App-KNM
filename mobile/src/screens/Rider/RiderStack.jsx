@@ -26,7 +26,7 @@ const RiderStack = () => {
             <Stack.Screen name="changepassword" component={ChangePassword} />
             {/* <Stack.Screen name="ongoingsession" component={OngoingSession} /> */}
             <Stack.Screen name="leaflet" component={Leaflet} />
-            {/* <Stack.Screen name="leafletupdate" component={LeafletUpdateLocation} /> */}
+            <Stack.Screen name="leafletupdate" component={LeafletTry} />
             <Stack.Screen name="cameracomponent" component={CameraCapture} />
             
            
