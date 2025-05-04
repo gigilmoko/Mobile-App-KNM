@@ -11,6 +11,7 @@ import { getSessionsByRider, submitProofDeliverySession, completeDeliverySession
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from "@expo/vector-icons";
 
+
 const LeafletTry = () => {
   const dispatch = useDispatch();
   const navigation = useNavigation();
@@ -30,6 +31,7 @@ const LeafletTry = () => {
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
   const [uploading, setUploading] = useState(false); // Add state for loader
+
 
   useEffect(() => {
     dispatch(getRiderProfile());
@@ -198,6 +200,7 @@ const LeafletTry = () => {
     getCurrentLocation();
   }, [dispatch, rider]);
 
+
   if (!location) {
     return (
       <View className="flex-1 justify-center items-center">
@@ -205,6 +208,7 @@ const LeafletTry = () => {
       </View>
     );
   }
+
 
   const htmlContent = selectedOrder ? `
   <!DOCTYPE html>
@@ -227,7 +231,7 @@ const LeafletTry = () => {
           .addTo(map)
           .bindPopup('Your Current Location')
           .openPopup();
-  
+ 
         ${selectedOrder.user.deliveryAddress.map(point => `
           L.Routing.control({
             waypoints: [
@@ -285,6 +289,7 @@ const LeafletTry = () => {
           <View key={session._id} className="p-5 mb-2 bg-white rounded">
             {groupOrdersByUserAndLocation(session.orders).map((group, idx) => (
               <View key={idx} className="p-4 mb-4 bg-[#fafafa] rounded border border-[#d9d9d9] shadow">
+
 
                 <Text className="text-lg font-bold flex-row items-center">
                   Order ID:{" "}
@@ -454,11 +459,13 @@ const LeafletTry = () => {
         <>
           <Text className="text-xl font-bold mb-4">Order Details</Text>
 
+
           <Text className="text-sm">Customer</Text>
           <Text className="text-lg font-bold mb-1">
             {selectedGroup.user.fname} {selectedGroup.user.lname}
           </Text>
           <Text className="text-sm text-gray-600 mb-2">{selectedGroup.user.phone}</Text>
+
 
           <Text className="text-base font-semibold">Delivery Location</Text>
           <Text className="text-sm text-gray-700 mb-2">
@@ -466,6 +473,7 @@ const LeafletTry = () => {
               .map((address) => `${address.houseNo} ${address.streetName}, ${address.barangay}, ${address.city}`)
               .join(", ")}
           </Text>
+
 
           <Text className="text-base font-semibold mb-1">Order Items</Text>
           {selectedGroup.orders.map((order, idx) =>
@@ -481,7 +489,9 @@ const LeafletTry = () => {
             ))
           )}
 
+
           <View className="border-b border-gray-300 my-2" />
+
 
           <View className="flex-row justify-between">
             <Text className="text-sm font-semibold">Delivery Fee</Text>
@@ -490,12 +500,15 @@ const LeafletTry = () => {
             </Text>
           </View>
 
+
           <View className="flex-row justify-between mb-1">
             <Text className="text-sm font-semibold">Payment Method</Text>
             <Text className="text-sm text-gray-700">{selectedGroup.orders[0].paymentInfo}</Text>
           </View>
 
+
           <View className="border-b border-gray-300 my-2" />
+
 
           <View className="flex-row justify-between items-center">
             <Text className="text-base font-bold">Total</Text>
@@ -504,7 +517,9 @@ const LeafletTry = () => {
             </Text>
           </View>
 
+
           <View className="border-b border-gray-300 my-2" />
+
 
           {uploading ? (
             <ActivityIndicator size="large" color="#e01d47" className="mt-3" />
@@ -544,6 +559,7 @@ const LeafletTry = () => {
             </TouchableOpacity>
           )}
 
+
           <TouchableOpacity
             className="mt-5 px-4 py-2 rounded-full"
             style={{ backgroundColor: '#e01d47' }}
@@ -558,8 +574,14 @@ const LeafletTry = () => {
 </Modal>
 
 
+
+
     </View>
   );
 };
 
+
 export default LeafletTry;
+
+
+
