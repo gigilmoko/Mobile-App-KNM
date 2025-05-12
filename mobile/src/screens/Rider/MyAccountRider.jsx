@@ -166,7 +166,7 @@ const MyAccountRider = ({ navigation }) => {
                         iconColor="#e01d47"
                         textColor="#e01d47"
                     /> */}
-                    <OptionList
+                    {/* <OptionList
                         text={"Leaflet"}
                         Icon={CameraIcon}
                         iconName={"map"}
@@ -181,7 +181,7 @@ const MyAccountRider = ({ navigation }) => {
                         onPress={() => navigation.navigate("leafletupdate")}
                         iconColor="#e01d47"
                         textColor="#e01d47"
-                    />
+                    /> */}
                 </View>
             </ScrollView>
 

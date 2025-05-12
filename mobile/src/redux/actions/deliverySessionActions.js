@@ -32,9 +32,9 @@ export const getSessionsByRider = (riderId) => async (dispatch) => {
 
         dispatch({
             type: 'GET_SESSIONS_BY_RIDER',
-            pendingSessions: data.pendingSessions,
+         
             ongoingSessions: data.ongoingSessions,
-            rejectedSessions: data.rejectedSessions,
+          
         });
 
         console.log('Fetched Sessions:', JSON.stringify(data, null, 2)); // Updated

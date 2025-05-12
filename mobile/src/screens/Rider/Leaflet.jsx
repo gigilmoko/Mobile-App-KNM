@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { View, ActivityIndicator, ToastAndroid, Text, ScrollView, Button, Modal, TouchableOpacity, Image, Alert, RefreshControl } from "react-native";
+import { View, ActivityIndicator, ToastAndroid, Text, StyleSheet, ScrollView, Button, Modal, TouchableOpacity, Image, Alert, RefreshControl } from "react-native";
 import { WebView } from "react-native-webview";
 import * as Location from "expo-location";
 import * as ImagePicker from 'expo-image-picker';
@@ -10,9 +10,9 @@ import { getRiderProfile, updateRiderLocation } from "../../redux/actions/riderA
 import { getSessionsByRider, submitProofDeliverySession, completeDeliverySession, startDeliverySession, cancelOrder } from "../../redux/actions/deliverySessionActions";
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from "@expo/vector-icons";
+import NewFooter from "./NewFooter";
 
-
-const LeafletTry = () => {
+const Leaflet= () => {
   const dispatch = useDispatch();
   const navigation = useNavigation();
   const { rider } = useSelector((state) => state.rider);
@@ -31,8 +31,6 @@ const LeafletTry = () => {
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
   const [uploading, setUploading] = useState(false); // Add state for loader
-
-
   useEffect(() => {
     dispatch(getRiderProfile());
   }, [dispatch]);
@@ -41,6 +39,10 @@ const LeafletTry = () => {
       dispatch(getSessionsByRider(rider._id));
     }
   }, [dispatch, rider]);
+
+  const navigationHandler = (screen) => {
+    navigation.navigate(screen);
+};
   const handleShowRoute = (order) => {
     setSelectedOrder(order);
     setShowMapModal(true);
@@ -277,126 +279,151 @@ const LeafletTry = () => {
     });
     return Object.values(groupedOrders);
   };
+
   return (
-    <View className="flex-1">
+    <View className="flex-1 bg-white">
+      
       <ScrollView
-        className="flex-1 bg-gray-100"
+        className="flex-1 bg-white"
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
+            <Text className="text-xl font-bold text-red-500 mb-2 p-5">My Tasks</Text>
         {ongoingSessions.map((session) => (
-          <View key={session._id} className="p-5 mb-2 bg-white rounded">
-            {groupOrdersByUserAndLocation(session.orders).map((group, idx) => (
-              <View key={idx} className="p-4 mb-4 bg-[#fafafa] rounded border border-[#d9d9d9] shadow">
-
-
-                <Text className="text-lg font-bold flex-row items-center">
-                  Order ID:{" "}
-                  {showFullOrderId[group.orders[0]._id]
-                    ? group.orders[0]._id
-                    : `${group.orders[0]._id.slice(0, 6)}...`}
-                  <TouchableOpacity
-                    onPress={() =>
-                      setShowFullOrderId((prev) => ({
-                        ...prev,
-                        [group.orders[0]._id]: !prev[group.orders[0]._id],
-                      }))
-                    }
-                  >
-                    <Ionicons name="eye" size={16} color="#000" />
-                  </TouchableOpacity>
-                </Text>
-                <Text className="text-base font-semibold flex-row items-center mb-2">
-                 {group.user.fname} {group.user.lname}
-                </Text>
-                <Text className="text-sm text-gray-600 ml-2 flex-row items-center">
-                  <Ionicons name="location" size={16} color="#000" />{" "}
-                  {group.deliveryAddress
-                    .map(
-                      (address) =>
-                        `${address.houseNo} ${address.streetName}, ${address.barangay}, ${address.city}`
-                    )
-                    .join(", ")}
-                </Text>
-                <Text className="text-sm ml-2 text-gray-600 flex-row items-center">
-                  <Ionicons name="cart" size={16} color="#000" /> {group.orders.length} items
-                </Text>
-                <View className="flex-row justify-between mt-3">
-                  <TouchableOpacity
-                    className="flex-1 px-4 py-2 bg-gray-200 rounded mr-2"
-                    onPress={() => handleViewDetails(group)}
-                  >
-                    <Text className="text-sm text-gray-800 text-center">View Details</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    className="flex-1 px-4 py-2 bg-gray-200 rounded ml-2"
-                    onPress={() => handleShowRoute(group.orders[0])}
-                  >
-                    <Text className="text-sm text-gray-800 text-center">Navigate</Text>
-                  </TouchableOpacity>
-                </View>
-                <TouchableOpacity
-                  className={`mt-3 px-4 py-2 rounded ${
-                    group.orders[0].proofOfDelivery || group.orders[0].status === "Cancelled"
-                      ? "bg-gray-300"
-                      : "bg-[#e01d47]"
-                  }`}
-                  onPress={() =>
-                    !group.orders[0].proofOfDelivery &&
-                    group.orders[0].status !== "Cancelled" &&
-                    handleDelivered(session._id, group, group.orders[0]._id)
-                  }
-                  disabled={!!group.orders[0].proofOfDelivery || group.orders[0].status === "Cancelled"}
-                >
-                  <Text className="text-sm text-white text-center">
-                    {group.orders[0].proofOfDelivery
-                      ? "Delivery Completed"
-                      : group.orders[0].status === "Cancelled"
-                      ? "Order Cancelled"
-                      : "Complete Delivery"}
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  className={`mt-3 px-4 py-2 rounded ${
-                    group.orders[0].status === "Cancelled" || group.orders[0].proofOfDelivery
-                      ? "bg-gray-300"
-                      : "bg-gray-500"
-                  }`}
-                  onPress={() =>
-                    group.orders[0].status !== "Cancelled" &&
-                    !group.orders[0].proofOfDelivery &&
-                    handleCancelOrder(session._id, group.orders[0]._id)
-                  }
-                  disabled={group.orders[0].status === "Cancelled" || !!group.orders[0].proofOfDelivery}
-                >
-                  <Text className="text-sm text-white text-center">
-                    {group.orders[0].status === "Cancelled"
-                      ? "Order Cancelled"
-                      : group.orders[0].proofOfDelivery
-                      ? "Delivery Completed"
-                      : "Cancel Order"}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            ))}
-            {!session.startTime && (
-              <TouchableOpacity
-                className="mt-3 px-4 py-2 rounded bg-[#e01d47]"
-                onPress={() => handleStartSession(session._id)}
-              >
-                <Text className="text-sm text-white text-center">Start Session</Text>
-              </TouchableOpacity>
-            )}
-            {session.startTime && (
-              <TouchableOpacity
-                className="mt-3 px-4 py-2 rounded bg-[#e01d47]"
-                onPress={() => handleCompleteSession(session._id)}
-              >
-                <Text className="text-sm text-white text-center">Complete Session</Text>
-              </TouchableOpacity>
-            )}
-          </View>
+         <View key={session._id} className="px-5 mb-2 bg-white rounded">
+         {groupOrdersByUserAndLocation(session.orders).map((group, idx) => (
+           <View key={idx} className="p-4 mb-4 bg-[#fafafa] rounded border border-[#d9d9d9] shadow">
+             
+             {/* Order ID */}
+             <Text className="text-xs font-semibold text-gray-700">
+               Order ID:{" "}
+               {showFullOrderId[group.orders[0]._id]
+                 ? group.orders[0]._id
+                 : `${group.orders[0]._id.slice(0, 6)}...`}
+               <TouchableOpacity
+                 onPress={() =>
+                   setShowFullOrderId((prev) => ({
+                     ...prev,
+                     [group.orders[0]._id]: !prev[group.orders[0]._id],
+                   }))
+                 }
+               >
+                 <Ionicons name="eye" size={14} color="#000" />
+               </TouchableOpacity>
+             </Text>
+       
+             {/* Customer Name */}
+             <Text className="text-base font-bold mt-1">
+               {group.user.fname} {group.user.lname}
+             </Text>
+       
+             {/* Address */}
+             <Text className="text-sm text-gray-600 mt-1 flex-row items-center">
+               <Ionicons name="location" size={14} color="#000" />{" "}
+               {group.deliveryAddress
+                 .map(
+                   (address) =>
+                     `${address.houseNo} ${address.streetName}, ${address.barangay}, ${address.city}`
+                 )
+                 .join(", ")}
+             </Text>
+       
+             {/* Item Count */}
+             <Text className="text-sm text-gray-600 mt-1 flex-row items-center">
+               <Ionicons name="cart" size={14} color="#000" /> {group.orders.length} items
+             </Text>
+       
+             {/* View Details */}
+             <TouchableOpacity
+               className="mt-3 px-4 py-2 border border-gray-300 rounded bg-white"
+               onPress={() => handleViewDetails(group)}
+             >
+               <Text className="text-sm text-center text-gray-800">View Details</Text>
+             </TouchableOpacity>
+             <View className="flex-row justify-between mt-3 space-x-2">
+               <TouchableOpacity
+                 className="flex-1 px-4 py-2 bg-[#e01d47] rounded"
+                 onPress={() => handleCall(group.user.phone)} // assuming `group.user.phone` is available
+               >
+                 <Text className="text-sm text-white text-center">Call</Text>
+               </TouchableOpacity>
+               <TouchableOpacity
+                 className="flex-1 px-4 py-2 bg-[#e01d47] rounded"
+                 onPress={() => handleShowRoute(group.orders[0])}
+               >
+                 <Text className="text-sm text-white text-center">Navigate</Text>
+               </TouchableOpacity>
+             </View>
+             {/* Complete Delivery */}
+             <TouchableOpacity
+               className={`mt-3 px-4 py-2 rounded ${
+                 group.orders[0].proofOfDelivery || group.orders[0].status === "Cancelled"
+                   ? "bg-gray-300"
+                   : "bg-[#e01d47]"
+               }`}
+               onPress={() =>
+                 !group.orders[0].proofOfDelivery &&
+                 group.orders[0].status !== "Cancelled" &&
+                 handleDelivered(session._id, group, group.orders[0]._id)
+               }
+               disabled={!!group.orders[0].proofOfDelivery || group.orders[0].status === "Cancelled"}
+             >
+               <Text className="text-sm text-white text-center">
+                 {group.orders[0].proofOfDelivery
+                   ? "Delivery Completed"
+                   : group.orders[0].status === "Cancelled"
+                   ? "Order Cancelled"
+                   : "Complete Delivery"}
+               </Text>
+             </TouchableOpacity>
+       
+             {/* Cancel Order */}
+             <TouchableOpacity
+               className={`mt-3 px-4 py-2 rounded ${
+                 group.orders[0].status === "Cancelled" || group.orders[0].proofOfDelivery
+                   ? "bg-gray-300"
+                   : "bg-gray-500"
+               }`}
+               onPress={() =>
+                 group.orders[0].status !== "Cancelled" &&
+                 !group.orders[0].proofOfDelivery &&
+                 handleCancelOrder(session._id, group.orders[0]._id)
+               }
+               disabled={group.orders[0].status === "Cancelled" || !!group.orders[0].proofOfDelivery}
+             >
+               <Text className="text-sm text-white text-center">
+                 {group.orders[0].status === "Cancelled"
+                   ? "Order Cancelled"
+                   : group.orders[0].proofOfDelivery
+                   ? "Delivery Completed"
+                   : "Cancel Order"}
+               </Text>
+             </TouchableOpacity>
+       
+             {/* Call & Navigate Buttons at Bottom */}
+           
+           </View>
+         ))}
+       
+         {/* Session Buttons */}
+         {!session.startTime ? (
+           <TouchableOpacity
+             className="mt-3 px-4 py-2 rounded bg-[#e01d47]"
+             onPress={() => handleStartSession(session._id)}
+           >
+             <Text className="text-sm text-white text-center">Start Session</Text>
+           </TouchableOpacity>
+         ) : (
+           <TouchableOpacity
+             className="mt-3 px-4 py-2 rounded bg-[#e01d47]"
+             onPress={() => handleCompleteSession(session._id)}
+           >
+             <Text className="text-sm text-white text-center">Complete Session</Text>
+           </TouchableOpacity>
+         )}
+       </View>
+       
         ))}
       </ScrollView>
       <Modal visible={showMapModal} animationType="slide" transparent={true}>
@@ -575,13 +602,14 @@ const LeafletTry = () => {
 
 
 
+      <NewFooter/>
 
     </View>
   );
 };
 
 
-export default LeafletTry;
+export default Leaflet;
 
 
 

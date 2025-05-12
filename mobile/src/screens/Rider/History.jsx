@@ -3,7 +3,7 @@ import { View, Text, ScrollView, StyleSheet, Alert } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { getHistoryByRider } from '../../redux/actions/deliverySessionActions';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import Footer from "../../components/Footer"; // Import the new Footer component
+import NewFooter from './NewFooter'; // Adjust the import path as necessary
 
 const History = () => {
     const dispatch = useDispatch();
@@ -39,7 +39,7 @@ const History = () => {
                             <Text style={styles.sessionText}>Session ID: {session._id}</Text>
                             <Text style={styles.sessionText}>Status: {session.status}</Text>
                             <Text style={styles.sessionText}>Truck Plate No: {session.truck?.plateNo}</Text>
-                            <Text style={styles.sessionText}>Rider Accepted: {session.riderAccepted}</Text>
+                            {/* <Text style={styles.sessionText}>Rider Accepted: {session.riderAccepted}</Text> */}
                             <Text style={styles.sessionText}>Orders:</Text>
                             {session.orders.map((order) => (
                                 <View key={order._id} style={styles.orderCard}>
@@ -62,7 +62,7 @@ const History = () => {
                     <Text>No delivery history available.</Text>
                 )}
             </ScrollView>
-            <Footer /> 
+           <NewFooter/>
         </View>
     );
 };
