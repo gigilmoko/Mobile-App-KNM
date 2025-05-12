@@ -202,7 +202,6 @@ const Leaflet= () => {
     getCurrentLocation();
   }, [dispatch, rider]);
 
-
   if (!location) {
     return (
       <View className="flex-1 justify-center items-center">
@@ -210,8 +209,7 @@ const Leaflet= () => {
       </View>
     );
   }
-
-
+  
   const htmlContent = selectedOrder ? `
   <!DOCTYPE html>
   <html>
@@ -298,19 +296,21 @@ const Leaflet= () => {
              {/* Order ID */}
              <Text className="text-xs font-semibold text-gray-700">
                Order ID:{" "}
-               {showFullOrderId[group.orders[0]._id]
+               {group.orders[0].KNMOrderId || (showFullOrderId[group.orders[0]._id]
                  ? group.orders[0]._id
-                 : `${group.orders[0]._id.slice(0, 6)}...`}
-               <TouchableOpacity
-                 onPress={() =>
-                   setShowFullOrderId((prev) => ({
-                     ...prev,
-                     [group.orders[0]._id]: !prev[group.orders[0]._id],
-                   }))
-                 }
-               >
-                 <Ionicons name="eye" size={14} color="#000" />
-               </TouchableOpacity>
+                 : `${group.orders[0]._id.slice(0, 6)}...`)}
+               {!group.orders[0].KNMOrderId && (
+                 <TouchableOpacity
+                   onPress={() =>
+                     setShowFullOrderId((prev) => ({
+                       ...prev,
+                       [group.orders[0]._id]: !prev[group.orders[0]._id],
+                     }))
+                   }
+                 >
+                   <Ionicons name="eye" size={14} color="#000" />
+                 </TouchableOpacity>
+               )}
              </Text>
        
              {/* Customer Name */}
@@ -358,16 +358,17 @@ const Leaflet= () => {
              {/* Complete Delivery */}
              <TouchableOpacity
                className={`mt-3 px-4 py-2 rounded ${
-                 group.orders[0].proofOfDelivery || group.orders[0].status === "Cancelled"
+                 !session.startTime || group.orders[0].proofOfDelivery || group.orders[0].status === "Cancelled"
                    ? "bg-gray-300"
                    : "bg-[#e01d47]"
                }`}
                onPress={() =>
+                 session.startTime &&
                  !group.orders[0].proofOfDelivery &&
                  group.orders[0].status !== "Cancelled" &&
                  handleDelivered(session._id, group, group.orders[0]._id)
                }
-               disabled={!!group.orders[0].proofOfDelivery || group.orders[0].status === "Cancelled"}
+               disabled={!session.startTime || !!group.orders[0].proofOfDelivery || group.orders[0].status === "Cancelled"}
              >
                <Text className="text-sm text-white text-center">
                  {group.orders[0].proofOfDelivery
@@ -381,16 +382,17 @@ const Leaflet= () => {
              {/* Cancel Order */}
              <TouchableOpacity
                className={`mt-3 px-4 py-2 rounded ${
-                 group.orders[0].status === "Cancelled" || group.orders[0].proofOfDelivery
+                 !session.startTime || group.orders[0].status === "Cancelled" || group.orders[0].proofOfDelivery
                    ? "bg-gray-300"
                    : "bg-gray-500"
                }`}
                onPress={() =>
+                 session.startTime &&
                  group.orders[0].status !== "Cancelled" &&
                  !group.orders[0].proofOfDelivery &&
                  handleCancelOrder(session._id, group.orders[0]._id)
                }
-               disabled={group.orders[0].status === "Cancelled" || !!group.orders[0].proofOfDelivery}
+               disabled={!session.startTime || group.orders[0].status === "Cancelled" || !!group.orders[0].proofOfDelivery}
              >
                <Text className="text-sm text-white text-center">
                  {group.orders[0].status === "Cancelled"
