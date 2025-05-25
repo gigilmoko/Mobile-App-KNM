@@ -43,7 +43,7 @@ const History = () => {
                             <Text style={styles.sessionText}>Orders:</Text>
                             {session.orders.map((order) => (
                                 <View key={order._id} style={styles.orderCard}>
-                                    <Text style={styles.orderText}>Order ID: {order._id}</Text>
+                                    <Text style={styles.orderText}>Order ID: {order.KNMOrderId}</Text>
                                     <Text style={styles.orderText}>Total Price: ₱{order.totalPrice}</Text>
                                     <Text style={styles.orderText}>Status: {order.status}</Text>
                                     <Text style={styles.orderText}>Payment: {order.paymentInfo}</Text>

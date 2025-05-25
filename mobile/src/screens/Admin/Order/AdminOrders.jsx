@@ -155,7 +155,7 @@ const AdminOrders = () => {
                             <View className="flex-row items-center">
                                 {getStatusIcon(order.status)}
                                 <View className="ml-3">
-                                    <Text className="text-base font-bold">ORD-{order._id}</Text>
+                                    <Text className="text-base font-bold">{order.KNMOrderId}</Text>
                                     <Text className="text-sm text-gray-600">
                                         {order.user ? `${order.user.fname} ${order.user.lname}` : "Unknown User"}
                                     </Text>

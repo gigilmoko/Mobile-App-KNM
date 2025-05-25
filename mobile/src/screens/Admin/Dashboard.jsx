@@ -207,7 +207,7 @@ const Dashboard = ({ navigation, route }) => {
                             <View className="flex-1">
                                 <View className="flex-row justify-between">
                                     <Text className="text-[#e01d47] font-bold text-sm">
-                                        {`${order._id}`}
+                                        {`${order.KNMOrderId}`}
                                     </Text>
                                     <Text className="text-[#ff7895] text-xs">
                                         {formatDate(order.createdAt)}
