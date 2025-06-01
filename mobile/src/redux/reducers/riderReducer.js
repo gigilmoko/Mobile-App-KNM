@@ -103,8 +103,14 @@ export const riderReducer = createReducer(initialState, (builder) => {
             };
             state.message = "Rider location updated successfully";
         })
-        .addCase("UPDATE_RIDER_LOCATION_FAIL", (state, action) => {
+           .addCase("UPDATE_RIDER_LOCATION_FAIL", (state, action) => {
             state.loading = false;
             state.error = action.payload;
+        })
+        .addCase("START_LOCATION_POLLING", (state, action) => {
+            state.locationPolling = action.payload;
+        })
+        .addCase("STOP_LOCATION_POLLING", (state) => {
+            state.locationPolling = null;
         });
 });

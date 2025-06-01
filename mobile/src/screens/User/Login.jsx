@@ -46,6 +46,7 @@ const Login = ({ navigation }) => {
           navigation.navigate("myaccount");
         } else {
           throw new Error("Invalid credentials");
+          // console.log(response.error.message);
         }
       })
       .catch((error) => {

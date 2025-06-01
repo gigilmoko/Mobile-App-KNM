@@ -337,12 +337,46 @@ export const updateRiderAvatar = (imageUrl) => async (dispatch, getState) => {
     }
 };
 
+// export const updateRiderLocation = (riderId, latitude, longitude) => async (dispatch) => {
+//   // console.log('Updating rider location:', riderId, latitude, longitude);
+//   try {
+//       dispatch({ type: "UPDATE_RIDER_LOCATION_REQUEST" });
+
+//       const token = await AsyncStorage.getItem('riderToken');
+
+//       const { data } = await axios.put(
+//           `${server}rider/update-location`, 
+//           { riderId, latitude, longitude }, 
+//           {
+//               headers: {
+//                   "Authorization": `Bearer ${token}`,
+//               },
+//               withCredentials: true,
+//           }
+//       );
+
+//       dispatch({
+//           type: "UPDATE_RIDER_LOCATION_SUCCESS",
+//           payload: data.location,
+//       });
+//   } catch (error) {
+//       dispatch({
+//           type: "UPDATE_RIDER_LOCATION_FAIL",
+//           payload: error.response?.data?.message || 'Failed to update location',
+//       });
+//   }
+// };
+
+// ...existing code...
+
 export const updateRiderLocation = (riderId, latitude, longitude) => async (dispatch) => {
-  // console.log('Updating rider location:', riderId, latitude, longitude);
   try {
       dispatch({ type: "UPDATE_RIDER_LOCATION_REQUEST" });
 
       const token = await AsyncStorage.getItem('riderToken');
+      if (!token) {
+          throw new Error('No rider token found');
+      }
 
       const { data } = await axios.put(
           `${server}rider/update-location`, 
@@ -359,10 +393,55 @@ export const updateRiderLocation = (riderId, latitude, longitude) => async (disp
           type: "UPDATE_RIDER_LOCATION_SUCCESS",
           payload: data.location,
       });
+
+      console.log('Rider location updated successfully:', { latitude, longitude });
   } catch (error) {
+      console.error('Failed to update rider location:', error);
       dispatch({
           type: "UPDATE_RIDER_LOCATION_FAIL",
           payload: error.response?.data?.message || 'Failed to update location',
       });
   }
+};
+
+// Update the existing startLocationPolling function
+export const startLocationPolling = (riderId, getCurrentLocation, intervalMs = 30000) => async (dispatch) => {
+  // Stop any existing polling first
+  dispatch(stopLocationPolling());
+
+  const pollLocation = async () => {
+    try {
+      const location = await getCurrentLocation();
+      if (location && location.latitude && location.longitude) {
+        await dispatch(updateRiderLocation(riderId, location.latitude, location.longitude));
+      }
+    } catch (error) {
+      console.error('Location polling error:', error);
+    }
+  };
+
+  // Get initial location immediately
+  pollLocation();
+
+  // Start interval polling
+  const pollingInterval = setInterval(pollLocation, intervalMs);
+
+  // Store interval ID for cleanup
+  dispatch({
+    type: "START_LOCATION_POLLING",
+    payload: { intervalId: pollingInterval, riderId }
+  });
+
+  return pollingInterval;
+};
+
+export const stopLocationPolling = () => (dispatch, getState) => {
+  const { locationPolling } = getState().rider;
+  
+  if (locationPolling && locationPolling.intervalId) {
+    clearInterval(locationPolling.intervalId);
+    console.log('Location polling stopped');
+  }
+  
+  dispatch({ type: "STOP_LOCATION_POLLING" });
 };

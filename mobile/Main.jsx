@@ -3,6 +3,9 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { useDispatch, useSelector } from "react-redux";
 import { loadUser } from "./src/redux/actions/userActions";
+import { startLocationPolling, stopLocationPolling } from "./src/redux/actions/riderActions";
+import * as Location from "expo-location";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Toast from 'react-native-toast-message';
 
 //ONE SIGNAL
@@ -50,11 +53,12 @@ import ForgetPassword from "./src/screens/User/ForgetPassword";
 import AdminEventAttendees from "./src/screens/Admin/Events/AdminEventAttendees";
 const Stack = createNativeStackNavigator();
 
-OneSignal.Debug.setLogLevel(LogLevel.Verbose);
-OneSignal.initialize(Constants.expoConfig.extra.oneSignalAppId);
+//uncomment this to enable OneSignal
+// OneSignal.Debug.setLogLevel(LogLevel.Verbose);
+// OneSignal.initialize(Constants.expoConfig.extra.oneSignalAppId);
 
-// Also need enable notifications to complete OneSignal setup
-OneSignal.Notifications.requestPermission(true);
+// // Also need enable notifications to complete OneSignal setup
+// OneSignal.Notifications.requestPermission(true);
 
 const HomeStack = () => {
     return (
@@ -112,12 +116,78 @@ const HomeStack = () => {
 const Main = () => {
     const dispatch = useDispatch();
     const { user } = useSelector((state) => state.user);
+    const { rider } = useSelector((state) => state.rider);
 
     useEffect(() => {
         if (!user || Object.keys(user).length === 0) {
             dispatch(loadUser());
         }
     }, [dispatch]);
+
+    // Set up rider location polling when rider is logged in
+    useEffect(() => {
+        const setupRiderLocationTracking = async () => {
+            try {
+                const riderToken = await AsyncStorage.getItem('riderToken');
+                const riderId = await AsyncStorage.getItem('riderId');
+                
+                if (riderToken && riderId) {
+                    // Request location permissions
+                    const { status } = await Location.requestForegroundPermissionsAsync();
+                    if (status !== 'granted') {
+                        console.log('Location permission denied');
+                        return;
+                    }
+
+                    // Define location getter function
+                    const getCurrentLocation = async () => {
+                        try {
+                            const location = await Location.getCurrentPositionAsync({
+                                accuracy: Location.Accuracy.High,
+                            });
+                            return {
+                                latitude: location.coords.latitude,
+                                longitude: location.coords.longitude,
+                            };
+                        } catch (error) {
+                            console.error('Error getting location:', error);
+                            return null;
+                        }
+                    };
+
+                    // Start location polling every 30 seconds
+                    dispatch(startLocationPolling(riderId, getCurrentLocation, 30000));
+                    console.log('Started rider location tracking');
+                }
+            } catch (error) {
+                console.error('Error setting up rider location tracking:', error);
+            }
+        };
+
+        const cleanupRiderLocationTracking = () => {
+            dispatch(stopLocationPolling());
+            console.log('Stopped rider location tracking');
+        };
+
+        // Check if rider is logged in
+        if (rider && rider._id) {
+            setupRiderLocationTracking();
+        } else {
+            // Check AsyncStorage for rider session
+            AsyncStorage.getItem('riderToken').then((token) => {
+                if (token) {
+                    setupRiderLocationTracking();
+                } else {
+                    cleanupRiderLocationTracking();
+                }
+            });
+        }
+
+        // Cleanup on component unmount
+        return () => {
+            cleanupRiderLocationTracking();
+        };
+    }, [dispatch, rider]);
 
     return (
         <NavigationContainer>

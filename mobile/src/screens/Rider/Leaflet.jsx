@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { View, ActivityIndicator, ToastAndroid, Text, StyleSheet, ScrollView, Button, Modal, TouchableOpacity, Image, Alert, RefreshControl } from "react-native";
+import { View, ActivityIndicator, ToastAndroid, Text, StyleSheet, ScrollView, Button, Modal, TouchableOpacity, Image, Alert, RefreshControl, Linking } from "react-native";
 import { WebView } from "react-native-webview";
 import * as Location from "expo-location";
 import * as ImagePicker from 'expo-image-picker';
@@ -166,6 +166,38 @@ const Leaflet= () => {
       setRefreshing(false);
     }
   };
+   useEffect(() => {
+    dispatch(getRiderProfile());
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (rider?._id) {
+      dispatch(getSessionsByRider(rider._id));
+    }
+  }, [dispatch, rider]);
+
+  const handleCall = (phoneNumber) => {
+    if (phoneNumber) {
+      const phoneUrl = `tel:${phoneNumber}`;
+      Linking.canOpenURL(phoneUrl)
+        .then((supported) => {
+          if (!supported) {
+            Alert.alert('Error', 'Phone calls are not supported on this device');
+          } else {
+            return Linking.openURL(phoneUrl);
+          }
+        })
+        .catch((error) => {
+          console.error('Error opening phone app:', error);
+          Alert.alert('Error', 'Failed to open phone app');
+        });
+    } else {
+      Alert.alert('Error', 'No phone number available');
+    }
+  };
+
+  // Remove the existing location tracking useEffect since it's now handled globally
+  // Keep only the location state for map display
   useEffect(() => {
     const getCurrentLocation = async () => {
       try {
@@ -179,28 +211,13 @@ const Leaflet= () => {
           latitude: location.coords.latitude,
           longitude: location.coords.longitude,
         });
-        if (rider?._id) {
-          dispatch(updateRiderLocation(rider._id, location.coords.latitude, location.coords.longitude));
-        }
-        if (webViewRef.current) {
-          webViewRef.current.injectJavaScript(`
-            if (typeof updateCurrentLocation === 'function') {
-              if (!window.initialLocationSet) {
-                updateCurrentLocation(${location.coords.latitude}, ${location.coords.longitude}, true);
-                window.initialLocationSet = true;
-              } else {
-                updateCurrentLocation(${location.coords.latitude}, ${location.coords.longitude}, false);
-              }
-            }
-          `);
-        }
       } catch (error) {
         ToastAndroid.show("Failed to get current location", ToastAndroid.LONG);
         console.error(error);
       }
     };
     getCurrentLocation();
-  }, [dispatch, rider]);
+  }, []);
 
   if (!location) {
     return (

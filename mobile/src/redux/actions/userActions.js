@@ -79,6 +79,7 @@ export const userLogin = (email, password, playerId) => async (dispatch) => {
 
         return 'success';
     } catch (error) {
+        console.log(error)
         dispatch({
             type: "loginFail", 
             payload: error.response?.data.message || 'Network error',
