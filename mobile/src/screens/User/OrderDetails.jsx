@@ -183,13 +183,14 @@ const OrderDetails = () => {
     }
   }, [sessionByOrderId?.rider?.location]);
 
+// ...existing code...
   const htmlContent =
     location && userDeliveryLocation
       ? `
     <!DOCTYPE html>
     <html>
         <head>
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <meta name="viewport" width=device-width, initial-scale=1.0">
             <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
             <style>
                 #map { height: 100vh; width: 100%; }
@@ -207,6 +208,9 @@ const OrderDetails = () => {
                 .status-indicator.online {
                     background: rgba(0,128,0,0.7);
                 }
+                .rider-marker {
+                    transition: all 0.3s ease-in-out;
+                }
             </style>
             <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
             <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
@@ -219,26 +223,29 @@ const OrderDetails = () => {
                 var map = L.map('map').setView([${location.latitude}, ${location.longitude}], 16);
                 var userInteracting = false;
                 var lastUserInteraction = 0;
-                var AUTO_CENTER_DELAY = 5000; // 5 seconds after user stops interacting
+                var AUTO_CENTER_DELAY = 10000; // Increased to 10 seconds
                 var lastUpdateTime = Date.now();
                 var statusElement = document.getElementById('status');
+                var previousLocation = null;
+                var isFirstUpdate = true;
 
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                     attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
                 }).addTo(map);
 
-                // Custom rider icon for better visibility
+                // Custom rider icon with smooth animation
                 var riderIcon = L.divIcon({
                     className: 'rider-marker',
-                    html: '<div style="background: #e01d47; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 10px rgba(224,29,71,0.5);"></div>',
+                    html: '<div style="background: #e01d47; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 10px rgba(224,29,71,0.5); transition: all 0.3s ease;"></div>',
                     iconSize: [26, 26],
                     iconAnchor: [13, 13]
                 });
 
-                var riderLocationMarker = L.marker([${location.latitude}, ${location.longitude}], {icon: riderIcon})
-                    .addTo(map)
-                    .bindPopup('Rider Current Location')
-                    .openPopup();
+                var riderLocationMarker = L.marker([${location.latitude}, ${location.longitude}], {
+                    icon: riderIcon,
+                    // Enable smooth panning for the marker
+                    zIndexOffset: 1000
+                }).addTo(map).bindPopup('Rider Current Location');
 
                 var userLocationMarker = L.marker([${userDeliveryLocation.latitude}, ${userDeliveryLocation.longitude}])
                     .addTo(map)
@@ -264,26 +271,50 @@ const OrderDetails = () => {
                     if (container) container.style.display = 'none';
                 });
 
-                // Track user interactions
-                map.on('dragstart', function() {
-                    userInteracting = true;
-                    lastUserInteraction = Date.now();
-                });
-
-                map.on('dragend', function() {
+                // Track user interactions more precisely
+                var interactionTimeout;
+                
+                function resetInteractionTimer() {
                     userInteracting = false;
                     lastUserInteraction = Date.now();
-                });
+                }
 
-                map.on('zoomstart', function() {
+                map.on('dragstart zoomstart', function() {
                     userInteracting = true;
-                    lastUserInteraction = Date.now();
+                    if (interactionTimeout) clearTimeout(interactionTimeout);
                 });
 
-                map.on('zoomend', function() {
-                    userInteracting = false;
-                    lastUserInteraction = Date.now();
+                map.on('dragend zoomend', function() {
+                    if (interactionTimeout) clearTimeout(interactionTimeout);
+                    interactionTimeout = setTimeout(resetInteractionTimer, 1000);
                 });
+
+                // Smooth marker animation function
+                function animateMarker(marker, newLatLng, duration = 1000) {
+                    var startLatLng = marker.getLatLng();
+                    var startTime = Date.now();
+
+                    function animate() {
+                        var elapsed = Date.now() - startTime;
+                        var progress = Math.min(elapsed / duration, 1);
+                        
+                        // Easing function for smooth animation
+                        var easeProgress = progress < 0.5 
+                            ? 2 * progress * progress 
+                            : 1 - Math.pow(-2 * progress + 2, 2) / 2;
+
+                        var currentLat = startLatLng.lat + (newLatLng.lat - startLatLng.lat) * easeProgress;
+                        var currentLng = startLatLng.lng + (newLatLng.lng - startLatLng.lng) * easeProgress;
+
+                        marker.setLatLng([currentLat, currentLng]);
+
+                        if (progress < 1) {
+                            requestAnimationFrame(animate);
+                        }
+                    }
+
+                    animate();
+                }
 
                 function updateCurrentLocation(lat, lng) {
                     console.log('Updating rider location:', lat, lng);
@@ -293,30 +324,54 @@ const OrderDetails = () => {
                     statusElement.textContent = 'Live Tracking';
                     statusElement.className = 'status-indicator online';
                     
-                    // Always update the marker position with smooth animation
-                    riderLocationMarker.setLatLng([lat, lng]).update();
+                    var newLatLng = L.latLng(lat, lng);
                     
-                    // Update routing waypoints
-                    routingControl.setWaypoints([
-                        L.latLng(lat, lng),
-                        L.latLng(${userDeliveryLocation.latitude}, ${userDeliveryLocation.longitude})
-                    ]);
+                    // Check if location actually changed to avoid unnecessary updates
+                    if (previousLocation && 
+                        Math.abs(previousLocation.lat - lat) < 0.00001 && 
+                        Math.abs(previousLocation.lng - lng) < 0.00001) {
+                        return; // Skip update if location hasn't changed significantly
+                    }
+
+                    // Smooth marker animation instead of instant update
+                    if (previousLocation && !isFirstUpdate) {
+                        animateMarker(riderLocationMarker, newLatLng, 800);
+                    } else {
+                        riderLocationMarker.setLatLng(newLatLng);
+                        isFirstUpdate = false;
+                    }
                     
-                    // Only center the map if user is not interacting and hasn't interacted recently
+                    previousLocation = { lat: lat, lng: lng };
+                    
+                    // Update routing waypoints less frequently to reduce map refreshing
+                    if (routingControl) {
+                        setTimeout(() => {
+                            routingControl.setWaypoints([
+                                L.latLng(lat, lng),
+                                L.latLng(${userDeliveryLocation.latitude}, ${userDeliveryLocation.longitude})
+                            ]);
+                        }, 200);
+                    }
+                    
+                    // Only center the map if user hasn't interacted recently and it's not the first update
                     var timeSinceLastInteraction = Date.now() - lastUserInteraction;
-                    if (!userInteracting && timeSinceLastInteraction > AUTO_CENTER_DELAY) {
-                        map.setView([lat, lng], map.getZoom(), {animate: true, duration: 1});
+                    if (!userInteracting && timeSinceLastInteraction > AUTO_CENTER_DELAY && !isFirstUpdate) {
+                        // Use flyTo for smoother map movement instead of setView
+                        map.flyTo([lat, lng], map.getZoom(), {
+                            animate: true,
+                            duration: 1.5
+                        });
                     }
                 }
 
                 // Check connection status
                 setInterval(function() {
                     var timeSinceLastUpdate = Date.now() - lastUpdateTime;
-                    if (timeSinceLastUpdate > 10000) { // No update for 10 seconds
+                    if (timeSinceLastUpdate > 15000) { // Increased to 15 seconds
                         statusElement.textContent = 'Connection Lost';
                         statusElement.className = 'status-indicator';
                     }
-                }, 2000);
+                }, 3000);
 
                 // Initial status
                 setTimeout(function() {
