@@ -27,6 +27,7 @@
     "expo-image-picker": "~16.0.4",
     "expo-location": "~18.0.5",
     "link": "^2.1.1",
+    "lucide-react-native": "^0.514.0",
     "mime": "^4.0.4",
     "moment-timezone": "^0.5.46",
     "nativewind": "^2.0.11",

@@ -108,13 +108,85 @@
                       "group.com.knm.mobile.onesignal"
                     ]
                   }
+                },
+                {
+                  "targetName": "OneSignalNotificationServiceExtension",
+                  "bundleIdentifier": "com.knm.mobile.OneSignalNotificationServiceExtension",
+                  "entitlements": {
+                    "com.apple.security.application-groups": [
+                      "group.com.knm.mobile.onesignal"
+                    ]
+                  }
+                },
+                {
+                  "targetName": "OneSignalNotificationServiceExtension",
+                  "bundleIdentifier": "com.knm.mobile.OneSignalNotificationServiceExtension",
+                  "entitlements": {
+                    "com.apple.security.application-groups": [
+                      "group.com.knm.mobile.onesignal"
+                    ]
+                  }
+                },
+                {
+                  "targetName": "OneSignalNotificationServiceExtension",
+                  "bundleIdentifier": "com.knm.mobile.OneSignalNotificationServiceExtension",
+                  "entitlements": {
+                    "com.apple.security.application-groups": [
+                      "group.com.knm.mobile.onesignal"
+                    ]
+                  }
+                },
+                {
+                  "targetName": "OneSignalNotificationServiceExtension",
+                  "bundleIdentifier": "com.knm.mobile.OneSignalNotificationServiceExtension",
+                  "entitlements": {
+                    "com.apple.security.application-groups": [
+                      "group.com.knm.mobile.onesignal"
+                    ]
+                  }
+                },
+                {
+                  "targetName": "OneSignalNotificationServiceExtension",
+                  "bundleIdentifier": "com.knm.mobile.OneSignalNotificationServiceExtension",
+                  "entitlements": {
+                    "com.apple.security.application-groups": [
+                      "group.com.knm.mobile.onesignal"
+                    ]
+                  }
+                },
+                {
+                  "targetName": "OneSignalNotificationServiceExtension",
+                  "bundleIdentifier": "com.knm.mobile.OneSignalNotificationServiceExtension",
+                  "entitlements": {
+                    "com.apple.security.application-groups": [
+                      "group.com.knm.mobile.onesignal"
+                    ]
+                  }
+                },
+                {
+                  "targetName": "OneSignalNotificationServiceExtension",
+                  "bundleIdentifier": "com.knm.mobile.OneSignalNotificationServiceExtension",
+                  "entitlements": {
+                    "com.apple.security.application-groups": [
+                      "group.com.knm.mobile.onesignal"
+                    ]
+                  }
+                },
+                {
+                  "targetName": "OneSignalNotificationServiceExtension",
+                  "bundleIdentifier": "com.knm.mobile.OneSignalNotificationServiceExtension",
+                  "entitlements": {
+                    "com.apple.security.application-groups": [
+                      "group.com.knm.mobile.onesignal"
+                    ]
+                  }
                 }
               ]
             }
           }
-        }
+        },
+        "projectId": "12f78e05-4566-4b75-b700-5fd36769d9df"
       }
-      
     },
     "newArchEnabled": true
   }

@@ -43,8 +43,8 @@ export const store = configureStore({
 
 
 //Bahay ni Von
-export const server = "https://knm-jiwx.onrender.com/api/"
-// export const server = "http://192.168.43.21:4002/api/"
+// export const server = "https://knm-jiwx.onrender.com/api/"
+export const server = "http://192.168.254.157:4002/api/"
 
 //Bahay ni Jis
 // export const server = "http://192.168.1.14:4002/api/"
