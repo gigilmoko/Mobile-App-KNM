@@ -1,57 +1,91 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
-  Text,
   View,
+  Text,
   ScrollView,
-  Modal,
   TouchableOpacity,
-  Button,
   ActivityIndicator,
   Image,
   Linking,
+  Dimensions,
 } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
-import { useIsFocused, useRoute } from "@react-navigation/native";
 import { getOrderDetails, confirmProofOfDelivery, notConfirmProofOfDelivery } from "../../redux/actions/orderActions";
 import { getSessionByOrderId } from "../../redux/actions/deliverySessionActions";
-import Header from "../../components/Layout/Header";
-import { useNavigation } from "@react-navigation/native";
-import { WebView } from "react-native-webview";
-import * as Location from "expo-location";
-import { loadUser } from "../../redux/actions/userActions";
+import { getUserDetails } from "../../redux/actions/userActions";
 import { Ionicons } from "@expo/vector-icons";
+import { WebView } from "react-native-webview";
+import Toast from "react-native-toast-message";
 
-const OrderDetails = () => {
-  const dispatch = useDispatch();
-  const navigation = useNavigation();
-  const isFocused = useIsFocused();
-  const route = useRoute();
+const { width } = Dimensions.get('window');
+
+const OrderDetails = ({ route, navigation }) => {
   const { id } = route.params;
-  const { order } = useSelector((state) => state.order);
+  const dispatch = useDispatch();
+  const { loading, order } = useSelector((state) => state.order);
   const { sessionByOrderId } = useSelector((state) => state.deliverySession);
-  const { user } = useSelector((state) => state.user);
-
-  const [location, setLocation] = useState(null);
-  const [showMapModal, setShowMapModal] = useState(false);
+  const { user: currentUser } = useSelector((state) => state.user);
   const webViewRef = useRef(null);
+
+  const [isMapLoaded, setIsMapLoaded] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [location, setLocation] = useState(null);
   const [userDeliveryLocation, setUserDeliveryLocation] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [isMapReady, setIsMapReady] = useState(false);
 
   useEffect(() => {
+    setIsLoading(true);
     const fetchOrderDetails = async () => {
-      setLoading(true);
-      await dispatch(getOrderDetails(id));
-      setLoading(false);
+      try {
+        await dispatch(getOrderDetails(id));
+        if (currentUser) {
+          await dispatch(getUserDetails(currentUser._id));
+        }
+      } catch (error) {
+        console.error("Error fetching order details:", error);
+        Toast.show({
+          type: "error",
+          text1: "Failed to load order details",
+          text2: "Please try again later",
+        });
+      } finally {
+        setIsLoading(false);
+      }
     };
-    fetchOrderDetails();
-  }, [dispatch, id]);
 
+    fetchOrderDetails();
+  }, [dispatch, id, currentUser?._id]);
+
+  useEffect(() => {
+    // Set up map when order is shipped and we have the user's delivery address
+    if (order?.status === "Shipped" && currentUser?.deliveryAddress && currentUser.deliveryAddress.length > 0) {
+      // For demo purposes, set a rider location near the delivery address
+      // In a real app, this would come from the rider's actual location
+      const userLocation = {
+        latitude: currentUser.deliveryAddress[0].latitude || 14.5471833,
+        longitude: currentUser.deliveryAddress[0].longitude || 121.0355163,
+      };
+      
+      // For demo, set rider location slightly offset from user location
+      const riderLocation = {
+        latitude: (userLocation.latitude || 0) + 0.005, 
+        longitude: (userLocation.longitude || 0) - 0.003
+      };
+      
+      setLocation(riderLocation);
+      setUserDeliveryLocation(userLocation);
+      setIsMapReady(true);
+    }
+  }, [order, currentUser]);
+
+  // Fetch and update rider location
   useEffect(() => {
     if (order?.status === "Shipped" || order?.status === "Delivered") {
       dispatch(getSessionByOrderId(id));
     }
   }, [dispatch, id, order?.status]);
 
+  // Update rider location state when session data changes
   useEffect(() => {
     if (sessionByOrderId?.rider?.location) {
       setLocation({
@@ -61,92 +95,7 @@ const OrderDetails = () => {
     }
   }, [sessionByOrderId]);
 
-  // useEffect(() => {
-  //   if (sessionByOrderId) {
-  //     console.log("Session by Order ID:", sessionByOrderId);
-  //   }
-  // }, [sessionByOrderId]);
-
-  useEffect(() => {
-    if (user?.deliveryAddress?.[0]) {
-      setUserDeliveryLocation({
-        latitude: user.deliveryAddress[0].latitude,
-        longitude: user.deliveryAddress[0].longitude,
-      });
-    }
-  }, [user]);
-
-  useEffect(() => {
-    dispatch(loadUser());
-  }, [dispatch, isFocused]);
-
-  useEffect(() => {
-    const interval = setInterval(async () => {
-      if (order?.status === "Shipped" || order?.status === "Delivered") {
-        await dispatch(getSessionByOrderId(id));
-        if (sessionByOrderId?.rider?.location && webViewRef.current) {
-          webViewRef.current.injectJavaScript(`
-                        if (typeof updateCurrentLocation === 'function') {
-                            updateCurrentLocation(${sessionByOrderId.rider.location.latitude}, ${sessionByOrderId.rider.location.longitude});
-                        }
-                    `);
-        }
-      }
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [dispatch, id, order?.status, sessionByOrderId]);
-
-  const handleShowRoute = () => {
-    setShowMapModal(true);
-  };
-
-  const handleCloseModal = () => {
-    setShowMapModal(false);
-  };
-
-  //   const handleRefreshLocation = async () => {
-  //     try {
-  //       const location = await Location.getCurrentPositionAsync({});
-  //       setLocation({
-  //         latitude: location.coords.latitude,
-  //         longitude: location.coords.longitude,
-  //       });
-  //       if (webViewRef.current) {
-  //         webViewRef.current.injectJavaScript(`
-  //                     if (typeof updateCurrentLocation === 'function') {
-  //                         updateCurrentLocation(${location.coords.latitude}, ${location.coords.longitude});
-  //                     }
-  //                 `);
-  //       }
-  //     } catch (error) {
-  //       console.error("Failed to refresh location", error);
-  //     }
-  //   };
-
-  const handleConfirmDelivery = () => {
-    dispatch(confirmProofOfDelivery(id));
-  };
-
-  const handleDeliveryDidntArrive = () => {
-    dispatch(notConfirmProofOfDelivery(id));
-  };
-
-  useEffect(() => {
-    if (sessionByOrderId?.rider?.location) {
-      console.log("Rider Location Update:", {
-        latitude: sessionByOrderId.rider.location.latitude,
-        longitude: sessionByOrderId.rider.location.longitude,
-        timestamp: new Date().toISOString(),
-      });
-
-      setLocation({
-        latitude: sessionByOrderId.rider.location.latitude,
-        longitude: sessionByOrderId.rider.location.longitude,
-      });
-    }
-  }, [sessionByOrderId]);
-  // ...existing code...
+  // Set up live polling for rider location
   useEffect(() => {
     let interval;
 
@@ -154,7 +103,7 @@ const OrderDetails = () => {
       // Initial fetch
       dispatch(getSessionByOrderId(id));
 
-      // Set up polling every 5 seconds for better performance
+      // Set up polling every 5 seconds
       interval = setInterval(async () => {
         try {
           console.log("Polling for rider location update...");
@@ -162,7 +111,7 @@ const OrderDetails = () => {
         } catch (error) {
           console.error("Failed to fetch session data:", error);
         }
-      }, 5000); // 5 seconds instead of 1 second
+      }, 5000);
     }
 
     return () => {
@@ -172,50 +121,93 @@ const OrderDetails = () => {
     };
   }, [dispatch, id, order?.status]);
 
-  // Separate useEffect for updating the map when sessionByOrderId changes
+  // Inject updated location into WebView when rider location changes
   useEffect(() => {
     if (sessionByOrderId?.rider?.location && webViewRef.current) {
       webViewRef.current.injectJavaScript(`
         if (typeof updateCurrentLocation === 'function') {
           updateCurrentLocation(${sessionByOrderId.rider.location.latitude}, ${sessionByOrderId.rider.location.longitude});
         }
+        true;
       `);
     }
   }, [sessionByOrderId?.rider?.location]);
 
-  const handleCall = (phoneNumber) => {
-    if (phoneNumber) {
-      const phoneUrl = `tel:${phoneNumber}`;
-      Linking.canOpenURL(phoneUrl)
-        .then((supported) => {
-          if (!supported) {
-            Alert.alert("Error", "Phone calls are not supported on this device");
-          } else {
-            return Linking.openURL(phoneUrl);
-          }
-        })
-        .catch((error) => {
-          console.error("Error opening phone app:", error);
-          Alert.alert("Error", "Failed to open phone app");
-        });
-    } else {
-      Alert.alert("Error", "No phone number available");
+  const handleRefresh = () => {
+    setIsLoading(true);
+    dispatch(getOrderDetails(id))
+      .then(() => {
+        if (currentUser) {
+          return dispatch(getUserDetails(currentUser._id));
+        }
+      })
+      .then(() => setIsLoading(false))
+      .catch((error) => {
+        console.error("Error refreshing order:", error);
+        setIsLoading(false);
+      });
+  };
+
+  const handleCallRider = (phone) => {
+    if (!phone) {
+      Toast.show({
+        type: "error",
+        text1: "No phone number available",
+      });
+      return;
+    }
+
+    Linking.openURL(`tel:${phone}`);
+  };
+
+  const handleConfirmDelivery = () => {
+    dispatch(confirmProofOfDelivery(id));
+  };
+
+  const handleDeliveryDidntArrive = () => {
+    dispatch(notConfirmProofOfDelivery(id));
+  };
+
+  const getStatusColor = (status) => {
+    if (!status) return '#808080';
+    
+    switch (status.toLowerCase()) {
+      case 'preparing':
+        return '#e01d47';
+      case 'shipped':
+        return '#ff9800';
+      case 'delivered pending':
+        return '#2196f3';
+      case 'delivered':
+        return '#4caf50';
+      case 'cancelled':
+        return '#9e9e9e';
+      default:
+        return '#808080';
     }
   };
 
-  // ...existing code...
+  const getStatusIcon = (status) => {
+    if (!status) return "help-circle";
+    
+    switch (status.toLowerCase()) {
+      case 'preparing':
+        return "time";
+      case 'shipped':
+        return "cube";
+      case 'delivered pending':
+        return "alert-circle";
+      case 'delivered':
+        return "checkmark-circle";
+      case 'cancelled':
+        return "close-circle";
+      default:
+        return "help-circle";
+    }
+  };
 
-  // ...existing code...
-
-  // const overallPrice = order?.orderProducts
-  //     ? order.orderProducts.reduce((acc, item) => acc + item.price * item.quantity, 0)
-  //     : 0;
-
-  // const totalQuantity = order?.orderProducts
-  //     ? order.orderProducts.reduce((acc, item) => acc + item.quantity, 0)
-  //     : 0;
-
-const htmlContent =
+  // HTML content for the map view
+  const htmlContent =
     location && userDeliveryLocation
       ? `
     <!DOCTYPE html>
@@ -653,203 +645,368 @@ const htmlContent =
     </html>
 `
       : "";
-// ...existing code...
-// ...existing code...
 
-
-
-  const subtotal = order?.orderProducts
-    ? order.orderProducts.reduce((acc, item) => acc + item.price * item.quantity, 0)
-    : 0;
-
-  const shipping = order?.shippingCharges || 0; // Use order.shippingCharges
-
-  const overallPrice = subtotal + shipping; // Total price includes subtotal + shipping
-
-  // Ensure order status exists before rendering the UI
-  if (loading) {
+  if (isLoading || loading) {
     return (
-      <View className="flex-1 items-center justify-center bg-gray-200">
-        <ActivityIndicator size="large" color="#FB6831" />
+      <View className="flex-1 justify-center items-center bg-white">
+        <ActivityIndicator size="large" color="#e01d47" />
+        <Text className="text-[#e01d47] mt-4 font-medium">Loading order details...</Text>
       </View>
     );
   }
 
+  if (!order) {
+    return (
+      <View className="flex-1 justify-center items-center bg-white">
+        <Ionicons name="alert-circle-outline" size={70} color="#e0e0e0" />
+        <Text className="text-lg font-medium text-gray-400 mt-4">Order not found</Text>
+        <TouchableOpacity
+          className="mt-6 bg-[#e01d47] py-3 px-6 rounded-full"
+          onPress={() => navigation.goBack()}
+        >
+          <Text className="text-white font-medium">Go Back</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  const formattedDate = order.createdAt
+    ? new Date(order.createdAt).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : "N/A";
+
+  const deliveryDate = order.deliveryAt
+    ? new Date(order.deliveryAt).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : "Pending";
+
+  // Calculate total
+  const subtotal = order.orderProducts.reduce(
+    (acc, item) => acc + (item.price || 0) * (item.quantity || 1),
+    0
+  );
+  const deliveryFee = order.shippingCharges || 0;
+  const total = subtotal + deliveryFee;
+
   return (
-    <>
-      <>
-        <View className="flex-1 bg-white items-center justify-center px-5 pb-0">
-          <ScrollView className="flex-1 w-full px-5 py-5" showsVerticalScrollIndicator={false}>
-            <Header title="Order Details" />
+    <View className="flex-1 bg-gray-50">
+      {/* Header */}
+      <View className="bg-white shadow-sm pt-12 pb-4 px-5">
+        <View className="flex-row items-center">
+          <TouchableOpacity onPress={() => navigation.goBack()} className="p-1">
+            <Ionicons name="arrow-back" size={24} color="#e01d47" />
+          </TouchableOpacity>
+          <Text className="text-xl font-bold text-gray-800 ml-2">Order Details</Text>
+          <View className="flex-1" />
+          <TouchableOpacity
+            onPress={handleRefresh}
+            className="p-2 bg-gray-100 rounded-full"
+          >
+            <Ionicons name="refresh" size={20} color="#e01d47" />
+          </TouchableOpacity>
+        </View>
+      </View>
 
-            {/* Order Products */}
-            <View className="border border-gray-500 rounded-lg px-1 pt-1 bg-white">
-              {order.orderProducts.map((i, index) => (
-                <View
-                  key={i.product?._id || index}
-                  className="flex-row items-center justify-between mb-3 border-gray-200"
-                >
-                  {i.product?.images?.length > 0 && (
-                    <Image source={{ uri: i.product.images[0].url }} className="w-12 h-12 rounded-md" />
-                  )}
-
-                  <View className="flex-1 ml-2">
-                    <Text className="text-sm font-medium text-gray-800">{i.product?.name || "Unknown Product"}</Text>
-                    <Text className="text-xs text-gray-500 ml-1">Qty: {i.quantity || 1}</Text>
-                  </View>
-
-                  <Text className="text-base font-semibold text-red-500">₱{i.price?.toFixed(2) || "0.00"}</Text>
-                </View>
-              ))}
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 40 }}
+      >
+        {/* Order Header Info */}
+        <View className="bg-white p-4 mb-2">
+          <View className="flex-row justify-between items-center mb-3">
+            <View>
+              <Text className="text-lg font-bold text-gray-800">
+                #{order.KNMOrderId || order._id.substring(0, 8)}
+              </Text>
+              <Text className="text-sm text-gray-500">{formattedDate}</Text>
             </View>
-
-            {/* Shipping Information */}
-            {user?.deliveryAddress?.length > 0 && (
-              <View className="bg-white border border-gray-500 p-4 mt-7 rounded-lg shadow-sm">
-                <Text className="text-lg font-extrabold text-gray-700">Shipping Information</Text>
-
-                <View className="mt-2 flex-row items-center">
-                  <Ionicons name="location-outline" size={20} color="red" />
-                  <Text className="text-base font-bold text-gray-800 ml-2">Delivery Address</Text>
-                </View>
-
-                <Text className="text-sm text-gray-600 mt-1">
-                  {user.deliveryAddress[0]?.houseNo || ""} {user.deliveryAddress[0]?.streetName || ""},{" "}
-                  {user.deliveryAddress[0]?.barangay || ""}, {user.deliveryAddress[0]?.city || ""}
+            <View
+              className="py-1.5 px-3 rounded-full"
+              style={{ backgroundColor: `${getStatusColor(order.status)}20` }}
+            >
+              <View className="flex-row items-center">
+                <Ionicons
+                  name={getStatusIcon(order.status)}
+                  size={16}
+                  color={getStatusColor(order.status)}
+                  style={{ marginRight: 4 }}
+                />
+                <Text
+                  className="text-sm font-medium"
+                  style={{ color: getStatusColor(order.status) }}
+                >
+                  {order.status}
                 </Text>
               </View>
-            )}
+            </View>
+          </View>
 
-            {/* Payment Information */}
-            {order?.orderProducts?.length > 0 && (
-              <View className="mt-2 w-full ">
-                <View className="bg-white p-4 mt-5 rounded-lg shadow-sm border border-gray-500">
-                  <Text className="text-lg font-bold text-gray-800 mb-2">Payment Information</Text>
-
-                  <View className="flex-row items-center mb-2">
-                    <Ionicons name="card-outline" size={40} color="red" />
-                    <View className="ml-2">
-                      <Text className="text-sm font-semibold text-gray-800">Payment Method</Text>
-                      <Text className="text-sm text-gray-500">{order?.paymentInfo || "N/A"}</Text>
-                    </View>
-                  </View>
-
-                  <View className="border-b border-gray-200 my-2" />
-
-                  <View className="flex-row justify-between mb-1">
-                    <Text className="text-sm text-gray-600">Subtotal</Text>
-                    <Text className="text-sm text-gray-800">₱{subtotal.toFixed(2)}</Text>
-                  </View>
-
-                  <View className="flex-row justify-between mb-2">
-                    <Text className="text-sm text-gray-600">Shipping</Text>
-                    <Text className="text-sm text-gray-800">₱{shipping.toFixed(2)}</Text>
-                  </View>
-
-                  <View className="border-b border-gray-200 my-2" />
-
-                  <View className="flex-row justify-between items-center mt-2">
-                    <Text className="text-base font-bold text-gray-800">Total</Text>
-                    <Text className="text-lg font-bold text-red-500">₱{overallPrice.toFixed(2)}</Text>
-                  </View>
-                </View>
-              </View>
-            )}
-
-            {/* Rider & Truck Details */}
-            {(order?.status === "Shipped" ||
-              order?.status === "Delivered" ||
-              order?.status === "Delivered Pending" ||
-              order?.status === "Cancelled") && (
-              <View className="bg-white p-5 mt-5 rounded-lg shadow-sm border border-gray-500">
-                <Text className="text-xl font-bold text-gray-800 mb-4">Delivery Details</Text>
-
-                {sessionByOrderId?.rider && (
-                  <View className="mb-1">
-                    <View className="flex-row items-center">
-                      <Ionicons name="person" size={22} color="#e01d47" />
-                      <Text className="text-base text-gray-700 ml-3">
-                        {sessionByOrderId.rider.fname} {sessionByOrderId.rider.lname}
-                      </Text>
-                    </View>
-                    <TouchableOpacity
-                      onPress={() => handleCall(sessionByOrderId.rider.phone)}
-                      className="bg-[#e01d47] py-3 rounded-lg items-center mt-4"
-                    >
-                      <Text className="text-white font-semibold">Call Rider: {sessionByOrderId.rider.phone}</Text>
-                    </TouchableOpacity>
-                  </View>
-                )}
-
-                {sessionByOrderId?.truck && (
-                  <View>
-                    <View className="flex-row items-center">
-                      <Ionicons name="car" size={22} color="#e01d47" />
-                      <Text className="text-base text-gray-700 ml-3">{sessionByOrderId.truck.model}</Text>
-                    </View>
-                    <View className="flex-row items-center mt-2">
-                      <Ionicons name="pricetag" size={22} color="#e01d47" />
-                      <Text className="text-base text-gray-700 ml-3">{sessionByOrderId.truck.plateNo}</Text>
-                    </View>
-                  </View>
-                )}
-              </View>
-            )}
-
-            {/* Show Rider Route Button */}
-            {order?.status === "Shipped" && (
-              <TouchableOpacity
-                className="bg-[#e01d47] py-3 rounded-lg items-center w-full mt-4 mb-5"
-                onPress={handleShowRoute}
-              >
-                <Text className="text-white font-semibold">Show Rider Route</Text>
-              </TouchableOpacity>
-            )}
-
-            {/* Proof of Delivery */}
-            {(order?.status === "Delivered Pending" ||
-              order?.status === "Delivered" ||
-              order?.status === "Cancelled") && (
-              <View className="mt-5 w-full mb-5">
-                <Text className="text-xl font-extrabold text-gray-600">Proof of Delivery</Text>
-                <Image source={{ uri: order.proofOfDelivery }} style={{ width: "100%", height: 200, marginTop: 10 }} />
-
-                {order?.status === "Delivered Pending" && (
-                  <>
-                    <TouchableOpacity
-                      className="bg-[#e01d47] py-3 rounded-lg items-center w-full mt-4"
-                      onPress={handleConfirmDelivery}
-                    >
-                      <Text className="text-white font-semibold">Confirm Delivery</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                      className="bg-[#e01d47] py-3 rounded-lg items-center w-full mt-3"
-                      onPress={handleDeliveryDidntArrive}
-                    >
-                      <Text className="text-white font-semibold">Delivery Didn't Arrive</Text>
-                    </TouchableOpacity>
-                  </>
-                )}
-              </View>
-            )}
-
-            {/* Map Modal */}
-            <Modal visible={showMapModal} animationType="slide">
-              <View style={{ flex: 1 }}>
-                <TouchableOpacity onPress={handleCloseModal}>
-                  <Text style={{ padding: 10, fontSize: 16, color: "blue" }}>Close Map</Text>
-                  {/* <Button title="Refresh Location" onPress={handleRefreshLocation} /> */}
-                </TouchableOpacity>
-                <WebView ref={webViewRef} originWhitelist={["*"]} source={{ html: htmlContent }} style={{ flex: 1 }} />
-              </View>
-            </Modal>
-
-            <View className="h-4"></View>
-          </ScrollView>
+          {/* Estimated Delivery */}
+          {order.status !== "Cancelled" && (
+            <View className="bg-gray-50 rounded-lg p-3 mb-3">
+              <Text className="text-sm text-gray-500">
+                {order.status === "Delivered"
+                  ? "Delivered on"
+                  : "Estimated Delivery"}
+              </Text>
+              <Text className="text-base font-medium text-gray-800">
+                {deliveryDate}
+              </Text>
+            </View>
+          )}
         </View>
-      </>
-    </>
+
+        {/* Live Tracking */}
+        {order.status === "Shipped" && isMapReady && (
+          <View className="bg-white p-4 mb-2">
+            <Text className="text-base font-bold text-gray-800 mb-2">
+              Live Order Tracking
+            </Text>
+            <View className="rounded-lg overflow-hidden" style={{ height: 300 }}>
+              <WebView
+                ref={webViewRef}
+                originWhitelist={["*"]}
+                source={{ html: htmlContent }}
+                onLoadEnd={() => setIsMapLoaded(true)}
+                javaScriptEnabled={true}
+                domStorageEnabled={true}
+                style={{ borderRadius: 8 }}
+                onError={(error) => {
+                  console.error("WebView error:", error);
+                }}
+              />
+              {!isMapLoaded && (
+                <View
+                  className="absolute inset-0 justify-center items-center bg-gray-100"
+                  style={{ borderRadius: 12 }}
+                >
+                  <ActivityIndicator size="large" color="#e01d47" />
+                  <Text className="text-sm text-gray-500 mt-2">
+                    Loading tracking map...
+                  </Text>
+                </View>
+              )}
+            </View>
+          </View>
+        )}
+
+        {/* Rider Info */}
+        {order.status === "Shipped" && sessionByOrderId?.rider && (
+          <View className="bg-white p-4 mb-2">
+            <Text className="text-base font-bold text-gray-800 mb-2">
+              Rider Information
+            </Text>
+            <View className="flex-row items-center">
+              <View className="bg-gray-100 p-3 rounded-full">
+                <Ionicons name="person" size={22} color="#e01d47" />
+              </View>
+              <View className="ml-3 flex-1">
+                <Text className="text-base font-medium text-gray-800">
+                  {sessionByOrderId.rider.fname} {sessionByOrderId.rider.lname}
+                </Text>
+                <Text className="text-sm text-gray-500">
+                  {sessionByOrderId.rider.phone || "No phone available"}
+                </Text>
+              </View>
+              <TouchableOpacity
+                onPress={() => handleCallRider(sessionByOrderId.rider?.phone)}
+                className="bg-[#e01d47] p-2.5 rounded-full"
+              >
+                <Ionicons name="call" size={18} color="#fff" />
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+
+        {/* Delivery Address */}
+        <View className="bg-white p-4 mb-2">
+          <Text className="text-base font-bold text-gray-800 mb-2">
+            Delivery Address
+          </Text>
+          {currentUser?.deliveryAddress && currentUser.deliveryAddress.length > 0 ? (
+            <View className="flex-row">
+              <View className="bg-gray-100 p-2.5 rounded-full">
+                <Ionicons name="location" size={18} color="#e01d47" />
+              </View>
+              <View className="ml-3 flex-1">
+                <Text className="text-base font-medium text-gray-800">
+                  {currentUser.deliveryAddress[0].houseNo !== "none"
+                    ? currentUser.deliveryAddress[0].houseNo + ", "
+                    : ""}
+                  {currentUser.deliveryAddress[0].streetName !== "none"
+                    ? currentUser.deliveryAddress[0].streetName + ", "
+                    : ""}
+                </Text>
+                <Text className="text-sm text-gray-600">
+                  {currentUser.deliveryAddress[0].barangay !== "none"
+                    ? "Brgy. " + currentUser.deliveryAddress[0].barangay + ", "
+                    : ""}
+                  {currentUser.deliveryAddress[0].city !== "none"
+                    ? currentUser.deliveryAddress[0].city
+                    : ""}
+                </Text>
+              </View>
+            </View>
+          ) : (
+            <Text className="text-base text-gray-500">Address not available</Text>
+          )}
+        </View>
+
+        {/* Order Items */}
+        <View className="bg-white p-4 mb-2">
+          <Text className="text-base font-bold text-gray-800 mb-3">
+            Order Items
+          </Text>
+          {order.orderProducts.map((item, index) => (
+            <View
+              key={index}
+              className={`flex-row py-3 ${
+                index !== order.orderProducts.length - 1
+                  ? "border-b border-gray-100"
+                  : ""
+              }`}
+            >
+              <View className="w-16 h-16 bg-gray-100 rounded-md overflow-hidden">
+                <Image
+                  source={{
+                    uri:
+                      item.product?.images?.[0]?.url ||
+                      "https://via.placeholder.com/100",
+                  }}
+                  className="w-full h-full"
+                  style={{ resizeMode: "cover" }}
+                />
+              </View>
+              <View className="ml-3 flex-1 justify-center">
+                <Text className="text-base font-medium text-gray-800" numberOfLines={2}>
+                  {item.product?.name || "Product"}
+                </Text>
+                <Text className="text-sm text-gray-500">
+                  Quantity: {item.quantity}
+                </Text>
+              </View>
+              <View className="justify-center">
+                <Text className="text-base font-bold text-[#e01d47]">
+                  ₱{((item.price || 0) * (item.quantity || 1)).toFixed(2)}
+                </Text>
+              </View>
+            </View>
+          ))}
+        </View>
+
+        {/* Payment Information */}
+        <View className="bg-white p-4 mb-2">
+          <Text className="text-base font-bold text-gray-800 mb-2">
+            Payment Information
+          </Text>
+          <View className="flex-row items-center mb-3">
+            <View className="bg-gray-100 p-2.5 rounded-full">
+              <Ionicons
+                name={
+                  order.paymentInfo === "Cash On Delivery" || order.paymentInfo === "COD"
+                    ? "cash"
+                    : "card"
+                }
+                size={18}
+                color="#e01d47"
+              />
+            </View>
+            <View className="ml-3">
+              <Text className="text-base font-medium text-gray-800">
+                {order.paymentInfo === "COD" ? "Cash On Delivery" : order.paymentInfo || "Payment method not specified"}
+              </Text>
+              <Text className="text-sm text-gray-500">
+                {order.paymentStatus || "Pending payment on delivery"}
+              </Text>
+            </View>
+          </View>
+
+          {/* Price Summary */}
+          <View className="bg-gray-50 rounded-lg p-3">
+            <View className="flex-row justify-between mb-1">
+              <Text className="text-sm text-gray-600">Subtotal</Text>
+              <Text className="text-sm text-gray-800">₱{subtotal.toFixed(2)}</Text>
+            </View>
+            <View className="flex-row justify-between mb-1">
+              <Text className="text-sm text-gray-600">Delivery Fee</Text>
+              <Text className="text-sm text-gray-800">₱{deliveryFee.toFixed(2)}</Text>
+            </View>
+            <View className="border-t border-gray-200 my-1.5" />
+            <View className="flex-row justify-between">
+              <Text className="text-base font-bold text-gray-800">Total</Text>
+              <Text className="text-base font-bold text-[#e01d47]">
+                ₱{total.toFixed(2)}
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Order Notes */}
+        {order.orderNotes && (
+          <View className="bg-white p-4 mb-2">
+            <Text className="text-base font-bold text-gray-800 mb-2">Order Notes</Text>
+            <Text className="text-base text-gray-700">{order.orderNotes}</Text>
+          </View>
+        )}
+
+        {/* Help Section */}
+        <View className="bg-white p-4 mb-2">
+          <TouchableOpacity
+            className="flex-row items-center"
+            onPress={() => navigation.navigate("help", { orderId: order._id })}
+          >
+            <Ionicons name="help-circle-outline" size={24} color="#e01d47" />
+            <Text className="text-base font-medium text-[#e01d47] ml-2">
+              Need Help with this Order?
+            </Text>
+            <View className="flex-1" />
+            <Ionicons name="chevron-forward" size={20} color="#e01d47" />
+          </TouchableOpacity>
+        </View>
+        
+        {/* Proof of Delivery Section */}
+        {(order?.status === "Delivered Pending" ||
+          order?.status === "Delivered") && order.proofOfDelivery && (
+          <View className="bg-white p-4 mb-2">
+            <Text className="text-base font-bold text-gray-800 mb-2">
+              Proof of Delivery
+            </Text>
+            <Image 
+              source={{ uri: order.proofOfDelivery }}
+              className="w-full h-48 rounded-lg"
+              style={{ resizeMode: "cover" }}
+            />
+            
+            {order?.status === "Delivered Pending" && (
+              <View className="flex-row justify-between mt-3">
+                <TouchableOpacity
+                  className="bg-green-500 py-2 px-4 rounded-lg flex-1 mr-2"
+                  onPress={handleConfirmDelivery}
+                >
+                  <Text className="text-white font-semibold text-center">Confirm Delivery</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  className="bg-red-500 py-2 px-4 rounded-lg flex-1 ml-2"
+                  onPress={handleDeliveryDidntArrive}
+                >
+                  <Text className="text-white font-semibold text-center">Report Issue</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+        )}
+      </ScrollView>
+    </View>
   );
 };
 

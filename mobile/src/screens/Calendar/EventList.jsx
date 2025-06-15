@@ -1,5 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity, TextInput, Image } from "react-native";
+import { 
+  View, 
+  Text, 
+  ScrollView, 
+  TouchableOpacity, 
+  TextInput, 
+  Image,
+  ActivityIndicator,
+  StatusBar 
+} from "react-native";
 import Footer from "../../components/Layout/Footer";
 import { useDispatch, useSelector } from "react-redux";
 import { getAllEvents } from "../../redux/actions/calendarActions";
@@ -54,145 +63,236 @@ const EventsList = ({ navigation }) => {
             .sort((a, b) => moment(a.date) - moment(b.date))[0];
     }, [events]);
 
+    // Format date nicely for display
+    const formatDate = (date) => {
+        return moment(date).format("MMM D, YYYY");
+    };
+
+    // Calculate days away
+    const getDaysAway = (date) => {
+        const eventDate = moment(date);
+        const today = moment();
+        return eventDate.diff(today, 'days');
+    };
+
     return (
-        <View className="flex-1 bg-white pb-">
-             <View className="px-5 py-5">
-                <View className="flex items-center">
-                    <Header title="Event List" />
+        <View className="flex-1 bg-gray-50">
+            <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
+            
+            {/* Header */}
+            <View className="bg-white pt-5 pb-4 px-5 shadow-sm">
+                <View className="flex-row items-center justify-between mb-2">
+                    <Text className="text-2xl font-bold text-gray-800">Events</Text>
+                </View>
+                
+                {/* Search Bar */}
+                <View className="flex-row items-center bg-gray-100 rounded-full px-4 py-2.5 mt-2">
+                    <Ionicons name="search" size={18} color="#666" />
+                    <TextInput
+                        className="flex-1 ml-2 text-base text-gray-700"
+                        placeholder="Search events..."
+                        placeholderTextColor="#999"
+                        value={searchQuery}
+                        onChangeText={setSearchQuery}
+                    />
+                    {searchQuery.length > 0 && (
+                        <TouchableOpacity onPress={() => setSearchQuery("")}>
+                            <Ionicons name="close-circle" size={18} color="#999" />
+                        </TouchableOpacity>
+                    )}
+                </View>
+
+                {/* Tab Filter */}
+                <View className="flex-row justify-between mt-4 bg-gray-100 p-1 rounded-xl">
+                    <TouchableOpacity
+                        className={`flex-1 py-2.5 rounded-lg ${
+                            activeTab === "past" ? "bg-white shadow-sm" : ""
+                        }`}
+                        onPress={() => setActiveTab("past")}
+                    >
+                        <Text className={`text-center font-medium ${
+                            activeTab === "past" ? "text-[#e01d47]" : "text-gray-500"
+                        }`}>
+                            Past
+                        </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        className={`flex-1 py-2.5 rounded-lg ${
+                            activeTab === "month" ? "bg-white shadow-sm" : ""
+                        }`}
+                        onPress={() => setActiveTab("month")}
+                    >
+                        <Text className={`text-center font-medium ${
+                            activeTab === "month" ? "text-[#e01d47]" : "text-gray-500"
+                        }`}>
+                            This Month
+                        </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        className={`flex-1 py-2.5 rounded-lg ${
+                            activeTab === "nextMonth" ? "bg-white shadow-sm" : ""
+                        }`}
+                        onPress={() => setActiveTab("nextMonth")}
+                    >
+                        <Text className={`text-center font-medium ${
+                            activeTab === "nextMonth" ? "text-[#e01d47]" : "text-gray-500"
+                        }`}>
+                            Future
+                        </Text>
+                    </TouchableOpacity>
                 </View>
             </View>
-            <View className="flex-1 px-4 pt-2 mb-10">
-            <View className="mt-[-20px] flex-row items-center border border-[#e01d47] rounded-full px-4 py-2 bg-white">
-    <TextInput
-        className="flex-1 text-gray-700 placeholder-gray-400"
-        placeholder="Search"
-        value={searchQuery}
-        onChangeText={setSearchQuery}
-    />
-    <Ionicons name="search" size={20} color="#e01d47" />
-</View>
+
+            <ScrollView
+                contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
+                showsVerticalScrollIndicator={false}
+            >
+                {/* Upcoming Event Feature Card */}
                 {upcomingEvent && (
-                    <View className="bg-white rounded p-2 shadow border border-yellow-500">
-                        <Text className="text-lg font-bold text-gray-800 mb-1">Upcoming Event</Text>
-                        <Text className="text-base font-bold">Title: {upcomingEvent.title}</Text>
-                        <Text className="text-sm text-gray-800">Venue: {upcomingEvent.location}</Text>
-                        <Text className="text-sm text-gray-600">Date: 
-                             {moment(upcomingEvent.date).format("MM-DD-YYYY")}
-                        </Text>
-                    
-                        <Text className="text-sm text-gray-600">Description: {upcomingEvent.description}</Text>
+                    <View className="bg-white rounded-xl shadow mb-4 overflow-hidden">
+                        <View className="bg-[#e01d47] py-2 px-4">
+                            <Text className="text-white font-bold">COMING UP</Text>
+                        </View>
+                        
+                        <View className="p-4">
+                            <View className="flex-row items-center mb-3">
+                                <View className="bg-[#e01d47] bg-opacity-10 p-2 rounded-lg mr-3">
+                                    <Text className="text-[#e01d47] text-xl font-bold">
+                                        {moment(upcomingEvent.date).format("D")}
+                                    </Text>
+                                    <Text className="text-[#e01d47] text-xs font-medium">
+                                        {moment(upcomingEvent.date).format("MMM")}
+                                    </Text>
+                                </View>
+                                
+                                <View className="flex-1">
+                                    <Text className="text-lg font-bold text-gray-800" numberOfLines={1}>
+                                        {upcomingEvent.title}
+                                    </Text>
+                                    <View className="flex-row items-center mt-1">
+                                        <Ionicons name="location" size={14} color="#666" />
+                                        <Text className="text-sm text-gray-600 ml-1" numberOfLines={1}>
+                                            {upcomingEvent.location || "Location not specified"}
+                                        </Text>
+                                    </View>
+                                </View>
+                            </View>
+                            
+                            <Text className="text-sm text-gray-600 mb-3" numberOfLines={2}>
+                                {upcomingEvent.description}
+                            </Text>
+                            
+                            <TouchableOpacity
+                                onPress={() => navigation.navigate("eventinfo", { eventId: upcomingEvent._id })}
+                                className="bg-[#e01d47] py-2.5 rounded-lg items-center"
+                            >
+                                <Text className="text-white font-medium">View Event Details</Text>
+                            </TouchableOpacity>
+                        </View>
                     </View>
                 )}
-
-                <View className="flex-row justify-around my-4">
-                <TouchableOpacity
-    className={`px-4 py-2 mt-2 rounded-full border ${
-        activeTab === "past"
-            ? "bg-[#e01d47] text-white"
-            : "bg-white border-[#e01d47]"
-    }`}
-    onPress={() => setActiveTab("past")}
->
-    <Text className={`font-bold ${activeTab === "past" ? "text-white" : "text-[#e01d47]"}`}>
-        Past Events
-    </Text>
-</TouchableOpacity>
-
-<TouchableOpacity
-    className={`px-4 py-2 mt-2 rounded-full border ${
-        activeTab === "month"
-            ? "bg-[#e01d47] text-white"
-            : "bg-white border-[#e01d47]"
-    }`}
-    onPress={() => setActiveTab("month")}
->
-    <Text className={`font-bold ${activeTab === "month" ? "text-white" : "text-[#e01d47]"}`}>
-        This Month
-    </Text>
-</TouchableOpacity>
-
-<TouchableOpacity
-    className={`px-4 py-2 mt-2 rounded-full border ${
-        activeTab === "nextMonth"
-            ? "bg-[#e01d47] text-white"
-            : "bg-white border-[#e01d47]"
-    }`}
-    onPress={() => setActiveTab("nextMonth")}
->
-    <Text className={`font-bold ${activeTab === "nextMonth" ? "text-white" : "text-[#e01d47]"}`}>
-        Future Events
-    </Text>
-</TouchableOpacity>
-                </View>
-
-                <ScrollView
-                    contentContainerStyle={{ paddingBottom: 10 }}
-                    showsVerticalScrollIndicator={false}
-                >
-                    {loading ? (
-                        <View className="justify-center items-center">
-                            <Text>Loading...</Text>
+                
+                {/* Event List */}
+                {loading ? (
+                    <View className="flex-1 justify-center items-center py-10">
+                        <ActivityIndicator size="large" color="#e01d47" />
+                        <Text className="text-gray-500 mt-3">Loading events...</Text>
+                    </View>
+                ) : filteredEvents.length > 0 ? (
+                    <>
+                        <View className="flex-row items-center justify-between mb-4">
+                            <Text className="text-base font-bold text-gray-700">
+                                {activeTab === "past" ? "Past Events" : 
+                                 activeTab === "month" ? "This Month" : "Future Events"}
+                            </Text>
+                            <Text className="text-sm text-gray-500">
+                                {filteredEvents.length} {filteredEvents.length === 1 ? 'event' : 'events'}
+                            </Text>
                         </View>
-                    ) : (
-                        <View>
-                            {filteredEvents && filteredEvents.length > 0 ? (
-    filteredEvents.map((event, index) => (
-        <View key={event._id} className="py-2">
-            {/* Event Content */}
-            <View className="flex-row items-center">
-                {/* Event Image */}
-                <Image
-                    source={{ uri: "https://res.cloudinary.com/dglawxazg/image/upload/v1741731158/image_2025-03-12_061207062-removebg-preview_hsp3wa.png" }}
-                    className="w-12 h-12 mr-3"
-                    resizeMode="contain"
-                />
-
-                {/* Event Details */}
-                <View className="flex-1">
-                    {/* Truncated Title */}
-                    <Text
-                        className={`text-base font-bold ${
-                            moment(event.date).isBetween(moment(), moment().endOf("month"), "day", "[]") ? "text-yellow-500" : ""
-                        }`}
-                    >
-                        {event.title.length > 40 ? `${event.title.substring(0, 40)}...` : event.title}
-                    </Text>
-
-                    {/* Truncated Description */}
-                    <Text className="text-sm text-gray-800">
-                        {event.description.length > 20 ? `${event.description.substring(0, 20)}...` : event.description}
-                    </Text>
-
-                    {/* Calendar Icon + Date */}
-                    <View className="flex-row items-center mt-1">
-                        <Ionicons name="calendar" size={16} color="#e01d47" />
-                        <Text className="text-sm text-gray-600 ml-1">
-                            {moment(event.date).format("MM-DD-YYYY")}
+                        
+                        {filteredEvents.map((event, index) => (
+                            <TouchableOpacity
+                                key={event._id}
+                                className="bg-white rounded-xl shadow-sm mb-3 overflow-hidden"
+                                onPress={() => navigation.navigate("eventinfo", { eventId: event._id })}
+                                activeOpacity={0.9}
+                            >
+                                <View className="p-4">
+                                    <View className="flex-row">
+                                        <View className="mr-3 bg-gray-100 rounded-lg p-2 items-center justify-center" 
+                                              style={{ width: 60, height: 60 }}>
+                                            <Text className="text-[#e01d47] text-lg font-bold">
+                                                {moment(event.date).format("D")}
+                                            </Text>
+                                            <Text className="text-[#e01d47] text-xs">
+                                                {moment(event.date).format("MMM")}
+                                            </Text>
+                                        </View>
+                                        
+                                        <View className="flex-1">
+                                            <Text className="text-base font-bold text-gray-800" numberOfLines={1}>
+                                                {event.title}
+                                            </Text>
+                                            
+                                            <View className="flex-row items-center mt-1">
+                                                <Ionicons name="time-outline" size={14} color="#666" />
+                                                <Text className="text-xs text-gray-500 ml-1">
+                                                    {formatDate(event.date)}
+                                                </Text>
+                                                
+                                                {moment(event.date).isAfter(moment()) && (
+                                                    <View className="bg-[#e01d47] bg-opacity-10 rounded-full px-2 py-0.5 ml-2">
+                                                        <Text className="text-xs text-[#e01d47]">
+                                                            In {getDaysAway(event.date)} days
+                                                        </Text>
+                                                    </View>
+                                                )}
+                                            </View>
+                                            
+                                            <View className="flex-row items-center mt-1">
+                                                <Ionicons name="location-outline" size={14} color="#666" />
+                                                <Text className="text-xs text-gray-500 ml-1" numberOfLines={1}>
+                                                    {event.location || "Location not specified"}
+                                                </Text>
+                                            </View>
+                                            
+                                            <Text className="text-sm text-gray-600 mt-1" numberOfLines={2}>
+                                                {event.description}
+                                            </Text>
+                                        </View>
+                                    </View>
+                                </View>
+                                
+                                <TouchableOpacity 
+                                    className="bg-red-100 py-2 items-center"
+                                    onPress={() => navigation.navigate("eventinfo", { eventId: event._id })}
+                                >
+                                    <Text className="text-sm text-[#e01d47] font-medium">View Details</Text>
+                                </TouchableOpacity>
+                            </TouchableOpacity>
+                        ))}
+                    </>
+                ) : (
+                    <View className="flex-1 justify-center items-center py-16">
+                        <Ionicons name="calendar-outline" size={70} color="#e0e0e0" />
+                        <Text className="text-lg font-medium text-gray-400 mt-4">No events found</Text>
+                        <Text className="text-sm text-gray-400 text-center mt-2 px-10">
+                            {searchQuery 
+                                ? "Try adjusting your search" 
+                                : activeTab === "past" 
+                                    ? "No past events available"
+                                    : activeTab === "month"
+                                        ? "No events this month" 
+                                        : "No future events scheduled"}
                         </Text>
                     </View>
-                </View>
-
-                {/* View Details Button */}
-                <TouchableOpacity
-    onPress={() => navigation.navigate("eventinfo", { eventId: event._id })}
-    className="bg-[#e01d47] px-4 py-2 mt-10 rounded-full"
->
-    <Text className="text-white text-sm font-bold">View Details</Text>
-</TouchableOpacity>
+                )}
+            </ScrollView>
+            
+            {/* Footer */}
+            <View className="absolute bottom-0 w-full">
+                <Footer activeRoute={"home"} />
             </View>
-
-            {/* Divider (Except for the last item) */}
-            {index !== filteredEvents.length - 1 && <View className="border-b border-gray-300 my-2" />}
-        </View>
-    ))
-                            ) : (
-                                <Text className="text-base text-gray-500 text-center">No events available</Text>
-                            )}
-                        </View>
-                    )}
-                </ScrollView>
-            </View>
-            <Footer className="mb-10" activeRoute={"home"} />
         </View>
     );
 };

@@ -67,7 +67,7 @@ const Footer = () => {
                     { key: 0, name: "home", label: "Home" },
                     { key: 1, name: "cart", label: "Cart" },
                     { key: 2, name: "calendar-month", label: "Events" },
-                    { key: 3, name: "bell", label: "Alerts" },
+                    { key: 3, name: "bell", label: "Notifications" },
                     { key: 4, name: "account", label: "Profile" },
                 ].map((item) => (
                     <TouchableOpacity
