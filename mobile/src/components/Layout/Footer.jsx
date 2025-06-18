@@ -4,11 +4,17 @@ import { useNavigation, useRoute } from "@react-navigation/native";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { useSelector } from "react-redux";
 
-const Footer = () => {
+const Footer = ({ activeRoute }) => {
     const navigate = useNavigation();
     const route = useRoute();
     const { isAuthenticated } = useSelector((state) => state.user);
-    const activeRoute = route.name;
+    const { cartItems } = useSelector((state) => state.cart);
+    
+    // Use passed activeRoute prop, or fallback to route.name
+    const currentRoute = activeRoute || route.name;
+
+    // Calculate total items in cart
+    const cartItemCount = cartItems.reduce((total, item) => total + item.quantity, 0);
 
     useEffect(() => {
         // console.log("isAuthenticated state:", isAuthenticated);
@@ -41,57 +47,75 @@ const Footer = () => {
         }
     };
 
+    const menuItems = [
+        { key: 0, name: "home", label: "Home", routeName: "home" },
+        { key: 1, name: "cart", label: "Cart", routeName: "cart" },
+        { key: 2, name: "calendar-month", label: "Events", routeName: "eventlist" },
+        { key: 3, name: "bell", label: "Notifications", routeName: "notification" },
+        { key: 4, name: "account", label: "Profile", routeName: "profile" }
+    ];
+
     return (
         <View
+            className="bg-white w-full bottom-0 justify-center items-center h-[70px] shadow-md border-t border-gray-100"
             style={{
-                backgroundColor: "#ffffff", 
-                position: "absolute",
-                width: "100%",
-                bottom: 0,
-                justifyContent: "center",
-                alignSelf: "center",
-                height: 70,
-                paddingVertical: 8,
-                borderTopWidth: 1,
-                borderTopColor: "#ddd",
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: -2 },
+                shadowOpacity: 0.05,
+                shadowRadius: 3,
+                elevation: 5
             }}
         >
-            <View
-                style={{
-                    flexDirection: "row",
-                    justifyContent: "space-evenly",
-                    alignItems: "center",
-                }}
-            >
-                {[
-                    { key: 0, name: "home", label: "Home" },
-                    { key: 1, name: "cart", label: "Cart" },
-                    { key: 2, name: "calendar-month", label: "Events" },
-                    { key: 3, name: "bell", label: "Notifications" },
-                    { key: 4, name: "account", label: "Profile" },
-                ].map((item) => (
-                    <TouchableOpacity
-                        key={item.key}
-                        activeOpacity={0.8}
-                        onPress={() => navigationHandler(item.key)}
-                        style={{ alignItems: "center" }}
-                    >
-                        <View
-                            style={{
-                                backgroundColor: activeRoute === item.name ? "#f5a8b8" : "transparent",
-                                borderRadius: 25,
-                                padding: 8,
-                            }}
+            <View className="flex-row justify-evenly items-center w-full">
+                {menuItems.map((item) => {
+                    const isActive = 
+                        currentRoute === item.routeName || 
+                        (item.routeName === "profile" && currentRoute === "myaccount");
+                    
+                    return (
+                        <TouchableOpacity
+                            key={item.key}
+                            className="items-center justify-center px-2 py-1"
+                            onPress={() => navigationHandler(item.key)}
                         >
-                            <Icon
-                                name={activeRoute === item.name ? item.name : `${item.name}-outline`}
-                                size={25}
-                                color="#e01d47"
-                            />
-                        </View>
-                        <Text style={{ fontSize: 12, color: "#e01d47" }}>{item.label}</Text>
-                    </TouchableOpacity>
-                ))}
+                            <View className="relative">
+                                {isActive ? (
+                                    // Active state with more prominent background
+                                    <View className="items-center justify-center p-2 rounded-full bg-[#ffecf0]">
+                                        <Icon name={item.name} size={24} color="#e01d47" />
+                                    </View>
+                                ) : (
+                                    // Inactive state
+                                    <View className="items-center justify-center p-2">
+                                        <Icon name={item.name} size={24} color="#777" />
+                                    </View>
+                                )}
+                                
+                                {/* Cart badge - only show for cart icon when items exist */}
+                                {item.key === 1 && cartItemCount > 0 && (
+                                    <View className="absolute -top-1 -right-1 bg-[#e01d47] rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
+                                        <Text className="text-white text-[10px] font-bold">
+                                            {cartItemCount > 99 ? '99+' : cartItemCount}
+                                        </Text>
+                                    </View>
+                                )}
+                            </View>
+                            
+                            <Text
+                                className={`text-[10px] mt-1 font-medium ${
+                                    isActive ? "text-[#e01d47]" : "text-gray-500"
+                                }`}
+                            >
+                                {item.label}
+                            </Text>
+                            
+                            {/* Active indicator dot */}
+                            {isActive && (
+                                <View className="absolute bottom-[-6px] h-1 w-4 rounded-full bg-[#e01d47]" />
+                            )}
+                        </TouchableOpacity>
+                    );
+                })}
             </View>
         </View>
     );

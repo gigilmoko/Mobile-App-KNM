@@ -1,212 +1,518 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity, TextInput, ActivityIndicator } from "react-native"; // Add ActivityIndicator
-import Footer from "../../../components/Layout/Footer";
+import { 
+  View, 
+  Text, 
+  ScrollView, 
+  TouchableOpacity, 
+  TextInput, 
+  ActivityIndicator,
+  StyleSheet
+} from "react-native";
 import { useDispatch, useSelector } from "react-redux";
-import { getAdminOrders, processOrderAny } from "../../../redux/actions/orderActions"; // Add this import
+import { getAdminOrders } from "../../../redux/actions/orderActions";
 import Toast from "react-native-toast-message";
 import { useNavigation } from "@react-navigation/native";
-import Entypo from 'react-native-vector-icons/Entypo';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { Ionicons } from "@expo/vector-icons"; // Add this import
+import { Ionicons } from "@expo/vector-icons";
 import Header from "../../../components/Layout/Header";
 
 const AdminOrders = () => {
-    const dispatch = useDispatch();
-    const navigation = useNavigation(); // Initialize navigation
-    const { adminOrders, loading, error, success } = useSelector((state) => state.order);
-    const [selectedTab, setSelectedTab] = useState("All");
-    const [searchQuery, setSearchQuery] = useState(""); // Add this state
-    const [isLoading, setIsLoading] = useState(true); // Add loading state
-    const [selectedStatus, setSelectedStatus] = useState(""); // Add this state
-    const [showStatusOptions, setShowStatusOptions] = useState(false); // Add this state
-    const [currentOrderId, setCurrentOrderId] = useState(null); // Add this state
+  const dispatch = useDispatch();
+  const navigation = useNavigation();
+  const { adminOrders, loading, error, success } = useSelector((state) => state.order);
+  
+  const [selectedTab, setSelectedTab] = useState("All");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
 
-    const getStatusIcon = (status) => {
-        switch (status.toLowerCase()) {
-            case "preparing":
-                return <Ionicons name="time-outline" size={20} color="#FFA500" />;
-            case "shipped":
-                return <Ionicons name="cube-outline" size={20} color="#1E90FF" />;
-            case "delivered":
-                return <Ionicons name="checkmark-circle-outline" size={20} color="#32CD32" />;
-            case "delivered pending":
-                return <Ionicons name="alert-circle-outline" size={20} color="#FF4500" />;
-            case "cancelled":
-                return <Ionicons name="close-circle-outline" size={20} color="#DC143C" />;
-            default:
-                return <Ionicons name="help-circle-outline" size={20} color="#000" />;
-        }
-    };
+  // Modified tabs without Pending and Cancelled
+  const tabs = [
+    { key: "All", label: "All" },
+    { key: "Preparing", label: "Preparing" },
+    { key: "Shipped", label: "Shipping" },
+    { key: "Delivered", label: "Delivered" },
+  ];
 
-    const tabMapping = {
-        "All": "All",
-        "Preparing": "Preparing",
-        "Shipping": "Shipped",
-        "Pending": "Delivered Pending",
-        "Delivered": "Delivered",
-        "Cancelled": "Cancelled"
-    };
+  useEffect(() => {
+    dispatch({ type: "clearAdminOrders" });
+    dispatch(getAdminOrders()).then(() => setIsLoading(false));
+  }, [dispatch]);
 
-    useEffect(() => {
-        dispatch({ type: "clearAdminOrders" }); // Clear orders at the start
-        dispatch(getAdminOrders()).then(() => setIsLoading(false)); // Fetch orders and stop loading
-    }, [dispatch]);
-
-    useEffect(() => {
-        if (error) {
-            Toast.show({
-                type: "error",
-                text1: "Error",
-                text2: error,
-            });
-        }
-    }, [error]);
-
-    useEffect(() => {
-        if (success) {
-            Toast.show({
-                type: "success",
-                text1: "Success",
-                text2: "Order updated successfully!",
-            });
-            dispatch({ type: "clearAdminOrders" });
-            dispatch(getAdminOrders());
-        }
-    }, [success, dispatch]);
-
-    const handleStatusChangeAny = (newStatus) => {
-        if (newStatus !== selectedStatus) {
-            setSelectedStatus(newStatus);
-            setShowStatusOptions(false); // Hide options after selection
-            if (currentOrderId) {
-                dispatch(processOrderAny(currentOrderId, newStatus, navigation));
-            }
-        }
-    };
-
-    const handleShowStatusOptions = (orderId) => {
-        setCurrentOrderId(orderId);
-        setShowStatusOptions(!showStatusOptions);
-    };
-
-    const filteredOrders = adminOrders.filter(order => 
-        (selectedTab === "All" || order.status === selectedTab) && 
-        order._id.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-
-    if (isLoading) {
-        return (
-            <View className="flex-1 justify-center items-center">
-                <ActivityIndicator size="large" color="#e01d47" />
-            </View>
-        );
+  useEffect(() => {
+    if (error) {
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: error,
+      });
     }
+  }, [error]);
 
+  useEffect(() => {
+    if (success) {
+      Toast.show({
+        type: "success",
+        text1: "Success",
+        text2: "Order updated successfully!",
+      });
+      dispatch({ type: "clearAdminOrders" });
+      dispatch(getAdminOrders());
+    }
+  }, [success, dispatch]);
+
+  // Calculate order stats
+  const orderStats = {
+    preparing: adminOrders.filter(order => order.status === "Preparing").length,
+    shipping: adminOrders.filter(order => order.status === "Shipped").length,
+    delivered: adminOrders.filter(order => order.status === "Delivered").length,
+    total: adminOrders.length
+  };
+
+  // Filter orders based on selected tab and search query
+  const filteredOrders = adminOrders
+    .filter(order => 
+      (selectedTab === "All" || order.status === selectedTab) && 
+      (order._id.toLowerCase().includes(searchQuery.toLowerCase()) || 
+       order.KNMOrderId?.toLowerCase().includes(searchQuery.toLowerCase()))
+    )
+    // Sort by creation date (newest first)
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+  const getStatusBadge = (status) => {
+    if (!status) return styles.statusUnknown;
+    
+    switch (status.toLowerCase()) {
+      case "preparing": return styles.statusPreparing;
+      case "shipped": return styles.statusShipped;
+      case "delivered": return styles.statusDelivered;
+      default: return styles.statusUnknown;
+    }
+  };
+
+  const getStatusIcon = (status) => {
+    if (!status) return "help-circle-outline";
+    
+    switch (status.toLowerCase()) {
+      case "preparing": return "time-outline";
+      case "shipped": return "cube-outline";
+      case "delivered": return "checkmark-circle-outline";
+      default: return "help-circle-outline";
+    }
+  };
+
+  if (isLoading) {
     return (
-        <View className="flex-1 bg-white">
-        {/* Header */}
-        <View className="flex-row items-center py-5 px-5">
-            <Header title="Order Management" />
-        </View>
-    
-        {/* Search Box */}
-        <View className="flex-row items-center border border-red-600 rounded-full px-3.5 py-1.5 mx-5 bg-white">
-    <TextInput
-        className="flex-1 text-gray-800"
-        placeholder="Search"
-        value={searchQuery}
-        onChangeText={setSearchQuery}
-    />
-    <Ionicons name="search" size={20} color="#e01d47" />
-</View>
-
-{/* Tabs - Fixed under search bar */}
-<View className="w-full px-5 mt-3">
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ flexDirection: "row" }}>
-        {Object.keys(tabMapping).map((tab) => (
-            <TouchableOpacity
-                key={tab}
-                onPress={() => setSelectedTab(tabMapping[tab])}
-                className={`px-3 py-1 mx-1 rounded-md border ${selectedTab === tabMapping[tab] ? "bg-red-600 border-red-600" : "bg-pink-100 border-pink-100"}`}
-            >
-                <Text className={`text-base font-medium ${selectedTab === tabMapping[tab] ? "text-white" : "text-black"}`}>
-                    {tab}
-                </Text>
-            </TouchableOpacity>
-        ))}
-    </ScrollView>
-
-    {/* Order count displayed below the tabs, aligned to the right */}
-    <View className="flex-row justify-end mt-2">
-        <Text className="text-gray-600 text-base font-medium">
-            {filteredOrders.length} Orders
-        </Text>
-    </View>
-</View>
-        {/* Orders List */}
-        <ScrollView contentContainerStyle={{ flexGrow: 1, paddingBottom: 50 }}>
-            {loading ? (
-                <Text className="text-center mt-5 text-lg text-gray-600">Loading...</Text>
-            ) : filteredOrders.length > 0 ? (
-                filteredOrders.map((order) => (
-                    <View key={order._id} className="bg-white p-3.5 rounded-lg mb-2.5 mx-5 shadow-md">
-                        {/* First Row: Order Details */}
-                        <View className="flex-row justify-between items-center">
-                            <View className="flex-row items-center">
-                                {getStatusIcon(order.status)}
-                                <View className="ml-3">
-                                    <Text className="text-base font-bold">{order.KNMOrderId}</Text>
-                                    <Text className="text-sm text-gray-600">
-                                        {order.user ? `${order.user.fname} ${order.user.lname}` : "Unknown User"}
-                                    </Text>
-                                </View>
-                            </View>
-                            <View className="items-end">
-                                <Text className="text-base font-bold text-red-600">₱{order.totalPrice}</Text>
-                                <Text className="text-sm text-gray-600">{new Date(order.createdAt).toLocaleDateString()}</Text>
-                            </View>
-                        </View>
-    
-                        {/* Second Row: Buttons Positioned Below */}
-                        <View className="flex-row mt-3 justify-between">
-                            <TouchableOpacity
-                                className="border border-gray-300 rounded-md px-3 py-1 mr-2 ml-7 flex-row items-center"
-                                onPress={() => navigation.navigate("adminordersdetails", { orderId: order._id })}
-                            >
-                                <Ionicons name="eye-outline" size={16} color="#000" />
-                                <Text className="ml-1 text-black">Details</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                className="border border-gray-300 rounded-md px-3 py-1 flex-row items-center"
-                                onPress={() => handleShowStatusOptions(order._id)}
-                            >
-                                <Ionicons name="pencil-outline" size={16} color="#000" />
-                                <Text className="ml-1 text-black">Update Status</Text>
-                            </TouchableOpacity>
-                        </View>
-
-                        {showStatusOptions && currentOrderId === order._id && (
-                            <View className="bg-white border border-gray-300 rounded-lg mt-2">
-                                {["Preparing", "Shipped", "Delivered", "Cancelled"].map((status) => (
-                                    <TouchableOpacity
-                                        key={status}
-                                        className="p-2 border-b border-gray-200"
-                                        onPress={() => handleStatusChangeAny(status)}
-                                    >
-                                        <Text className="text-gray-800">{status}</Text>
-                                    </TouchableOpacity>
-                                ))}
-                            </View>
-                        )}
-                    </View>
-                ))
-            ) : (
-                <Text className="text-center mt-5 text-lg text-gray-600">No orders available.</Text>
-            )}
-        </ScrollView>
-    </View>
-    
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#e01d47" />
+      </View>
     );
+  }
+
+  return (
+    <View style={styles.container}>
+      {/* Header */}
+      <View style={styles.headerContainer}>
+        <Header title="Order Management" />
+      </View>
+
+      {/* Stats Cards */}
+      <View style={styles.statsContainer}>
+        <View style={[styles.statCard, styles.preparingCard]}>
+          <View style={styles.statIconContainer}>
+            <Ionicons name="time-outline" size={24} color="#fff" />
+          </View>
+          <Text style={styles.statCount}>{orderStats.preparing}</Text>
+          <Text style={styles.statLabel}>Preparing</Text>
+        </View>
+        
+        <View style={[styles.statCard, styles.shippingCard]}>
+          <View style={styles.statIconContainer}>
+            <Ionicons name="cube-outline" size={24} color="#fff" />
+          </View>
+          <Text style={styles.statCount}>{orderStats.shipping}</Text>
+          <Text style={styles.statLabel}>Shipping</Text>
+        </View>
+        
+        <View style={[styles.statCard, styles.deliveredCard]}>
+          <View style={styles.statIconContainer}>
+            <Ionicons name="checkmark-circle-outline" size={24} color="#fff" />
+          </View>
+          <Text style={styles.statCount}>{orderStats.delivered}</Text>
+          <Text style={styles.statLabel}>Delivered</Text>
+        </View>
+      </View>
+
+      {/* Search Box */}
+      <View style={styles.searchContainer}>
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search by order ID"
+          placeholderTextColor="#999"
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+        />
+        <Ionicons name="search" size={20} color="#e01d47" />
+      </View>
+
+      {/* Tabs */}
+      <View style={styles.tabsContainer}>
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false} 
+          contentContainerStyle={styles.tabsScrollView}
+        >
+          {tabs.map((tab) => (
+            <TouchableOpacity
+              key={tab.key}
+              style={[
+                styles.tab,
+                selectedTab === tab.key && styles.activeTab
+              ]}
+              onPress={() => setSelectedTab(tab.key)}
+            >
+              <Text 
+                style={[
+                  styles.tabText,
+                  selectedTab === tab.key && styles.activeTabText
+                ]}
+              >
+                {tab.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+
+        {/* Order count */}
+        <View style={styles.countContainer}>
+          <Text style={styles.countText}>
+            {filteredOrders.length} Orders
+          </Text>
+        </View>
+      </View>
+
+      {/* Orders List */}
+      {loading ? (
+        <ActivityIndicator style={styles.listLoading} size="large" color="#e01d47" />
+      ) : (
+        <ScrollView style={styles.ordersList}>
+          {filteredOrders.length > 0 ? (
+            filteredOrders.map((order) => (
+              <TouchableOpacity
+                key={order._id}
+                style={styles.orderCard}
+                onPress={() => navigation.navigate("adminordersdetails", { orderId: order._id })}
+                activeOpacity={0.7}
+              >
+                <View style={styles.orderHeader}>
+                  <View style={styles.orderStatus}>
+                    <View style={[styles.statusDot, getStatusBadge(order.status)]} />
+                    <Text style={[styles.statusText, getStatusBadge(order.status)]}>
+                      {order.status}
+                    </Text>
+                  </View>
+                  <Text style={styles.orderDate}>
+                    {new Date(order.createdAt).toLocaleDateString()}
+                  </Text>
+                </View>
+                
+                <View style={styles.orderContent}>
+                  <View style={styles.orderInfo}>
+                    <Text style={styles.orderId}>{order.KNMOrderId}</Text>
+                    <Text style={styles.userName}>
+                      {order.user ? `${order.user.fname} ${order.user.lname}` : "Unknown User"}
+                    </Text>
+                    <Text style={styles.itemCount}>
+                      {order.orderProducts?.length || 0} items
+                    </Text>
+                  </View>
+                  
+                  <View style={styles.orderPrice}>
+                    <Text style={styles.priceLabel}>Total</Text>
+                    <Text style={styles.priceValue}>₱{order.totalPrice?.toFixed(2)}</Text>
+                  </View>
+                </View>
+                
+                <View style={styles.actionRow}>
+                  <View style={styles.viewDetails}>
+                    <Ionicons name="eye-outline" size={16} color="#666" />
+                    <Text style={styles.viewDetailsText}>View Details</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={18} color="#aaa" />
+                </View>
+              </TouchableOpacity>
+            ))
+          ) : (
+            <View style={styles.emptyContainer}>
+              <Ionicons name="receipt-outline" size={60} color="#ddd" />
+              <Text style={styles.emptyText}>No orders found</Text>
+              <Text style={styles.emptySubtext}>
+                Try adjusting your search or filters
+              </Text>
+            </View>
+          )}
+          
+          <View style={styles.bottomSpacing} />
+        </ScrollView>
+      )}
+    </View>
+  );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#f8f8f8",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f8f8f8",
+  },
+  headerContainer: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: "#fff",
+    borderBottomWidth: 1,
+    borderBottomColor: "#f0f0f0",
+  },
+  // New stats styles
+  statsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    marginVertical: 16,
+  },
+  statCard: {
+    width: '31%',
+    borderRadius: 12,
+    paddingVertical: 16,
+    alignItems: 'center',
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  statIconContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255,255,255,0.25)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  statCount: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#fff',
+    marginBottom: 2,
+  },
+  statLabel: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: '#fff',
+    opacity: 0.9,
+  },
+  preparingCard: {
+    backgroundColor: '#ff9800',
+  },
+  shippingCard: {
+    backgroundColor: '#2196f3',
+  },
+  deliveredCard: {
+    backgroundColor: '#4caf50',
+  },
+  searchContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    marginHorizontal: 16,
+    marginBottom: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#e5e5e5",
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 15,
+    color: "#333",
+    marginRight: 8,
+  },
+  tabsContainer: {
+    paddingHorizontal: 16,
+  },
+  tabsScrollView: {
+    paddingBottom: 8,
+  },
+  tab: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginRight: 8,
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#e5e5e5",
+  },
+  activeTab: {
+    backgroundColor: "#e01d47",
+    borderColor: "#e01d47",
+  },
+  tabText: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: "#555",
+  },
+  activeTabText: {
+    color: "#fff",
+  },
+  countContainer: {
+    alignItems: "flex-end",
+    paddingVertical: 8,
+  },
+  countText: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: "#666",
+  },
+  listLoading: {
+    marginTop: 20,
+  },
+  ordersList: {
+    flex: 1,
+  },
+  orderCard: {
+    backgroundColor: "#fff",
+    marginHorizontal: 16,
+    marginBottom: 12,
+    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  orderHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    borderBottomWidth: 1,
+    borderBottomColor: "#f5f5f5",
+    padding: 12,
+  },
+  orderStatus: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 6,
+  },
+  statusText: {
+    fontSize: 13,
+    fontWeight: "600",
+  },
+  orderDate: {
+    fontSize: 13,
+    color: "#777",
+  },
+  orderContent: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 12,
+  },
+  orderInfo: {
+    flex: 1,
+    paddingRight: 8,
+  },
+  orderId: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#333",
+    marginBottom: 2,
+  },
+  userName: {
+    fontSize: 14,
+    color: "#444",
+    marginBottom: 2,
+  },
+  itemCount: {
+    fontSize: 13,
+    color: "#777",
+  },
+  orderPrice: {
+    alignItems: "flex-end",
+  },
+  priceLabel: {
+    fontSize: 12,
+    color: "#777",
+  },
+  priceValue: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#e01d47",
+  },
+  actionRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    borderTopWidth: 1,
+    borderTopColor: "#f5f5f5",
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+  },
+  viewDetails: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  viewDetailsText: {
+    marginLeft: 6,
+    fontSize: 14,
+    color: "#666",
+    fontWeight: "500",
+  },
+  emptyContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 60,
+  },
+  emptyText: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#555",
+    marginTop: 16,
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: "#888",
+    marginTop: 8,
+  },
+  bottomSpacing: {
+    height: 80,
+  },
+  statusPreparing: {
+    backgroundColor: "#ff9800",
+    color: "#fff",
+    padding: 4,
+    borderRadius: 4,
+  },
+  statusShipped: {
+    backgroundColor: "#2196f3",
+    color: "#fff",
+  },
+  statusDelivered: {
+    backgroundColor: "#4caf50",
+    color: "#fff",
+  },
+  statusUnknown: {
+    backgroundColor: "#9e9e9e",
+    color: "#fff",
+  },
+});
 
 export default AdminOrders;

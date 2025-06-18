@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, Dimensions, StyleSheet, Image, TouchableOpacity, ScrollView, FlatList } from "react-native";
+import { View, Text, Dimensions, StyleSheet, Image, TouchableOpacity, ScrollView, FlatList, ActivityIndicator } from "react-native";
 import Header from "../../components/Layout/Header";
 import { Avatar, Button } from "react-native-paper";
 import Toast from "react-native-toast-message";
@@ -48,318 +48,346 @@ const StarRating = ({ rating }) => {
 
 const ProductDetails = ({ route: { params } }) => {
   const navigate = useNavigation();
-const dispatch = useDispatch();
-const isFocused = useIsFocused();
+  const dispatch = useDispatch();
+  const isFocused = useIsFocused();
 
-const { isLoading, product, error } = useSelector((state) => state.product);
-const { feedbacks, feedbackLoading } = useSelector((state) => state.feedbacks);
-const { user } = useSelector((state) => state.user);
-const userOrdersMobile = useSelector((state) => state.order);
+  const { isLoading, product, error } = useSelector((state) => state.product);
+  const { feedbacks, feedbackLoading } = useSelector((state) => state.feedbacks);
+  const { user } = useSelector((state) => state.user);
+  const userOrdersMobile = useSelector((state) => state.order) || {}; // Fix: Add default empty object
 
-const [quantity, setQuantity] = useState(1);
-const { name, price, stock, description, images } = product || {};
+  const [quantity, setQuantity] = useState(1);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const { name, price, stock, description, images } = product || {};
 
-const isOutOfStock = stock === 0;
+  const isOutOfStock = stock === 0;
 
-useEffect(() => {
-  dispatch(getProductDetails(params.id));
-  dispatch(fetchProductFeedbacksMobile(params.id));
-  dispatch(getUserOrdersMobile());
-}, [dispatch, params.id, isFocused]);
+  useEffect(() => {
+    dispatch(getProductDetails(params.id));
+    dispatch(fetchProductFeedbacksMobile(params.id));
+    dispatch(getUserOrdersMobile());
+  }, [dispatch, params.id, isFocused]);
 
-// console.log("User Orders Mobile:", userOrdersMobile);
-// console.log("Product Details:", product);
-
-const productExistsInOrders = userOrdersMobile.orders?.find(order =>
-  order.orderProducts.some(product => product._id === product._id)
-);
-
-const orderIdContainingProduct = productExistsInOrders ? productExistsInOrders._id : null;
-
-// console.log("Product exists in orders:", !!productExistsInOrders);
-// console.log("Order ID containing product:", orderIdContainingProduct);
-
-const navigateToFeedback = () => {
-  navigate.navigate("productfeedback", { orderId: orderIdContainingProduct, productId: params.id });
-};
-
-useEffect(() => {
-  if (product) {
-    
-  }
-  if (error) {
-    Toast.show({
-      type: "error",
-      text1: error,
-    });
-  }
-}, [product, error]);
-
-const incrementQty = () => {
-  if (stock <= quantity) {
-    return Toast.show({
-      type: "error",
-      text1: "Maximum Value Added",
-    });
-  }
-  setQuantity((prev) => prev + 1);
-};
-
-const decrementQty = () => {
-  if (quantity <= 1) return;
-  setQuantity((prev) => prev - 1);
-};
-
-const addToCartHandler = (id, name, price, image, stock) => {
-  if (!user) {
-    navigate.navigate("login");
-    return Toast.show({
-      type: "info",
-      text1: "Log in to continue.",
-    });
-  }
-
-  dispatch({
-    type: "addToCart",
-    payload: {
-      product: id,
-      name,
-      price,
-      image,
-      stock,
-      quantity,
-    },
-  });
-  Toast.show({
-    type: "success",
-    text1: "Added To Cart",
-  });
-};
-
-const addToWishlistHandler = (id, name, price, image, stock) => {
-  if (!user) {
-    navigate.navigate("login");
-    return Toast.show({
-      type: "info",
-      text1: "Log in to continue.",
-    });
-  }
-
-  dispatch({
-    type: "addToWishlist",
-    payload: {
-      product: id,
-      name,
-      price,
-      image,
-      stock,
-    },
-  });
-
-  Toast.show({
-    type: "success",
-    text1: "Added To Wishlist",
-  });
-};
-
-if (isLoading || feedbackLoading) {
-  return (
-    <View style={styles.loadingContainer}>
-      <Text>Loading...</Text>
-    </View>
+  // Fix: Use optional chaining to prevent errors
+  const productExistsInOrders = userOrdersMobile.orders?.find(order =>
+    order.orderProducts?.some(orderProduct => orderProduct._id === params.id)
   );
-}
 
-// console.log(feedbacks);
+  const orderIdContainingProduct = productExistsInOrders ? productExistsInOrders._id : null;
 
-const getAverageRating = (feedbacks) => {
-  if (!feedbacks || feedbacks.length === 0) return 0;
+  const navigateToFeedback = () => {
+    navigate.navigate("productfeedback", { orderId: orderIdContainingProduct, productId: params.id });
+  };
 
-  const totalRating = feedbacks.reduce((sum, fb) => sum + fb.rating, 0);
-  return (totalRating / feedbacks.length).toFixed(1); 
-};
+  useEffect(() => {
+    if (error) {
+      Toast.show({
+        type: "error",
+        text1: error,
+      });
+    }
+  }, [product, error]);
 
-const averageRating = getAverageRating(feedbacks);
-// console.log("Average Rating:", averageRating);
+  const incrementQty = () => {
+    if (stock <= quantity) {
+      return Toast.show({
+        type: "error",
+        text1: "Maximum Value Added",
+      });
+    }
+    setQuantity((prev) => prev + 1);
+  };
 
+  const decrementQty = () => {
+    if (quantity <= 1) return;
+    setQuantity((prev) => prev - 1);
+  };
 
-  
-  return (
-    <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-    <View className="absolute top-5 left-5 right-5 z-10 flex-row items-center py-3">
-{/* Back Button */}
-<TouchableOpacity 
-  onPress={() => navigate.goBack()} 
-  className="p-2 bg-[#ff7895] rounded-full items-center justify-center w-9 h-9"
->
-  <Ionicons name="arrow-back" size={20} color="#ffffff" />
-</TouchableOpacity>
+  const addToCartHandler = (id, name, price, image, stock) => {
+    if (!user) {
+      navigate.navigate("login");
+      return Toast.show({
+        type: "info",
+        text1: "Log in to continue.",
+      });
+    }
 
-<View className="flex-1" />
+    dispatch({
+      type: "addToCart",
+      payload: {
+        product: id,
+        name,
+        price,
+        image,
+        stock,
+        quantity,
+      },
+    });
+    Toast.show({
+      type: "success",
+      text1: "Added To Cart",
+    });
+  };
 
-{/* Wishlist Button */}
-<TouchableOpacity 
-  onPress={() => addToWishlistHandler(params.id, name, price, images[0]?.url, stock)} 
-  className="p-2 bg-[#ff7895] rounded-full items-center justify-center w-9 h-9"
->
-  <Ionicons name="heart" size={20} color="#ffffff" />
-</TouchableOpacity>
-</View>
-    <ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false}>
-      {images && images.length > 0 ? (
-        images.map((image, index) => (
-          <View key={index} style={styles.imageWrapper}>
-            <Image
-              source={{ uri: image.url }}
-              style={styles.image}
-            />
-          </View>
-        ))
-      ) : (
-        <View className="w-full h-[50vh] flex justify-center items-center bg-gray-200 -mt-8">
-          <Text className="text-gray-500">No Images Available</Text>
-        </View>
-      )}
-    </ScrollView>
+  const addToWishlistHandler = (id, name, price, image, stock) => {
+    if (!user) {
+      navigate.navigate("login");
+      return Toast.show({
+        type: "info",
+        text1: "Log in to continue.",
+      });
+    }
 
-      <View className="p-4 -mt-10 bg-white rounded-t-3xl shadow-lg flex-1">
-        <View className="px-2">
-        <View className="flex-row justify-between items-center">
-        <Text numberOfLines={2} className="text-2xl font-semibold flex-1">
-          {name}
-        </Text>
-        <Text className="text-lg font-medium text-gray-700">${price}</Text>
+    dispatch({
+      type: "addToWishlist",
+      payload: {
+        product: id,
+        name,
+        price,
+        image,
+        stock,
+      },
+    });
+
+    Toast.show({
+      type: "success",
+      text1: "Added To Wishlist",
+    });
+  };
+
+  const getAverageRating = (feedbacks) => {
+    if (!feedbacks || feedbacks.length === 0) return 0;
+    const totalRating = feedbacks.reduce((sum, fb) => sum + fb.rating, 0);
+    return (totalRating / feedbacks.length).toFixed(1);
+  };
+
+  const averageRating = getAverageRating(feedbacks);
+
+  if (isLoading || feedbackLoading) {
+    return (
+      <View className="flex-1 bg-white justify-center items-center">
+        <ActivityIndicator size="large" color="#e01d47" />
+        <Text className="mt-3 text-gray-500">Loading product details...</Text>
       </View>
-      <StarRating rating={averageRating} />
-        <Text numberOfLines={8} className="text-gray-500 my-4">
-          {description}
-        </Text>
-        </View>
+    );
+  }
 
-        <View className="flex-row justify-between items-center mt-5 px-2">
-        {/* Add to Cart Button */}
-        <TouchableOpacity
-          activeOpacity={0.9}
-          onPress={() =>
-            addToCartHandler(params.id, name, price, images[0]?.url, stock)
-          }
-          disabled={isOutOfStock}
-          className={`bg-[#e01d47] py-3 rounded-lg items-center justify-center flex-1 mr-2 ${
-            isOutOfStock ? "opacity-50" : ""
-          }`}
+  return (
+    <View className="flex-1 bg-white">
+      {/* Floating Action Buttons */}
+      <View className="absolute top-10 left-4 right-4 z-10 flex-row justify-between">
+        <TouchableOpacity 
+          onPress={() => navigate.goBack()} 
+          className="w-10 h-10 bg-white rounded-full items-center justify-center shadow-md"
         >
-          <Text className="text-white font-semibold">{isOutOfStock ? "Out Of Stock" : "Add to Cart"}</Text>
+          <Ionicons name="arrow-back" size={22} color="#e01d47" />
         </TouchableOpacity>
 
-        {/* Quantity Control */}
-        <View className="w-1/3 bg-[#f5a8b8] flex-row items-center justify-between px-2 py-2 rounded-lg">
-          <TouchableOpacity onPress={decrementQty} className="px-2">
-            <Text className="text-white text-lg font-bold">-</Text>
-          </TouchableOpacity>
-          
-          <Text className="text-white text-lg font-semibold">{quantity}</Text>
-          
-          <TouchableOpacity onPress={incrementQty} className="px-2">
-            <Text className="text-white text-lg font-bold">+</Text>
-          </TouchableOpacity>
-        </View>
-      </View>      
-      {/* Add Rating Button */}
-      
-      <View className="p-4 rounded-t-md mt-2">
-      <View className="h-1 w-full bg-[#f5a8b8] rounded-full mb-4" />
-      <Text className="text-2xl text-[#e01d47] font-bold">Reviews</Text>
-      {feedbacks && feedbacks.length > 0 ? (
-  <FlatList
-    data={feedbacks}
-    keyExtractor={(item) => item._id}
-    renderItem={({ item }) => (
-      <View className="mt-3 p-3 bg-white rounded-md flex-row items-start">
-      
-      {item.userId?.avatar ? (
-          <Image
-            source={{ uri: item.userId.avatar }}
-            className="w-10 h-10 rounded-full mr-3"
-          />
-        ) : (
-          <View className="w-10 h-10 bg-pink-300 rounded-full flex items-center justify-center mr-3">
-            <Text className="text-white font-bold">
-              {item.userId?.fname?.charAt(0).toUpperCase() || "U"}
-            </Text>
+        <TouchableOpacity 
+          onPress={() => addToWishlistHandler(params.id, name, price, images?.[0]?.url, stock)} 
+          className="w-10 h-10 bg-white rounded-full items-center justify-center shadow-md"
+        >
+          <Ionicons name="heart-outline" size={22} color="#e01d47" />
+        </TouchableOpacity>
+      </View>
+
+      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+        {/* Product Images */}
+        <ScrollView 
+          horizontal 
+          pagingEnabled 
+          showsHorizontalScrollIndicator={false}
+          onMomentumScrollEnd={(e) => {
+            const contentOffset = e.nativeEvent.contentOffset;
+            const viewSize = e.nativeEvent.layoutMeasurement;
+            const selectedIndex = Math.floor(contentOffset.x / viewSize.width);
+            setSelectedImageIndex(selectedIndex);
+          }}
+        >
+          {images && images.length > 0 ? (
+            images.map((image, index) => (
+              <Image
+                key={index}
+                source={{ uri: image.url }}
+                className="w-full h-[350px]"
+                style={{ width: Dimensions.get("window").width }}
+                resizeMode="cover"
+              />
+            ))
+          ) : (
+            <View className="w-full h-[350px] flex justify-center items-center bg-gray-100">
+              <Ionicons name="image-outline" size={80} color="#d1d1d1" />
+              <Text className="text-gray-400 mt-4">No Images Available</Text>
+            </View>
+          )}
+        </ScrollView>
+
+        {/* Image Pagination Dots */}
+        {images && images.length > 1 && (
+          <View className="flex-row justify-center mt-2">
+            {images.map((_, index) => (
+              <View 
+                key={index}
+                className={`h-2 w-2 rounded-full mx-1 ${
+                  selectedImageIndex === index ? 'bg-[#e01d47]' : 'bg-gray-300'
+                }`}
+              />
+            ))}
           </View>
         )}
 
-        <View className="flex-1">
-          {/* User name and stars in the same row, aligned properly */}
-          <View className="flex-row justify-between items-center">
-            <Text className="font-bold">
-              {`${item.userId?.fname || ""} ${item.userId?.middlei || ""} ${item.userId?.lname || ""}`}
+        {/* Product Information */}
+        <View className="px-4 pt-4">
+          {/* Category */}
+          <Text className="text-xs text-gray-500 mb-1">
+            {product?.category?.name || "Uncategorized"}
+          </Text>
+          
+          <View className="flex-row justify-between items-start mb-2">
+            <Text className="text-2xl font-bold text-gray-800 flex-1 mr-4" numberOfLines={2}>
+              {name || "Product Name"}
             </Text>
-            <View className="flex-row">
-              {Array.from({ length: item.rating }).map((_, index) => (
-                <Text key={index} className="text-yellow-500">⭐</Text>
-              ))}
-            </View>
+            <Text className="text-2xl font-bold text-[#e01d47]">
+              ₱{parseFloat(price || 0).toFixed(2)}
+            </Text>
           </View>
 
-          {/* Feedback text */}
-          <Text className="mt-1 text-gray-700">{item.feedback}</Text>
+          {/* Ratings */}
+          <View className="flex-row items-center mb-3">
+            <StarRating rating={averageRating} />
+            <Text className="ml-2 text-gray-500">
+              ({averageRating}) • {feedbacks?.length || 0} {feedbacks?.length === 1 ? "review" : "reviews"}
+            </Text>
+          </View>
 
-          {/* Date */}
-          {/* <Text className="text-gray-500 text-xs">
-            {new Date(item.createdAt).toLocaleDateString()}
-          </Text> */}
+          {/* Stock Status */}
+          <View className="flex-row items-center mb-4">
+            <View className={`h-3 w-3 rounded-full ${isOutOfStock ? 'bg-red-500' : 'bg-green-500'} mr-2`} />
+            <Text className={`text-sm ${isOutOfStock ? 'text-red-500' : 'text-green-500'}`}>
+              {isOutOfStock ? "Out of Stock" : `${stock} in stock`}
+            </Text>
+          </View>
+
+          {/* Description */}
+          <View className="mb-6">
+            <Text className="text-lg font-bold text-gray-800 mb-2">Description</Text>
+            <Text className="text-gray-600 leading-6">
+              {description || "No description available"}
+            </Text>
+          </View>
+
+          {/* Quantity and Add to Cart */}
+          <View className="flex-row justify-between items-center mb-6">
+            {/* Quantity Selector */}
+            <View className="flex-row bg-gray-100 rounded-lg px-2 py-1 items-center">
+              <TouchableOpacity 
+                onPress={decrementQty} 
+                className="w-8 h-8 items-center justify-center"
+                disabled={quantity <= 1}
+              >
+                <Text className={`text-xl ${quantity <= 1 ? 'text-gray-300' : 'text-gray-700'}`}>-</Text>
+              </TouchableOpacity>
+              <Text className="mx-3 text-base font-medium w-6 text-center">{quantity}</Text>
+              <TouchableOpacity 
+                onPress={incrementQty} 
+                className="w-8 h-8 items-center justify-center"
+                disabled={stock <= quantity}
+              >
+                <Text className={`text-xl ${stock <= quantity ? 'text-gray-300' : 'text-gray-700'}`}>+</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Add to Cart Button */}
+            <TouchableOpacity
+              onPress={() => addToCartHandler(params.id, name, price, images?.[0]?.url, stock)}
+              disabled={isOutOfStock}
+              className={`py-3 px-6 rounded-lg ${isOutOfStock ? 'bg-gray-400' : 'bg-[#e01d47]'}`}
+            >
+              <Text className="text-white font-bold">Add to Cart</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Divider */}
+          <View className="h-px bg-gray-200 my-4" />
+
+          {/* Reviews Section */}
+          <View className="mb-6">
+            <Text className="text-xl font-bold text-gray-800 mb-3">Reviews</Text>
+
+            {feedbacks && feedbacks.length > 0 ? (
+              feedbacks.map((item) => (
+                <View key={item._id} className="mb-4 p-4 bg-gray-50 rounded-lg">
+                  <View className="flex-row items-center mb-2">
+                    {item.userId?.avatar ? (
+                      <Image
+                        source={{ uri: item.userId.avatar }}
+                        className="w-10 h-10 rounded-full mr-3"
+                      />
+                    ) : (
+                      <View className="w-10 h-10 bg-[#ff7895] rounded-full items-center justify-center mr-3">
+                        <Text className="text-white font-bold">
+                          {item.userId?.fname?.charAt(0).toUpperCase() || "U"}
+                        </Text>
+                      </View>
+                    )}
+                    
+                    <View className="flex-1">
+                      <Text className="font-bold text-gray-800">
+                        {`${item.userId?.fname || ""} ${item.userId?.lname || ""}`}
+                      </Text>
+                      <View className="flex-row mt-1">
+                        {Array.from({ length: 5 }).map((_, idx) => (
+                          <Ionicons
+                            key={idx}
+                            name={idx < item.rating ? "star" : "star-outline"}
+                            size={14}
+                            color="#ffd700"
+                          />
+                        ))}
+                        <Text className="text-xs text-gray-500 ml-2">
+                          {new Date(item.createdAt).toLocaleDateString()}
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+                  <Text className="text-gray-700">{item.feedback}</Text>
+                </View>
+              ))
+            ) : (
+              <View className="py-8 items-center">
+                <Ionicons name="chatbox-outline" size={40} color="#d1d1d1" />
+                <Text className="text-gray-400 mt-2">No reviews yet</Text>
+              </View>
+            )}
+
+            {productExistsInOrders && (
+              <TouchableOpacity
+                onPress={navigateToFeedback}
+                className="bg-[#e01d47] py-3 rounded-lg items-center mt-4"
+              >
+                <Text className="text-white font-bold">Write a Review</Text>
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
-      </View>
-    )}
-  />
-) : (
-        <Text className="mt-3 text-gray-500 text-center">
-          No reviews available yet.
-        </Text>
-      )}
-      {productExistsInOrders && (
-        <TouchableOpacity
-          activeOpacity={0.9}
-          onPress={navigateToFeedback}
-          className="bg-[#e01d47] py-3 rounded-lg items-center justify-center mt-4"
-        >
-          <Text className="text-white font-semibold">Add Rating</Text>
-        </TouchableOpacity>
-      )}
+      </ScrollView>
     </View>
-    </View>
-  </ScrollView>
-
   );
 };
 
 const styles = StyleSheet.create({
-  scrollViewContent: {
-    flexGrow: 1,
+  quantityControl: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+  quantityButton: {
+    backgroundColor: '#f5f5f5',
+    borderRadius: 4,
   },
-  imageWrapper: {
-    flex: 1,
-    alignItems: "center",
-  },
-  image: {
-    width: Dimensions.get("window").width, 
-    height: Dimensions.get("window").height / 2 + 60, 
-  },
-  noImageContainer: {
-    width: Dimensions.get("window").width,
-    height: Dimensions.get("window").height / 2 + 30, 
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#f5f5f5",
-    marginTop: -30, 
-  },
-  
+  quantity: {
+    marginHorizontal: 10,
+    fontSize: 16,
+  }
 });
 
 export default ProductDetails;

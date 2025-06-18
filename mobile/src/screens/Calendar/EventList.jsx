@@ -80,7 +80,7 @@ const EventsList = ({ navigation }) => {
             <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
             
             {/* Header */}
-            <View className="bg-white pt-5 pb-4 px-5 shadow-sm">
+            <View className="bg-white pt-2 pb-4 px-5 shadow-sm">
                 <View className="flex-row items-center justify-between mb-2">
                     <Text className="text-2xl font-bold text-gray-800">Events</Text>
                 </View>

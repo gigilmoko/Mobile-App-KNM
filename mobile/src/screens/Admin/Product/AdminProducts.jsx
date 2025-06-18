@@ -24,10 +24,6 @@ const AdminProducts = () => {
     dispatch(getAllCategories());
   }, [dispatch]);
 
-  // useEffect(() => {
-  //   console.log("Fetched products:", products);
-  // }, [products]);
-
   useEffect(() => {
     const handleResize = () => {
       setScreenWidth(Dimensions.get("window").width);
@@ -38,6 +34,22 @@ const AdminProducts = () => {
       subscription?.remove();
     };
   }, []);
+
+  // Calculate product stats
+  const productStats = {
+    total: products.length,
+    outOfStock: products.filter(product => product.stock === 0).length,
+    lowStock: products.filter(product => product.stock > 0 && product.stock <= 5).length,
+  };
+
+  // Get top categories
+  const categoryCounts = {};
+  products.forEach(product => {
+    if (product.category && product.category._id) {
+      const categoryId = product.category._id;
+      categoryCounts[categoryId] = (categoryCounts[categoryId] || 0) + 1;
+    }
+  });
 
   const handleProductPress = (productId) => {
     navigation.navigate("adminproductsupdate", { productId });
@@ -95,7 +107,7 @@ const AdminProducts = () => {
         {/* Title */}
         <View className="flex-1">
           <Text className="text-2xl font-bold text-[#e01d47] text-center">
-            Product 
+            Product Management
           </Text>
         </View>
 
@@ -103,51 +115,95 @@ const AdminProducts = () => {
         <View className="w-10" />
       </View>
 
-      {/* Search Box */}
-        <View className=" flex-row items-center border border-[#e01d47] rounded-full px-4 py-2 mx-5 bg-white">
-          <TextInput
-              className="flex-1 text-gray-700 placeholder-gray-400"
-              placeholder="Search"
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-          />
-          <Ionicons name="search" size={20} color="#e01d47" />
+      {/* Stats Cards */}
+      <View className="flex-row justify-between px-5 my-3">
+        <View className="bg-blue-500 p-4 rounded-lg w-[31%] shadow-sm">
+          <View className="bg-blue-400 rounded-full w-10 h-10 items-center justify-center mb-2">
+            <Ionicons name="cube-outline" size={24} color="#fff" />
+          </View>
+          <Text className="text-xl font-bold text-white">{productStats.total}</Text>
+          <Text className="text-white text-xs">Total Products</Text>
+        </View>
+        
+        <View className="bg-amber-500 p-4 rounded-lg w-[31%] shadow-sm">
+          <View className="bg-amber-400 rounded-full w-10 h-10 items-center justify-center mb-2">
+            <Ionicons name="alert-circle-outline" size={24} color="#fff" />
+          </View>
+          <Text className="text-xl font-bold text-white">{productStats.lowStock}</Text>
+          <Text className="text-white text-xs">Low Stock</Text>
+        </View>
+        
+        <View className="bg-red-500 p-4 rounded-lg w-[31%] shadow-sm">
+          <View className="bg-red-400 rounded-full w-10 h-10 items-center justify-center mb-2">
+            <Ionicons name="close-circle-outline" size={24} color="#fff" />
+          </View>
+          <Text className="text-xl font-bold text-white">{productStats.outOfStock}</Text>
+          <Text className="text-white text-xs">Out of Stock</Text>
+        </View>
       </View>
 
-{/* Delete Button and Filter */}
-<View className="flex-row items-center px-5">
-  <TouchableOpacity onPress={handleSelectAll} className="p-2 bg-white rounded-md items-center justify-center flex-row  py-2 mr-2">
-    <Ionicons name={selectAll ? "checkbox" : "square-outline"} size={20} color="gray" />
-    <Text className="text-gray-700 ml-2">Select All</Text>
-  </TouchableOpacity>
-  <View className="flex-1" />
-  <View className ="mr-2">
-  {isAnyProductSelected && (
-      <TouchableOpacity 
-        onPress={handleDeleteSelected} 
-        className="p-2 border border-[#e01d47] bg-white rounded-md items-center justify-center flex-row px-4 py-2"
-      >
-        <Ionicons name="trash" size={20} color="#e01d47" />
-      </TouchableOpacity>
-    )}
-    </View>
-  <View className="flex-row items-center space-x-2 border border-gray-300 rounded-md px-2 my-5">
-  
-    <Picker
-      selectedValue={selectedCategory}
-      onValueChange={(itemValue) => setSelectedCategory(itemValue)}
-      style={{ height: 40, width: 40, fontSize: 12 }}
-    >
-      <Picker.Item label="Filter" value="" style={{ fontSize: 12 }} />
-      {categories.map((category) => (
-        <Picker.Item key={category._id} label={category.name} value={category._id} style={{ fontSize: 12 }} />
-      ))}
-    </Picker>
+      {/* Search Box */}
+      <View className="flex-row items-center border border-[#e01d47] rounded-full px-4 py-2 mx-5 bg-white">
+        <TextInput
+            className="flex-1 text-gray-700 placeholder-gray-400"
+            placeholder="Search"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+        />
+        <Ionicons name="search" size={20} color="#e01d47" />
+      </View>
 
-   
-  </View>
-</View>
+      {/* Delete Button and Filter */}
+      <View className="flex-row items-center px-5">
+        <TouchableOpacity onPress={handleSelectAll} className="p-2 bg-white rounded-md items-center justify-center flex-row py-2 mr-2">
+          <Ionicons name={selectAll ? "checkbox" : "square-outline"} size={20} color="gray" />
+          <Text className="text-gray-700 ml-2">Select All</Text>
+        </TouchableOpacity>
+        <View className="flex-1" />
+        <View className="mr-2">
+        {isAnyProductSelected && (
+            <TouchableOpacity 
+              onPress={handleDeleteSelected} 
+              className="p-2 border border-[#e01d47] bg-white rounded-md items-center justify-center flex-row px-4 py-2"
+            >
+              <Ionicons name="trash" size={20} color="#e01d47" />
+            </TouchableOpacity>
+          )}
+        </View>
+        <View className="flex-row items-center space-x-2 border border-gray-300 rounded-md px-2 my-5">
+        
+          <Picker
+            selectedValue={selectedCategory}
+            onValueChange={(itemValue) => setSelectedCategory(itemValue)}
+            style={{ height: 40, width: 40, fontSize: 12 }}
+          >
+            <Picker.Item label="Filter" value="" style={{ fontSize: 12 }} />
+            {categories.map((category) => (
+              <Picker.Item key={category._id} label={category.name} value={category._id} style={{ fontSize: 12 }} />
+            ))}
+          </Picker>
+        </View>
+      </View>
 
+      {/* Categories Overview */}
+      <View className="px-5 mb-3">
+        <Text className="font-bold text-gray-700 mb-2">Category Overview</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} className="pb-2">
+          {categories.map(category => {
+            const count = categoryCounts[category._id] || 0;
+            return (
+              <TouchableOpacity 
+                key={category._id} 
+                className="mr-3 px-3 py-2 bg-gray-100 rounded-md"
+                onPress={() => setSelectedCategory(category._id === selectedCategory ? "" : category._id)}
+              >
+                <Text className="font-medium">{category.name}</Text>
+                <Text className="text-xs text-gray-500">{count} products</Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+      </View>
 
       {loading ? (
         <View className="flex-1 justify-center items-center">
@@ -199,13 +255,12 @@ const AdminProducts = () => {
         </ScrollView>
       )}
 
-       <TouchableOpacity
-                  className="absolute bottom-8 right-6 bg-[#e01d47] p-4 rounded-full shadow-lg"
-                  onPress={() => navigation.navigate("adminproductscreate")}
-              >
-                  <Ionicons name="add" size={24} color="#fff" />
-              </TouchableOpacity>
-      
+      <TouchableOpacity
+        className="absolute bottom-8 right-6 bg-[#e01d47] p-4 rounded-full shadow-lg"
+        onPress={() => navigation.navigate("adminproductscreate")}
+      >
+        <Ionicons name="add" size={24} color="#fff" />
+      </TouchableOpacity>
     </View>
   );
 };

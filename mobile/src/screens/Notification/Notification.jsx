@@ -30,6 +30,7 @@ const Notification = () => {
     const loadNotifications = async () => {
       try {
         await dispatch(getNotifications());
+        console.log(notifications)
       } catch (error) {
         console.error("Error loading notifications:", error);
       } finally {
@@ -160,9 +161,9 @@ const Notification = () => {
                 className={`text-base ${item.read ? "text-gray-800" : "text-gray-900 font-bold"}`}
                 numberOfLines={1}
               >
-                {item.event.title}
+                {item?. event?.title}
               </Text>
-              {!item.read && (
+              {!item?.event?.read && (
                 <View className="bg-[#e01d47] h-2.5 w-2.5 rounded-full ml-2" />
               )}
             </View>
@@ -172,7 +173,7 @@ const Notification = () => {
             className={`text-sm mt-1 ${item.read ? "text-gray-500" : "text-gray-700"}`}
             numberOfLines={2}
           >
-             {item.event.description}
+             {item?. event?.description}
           </Text>
         </View>
       </View>
@@ -192,7 +193,7 @@ const Notification = () => {
   return (
     <View className="flex-1 bg-gray-50">
       {/* Header */}
-      <View className="bg-white shadow-sm pt-12 pb-4 px-5">
+      <View className="bg-white shadow-sm pt-2 pb-4 px-5">
         <View className="flex-row items-center justify-between">
           <Text className="text-xl font-bold text-gray-800">Notifications</Text>
           {/* {hasUnreadNotifications && (

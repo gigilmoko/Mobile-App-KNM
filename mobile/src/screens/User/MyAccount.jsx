@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator } from "react-native";
 import Footer from "../../components/Layout/Footer";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { useDispatch, useSelector } from "react-redux";
 import { Ionicons } from "@expo/vector-icons";
 import OptionList from "../../components/User/OptionList";
@@ -25,17 +25,22 @@ const MyAccount = ({ navigation, route }) => {
     const [isLoggingOut, setIsLoggingOut] = useState(false);
     const [pageLoading, setPageLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setPageLoading(true);
-      await dispatch(loadUser());
-      setPageLoading(false);
-    };
+  // Only fetch user data when parameters change or on first load
+  useFocusEffect(
+    useCallback(() => {
+      const fetchData = async () => {
+        if (!user || !user._id) {
+          setPageLoading(true);
+          await dispatch(loadUser());
+          setPageLoading(false);
+        } else {
+          setPageLoading(false);
+        }
+      };
 
-    if (isFocused) {
       fetchData();
-    }
-  }, [route.params, dispatch, isFocused]);
+    }, [dispatch, route.params])
+  );
 
   useEffect(() => {
     if (user?.avatar) {
@@ -115,47 +120,48 @@ const MyAccount = ({ navigation, route }) => {
     }
   };
 
-const handleLogout = async () => {
-        try {
-            setIsLoggingOut(true);
-            await dispatch(logout());
-            Toast.show({
-                type: 'success',
-                text1: 'Logged Out Successfully',
-                text2: 'See you again soon!'
-            });
-            navigation.navigate("home");
-        } catch (error) {
-            Toast.show({
-                type: 'error',
-                text1: 'Logout Failed',
-                text2: 'Please try again'
-            });
-        } finally {
-            setIsLoggingOut(false);
-        }
-    };
+  const handleLogout = async () => {
+    try {
+      setIsLoggingOut(true);
+      await dispatch(logout());
+      Toast.show({
+        type: 'success',
+        text1: 'Logged Out Successfully',
+        text2: 'See you again soon!'
+      });
+      navigation.navigate("home");
+    } catch (error) {
+      Toast.show({
+        type: 'error',
+        text1: 'Logout Failed',
+        text2: 'Please try again'
+      });
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
 
-    if (isLoggingOut) {
+  if (isLoggingOut) {
     return (
-        <View className="flex-1 justify-center items-center bg-white">
-            <ActivityIndicator size="large" color="#e01d47" />
-            <Text className="text-[#e01d47] mt-4 font-medium">Signing out...</Text>
-        </View>
+      <View className="flex-1 justify-center items-center bg-white">
+        <ActivityIndicator size="large" color="#e01d47" />
+        <Text className="text-[#e01d47] mt-4 font-medium">Signing out...</Text>
+      </View>
     );
-} else if (pageLoading || userLoading) {
+  } else if (pageLoading || userLoading) {
     return (
-        <View className="flex-1 justify-center items-center bg-white">
-            <ActivityIndicator size="large" color="#e01d47" />
-            <Text className="text-[#e01d47] mt-4 font-medium">Loading your profile...</Text>
-        </View>
+      <View className="flex-1 justify-center items-center bg-white">
+        <ActivityIndicator size="large" color="#e01d47" />
+        <Text className="text-[#e01d47] mt-4 font-medium">Loading your profile...</Text>
+      </View>
     );
-}
+  }
+  
   return (
     <View className="flex-1 bg-white">
       <ScrollView contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false}>
-        {/* Simple Header with Back Button */}
-        <View className="bg-[#e01d47] pt-12 pb-8 px-5">
+        {/* Header with gradient background */}
+        <View className="bg-[#e01d47] pt-2 pb-8 px-5">
           <View className="flex-row justify-start mb-4">
             <TouchableOpacity onPress={() => navigation.goBack()} className="p-2 bg-white bg-opacity-20 rounded-full">
               <Ionicons name="arrow-back" size={22} color="#e01d47" />
@@ -202,7 +208,7 @@ const handleLogout = async () => {
 
             {user?.role === "admin" && (
               <View className="bg-white bg-opacity-20 rounded-full px-3 py-1 mt-2">
-                <Text className="text-red-500 font-medium">Administrator</Text>
+                <Text className="text-[#e01d47] font-medium">Administrator</Text>
               </View>
             )}
           </View>
@@ -213,7 +219,7 @@ const handleLogout = async () => {
           <View className="mb-6">
             <Text className="text-sm font-bold text-gray-500 mb-3 px-1 uppercase">Personal Information</Text>
 
-            <View className="bg-gray-50 rounded-lg p-4 mb-2">
+            <View className="bg-gray-50 rounded-lg p-4 mb-2 shadow-sm">
               {/* Phone Information */}
               <View className="flex-row items-center mb-4">
                 <View className="bg-gray-100 rounded-full p-2">
@@ -262,77 +268,81 @@ const handleLogout = async () => {
             </View>
           </View>
 
-          {/* Account Settings Section */}
+          {/* Account Settings Section - REDESIGNED */}
           <View className="mb-6">
             <Text className="text-sm font-bold text-gray-500 mb-3 px-1 uppercase">Account Settings</Text>
 
-            <View className="bg-gray-50 rounded-lg mb-2">
+            {/* Modern card-based design with icons */}
+            <View className="flex-row flex-wrap justify-between">
               {user?.role !== "admin" && (
-                <OptionList
-                  text={"My Orders"}
-                  Icon={Ionicons}
-                  iconName={"bag-outline"}
+                <TouchableOpacity 
                   onPress={() => navigation.navigate("myorders")}
-                  iconColor="#e01d47"
-                  textColor="#333"
-                />
+                  className="w-[48%] bg-white shadow-sm rounded-xl p-4 mb-4 border border-gray-100"
+                >
+                  <View className="bg-pink-50 p-2 rounded-full w-10 h-10 items-center justify-center mb-2">
+                    <Ionicons name="bag-outline" size={20} color="#e01d47" />
+                  </View>
+                  <Text className="font-bold text-gray-800">My Orders</Text>
+                  <Text className="text-xs text-gray-500 mt-1">View all orders</Text>
+                </TouchableOpacity>
               )}
 
               {user?.role === "admin" && (
-                <OptionList
-                  text={"Admin Dashboard"}
-                  Icon={Ionicons}
-                  iconName={"grid-outline"}
+                <TouchableOpacity 
                   onPress={() => navigation.navigate("dashboard")}
-                  iconColor="#e01d47"
-                  textColor="#333"
-                />
+                  className="w-[48%] bg-white shadow-sm rounded-xl p-4 mb-4 border border-gray-100"
+                >
+                  <View className="bg-purple-50 p-2 rounded-full w-10 h-10 items-center justify-center mb-2">
+                    <Ionicons name="grid-outline" size={20} color="#8b5cf6" />
+                  </View>
+                  <Text className="font-bold text-gray-800">Dashboard</Text>
+                  <Text className="text-xs text-gray-500 mt-1">Admin panel</Text>
+                </TouchableOpacity>
               )}
 
-              <OptionList
-                text={"Change Password"}
-                Icon={Ionicons}
-                iconName={"key-outline"}
+              <TouchableOpacity 
                 onPress={() => navigation.navigate("changepassword")}
-                iconColor="#e01d47"
-                textColor="#333"
-              />
+                className="w-[48%] bg-white shadow-sm rounded-xl p-4 mb-4 border border-gray-100"
+              >
+                <View className="bg-blue-50 p-2 rounded-full w-10 h-10 items-center justify-center mb-2">
+                  <Ionicons name="key-outline" size={20} color="#3b82f6" />
+                </View>
+                <Text className="font-bold text-gray-800">Password</Text>
+                <Text className="text-xs text-gray-500 mt-1">Change password</Text>
+              </TouchableOpacity>
 
-              <OptionList
-                text={"Update Profile"}
-                Icon={Ionicons}
-                iconName={"person-outline"}
+              <TouchableOpacity 
                 onPress={() => navigation.navigate("updateprofile")}
-                iconColor="#e01d47"
-                textColor="#333"
-              />
+                className="w-[48%] bg-white shadow-sm rounded-xl p-4 mb-4 border border-gray-100"
+              >
+                <View className="bg-amber-50 p-2 rounded-full w-10 h-10 items-center justify-center mb-2">
+                  <Ionicons name="person-outline" size={20} color="#f59e0b" />
+                </View>
+                <Text className="font-bold text-gray-800">Profile</Text>
+                <Text className="text-xs text-gray-500 mt-1">Update info</Text>
+              </TouchableOpacity>
 
-              <OptionList
-                text={"Update Address"}
-                Icon={Ionicons}
-                iconName={"location-outline"}
+              <TouchableOpacity 
                 onPress={() => navigation.navigate("editaddress")}
-                iconColor="#e01d47"
-                textColor="#333"
-                noBorder
-              />
-            </View>
-          </View>
+                className="w-[48%] bg-white shadow-sm rounded-xl p-4 border border-gray-100"
+              >
+                <View className="bg-green-50 p-2 rounded-full w-10 h-10 items-center justify-center mb-2">
+                  <Ionicons name="location-outline" size={20} color="#10b981" />
+                </View>
+                <Text className="font-bold text-gray-800">Address</Text>
+                <Text className="text-xs text-gray-500 mt-1">Update address</Text>
+              </TouchableOpacity>
 
-          {/* Support Section */}
-          <View className="mb-6">
-            <Text className="text-sm font-bold text-gray-500 mb-3 px-1 uppercase">Support & Feedback</Text>
-
-            <View className="bg-gray-50 rounded-lg mb-2">
-              <OptionList
-                text={"Contact and Feedback"}
-                Icon={Ionicons}
-                iconName={"chatbox-ellipses-outline"}
+              <TouchableOpacity 
                 onPress={() => navigation.navigate("feedback")}
-                iconColor="#e01d47"
-                textColor="#333"
-                noBorder
-              />
+                className="w-[48%] bg-white shadow-sm rounded-xl p-4 border border-gray-100"
+              >
+                <View className="bg-orange-50 p-2 rounded-full w-10 h-10 items-center justify-center mb-2">
+                  <Ionicons name="chatbox-ellipses-outline" size={20} color="#f97316" />
+                </View>
+                <Text className="font-bold text-gray-800">Feedback</Text>
+                <Text className="text-xs text-gray-500 mt-1">Contact us</Text>
+              </TouchableOpacity>
             </View>
           </View>
         </View>
