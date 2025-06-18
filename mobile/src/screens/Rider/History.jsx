@@ -2,41 +2,63 @@ import React, { useEffect, useState } from 'react';
 import { 
   View, 
   Text, 
-  ScrollView, 
-  StyleSheet, 
+  ScrollView,
   ActivityIndicator, 
   TouchableOpacity, 
-  Image 
+  Image,
+  RefreshControl
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { getHistoryByRider } from '../../redux/actions/deliverySessionActions';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NewFooter from './NewFooter';
 import { Ionicons } from '@expo/vector-icons';
+import tw from 'twrnc';
 
 const History = () => {
   const dispatch = useDispatch();
-  const history = useSelector((state) => state.deliverySession.historySessions);
+  const historySessions = useSelector((state) => state.deliverySession?.historySessions || []);
+  const error = useSelector((state) => state.deliverySession?.error);
+  
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [expandedOrder, setExpandedOrder] = useState({});
 
+  const fetchHistory = async () => {
+    try {
+      const id = await AsyncStorage.getItem('riderId');
+      if (!id) {
+        console.log('No rider ID found in storage');
+        return;
+      }
+      
+      console.log("Fetching delivery history for rider ID:", id);
+      await dispatch(getHistoryByRider(id));
+    } catch (err) {
+      console.error("Error fetching rider history:", err);
+    }
+  };
+
   useEffect(() => {
-    const fetchRiderId = async () => {
+    const loadData = async () => {
       try {
-        const id = await AsyncStorage.getItem('riderId');
-        if (!id) {
-          return;
-        }
-        await dispatch(getHistoryByRider(id));
-      } catch (err) {
-        console.error("Error fetching rider ID:", err);
+        await fetchHistory();
       } finally {
         setLoading(false);
       }
     };
 
-    fetchRiderId();
+    loadData();
   }, [dispatch]);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await fetchHistory();
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   const toggleExpandOrder = (orderId) => {
     setExpandedOrder(prev => ({
@@ -47,120 +69,165 @@ const History = () => {
 
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
-  const calculateTotal = (order) => {
     try {
-      let total = 0;
-      
-      if (!order.orderProducts) return "₱0.00";
-      
-      // Calculate subtotal from products
-      order.orderProducts.forEach(product => {
-        const price = parseFloat(product.price || 0);
-        const quantity = parseInt(product.quantity || 1);
-        total += price * quantity;
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
       });
-      
-      // Add shipping if available
-      const shipping = parseFloat(order.shippingCharges || 0);
-      total += shipping;
-      
-      return `₱${total.toFixed(2)}`;
-    } catch (err) {
-      console.error("Error calculating total:", err);
-      return "₱0.00";
+    } catch (e) {
+      console.error("Date formatting error:", e);
+      return "Invalid date";
     }
   };
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
+      <View style={tw`flex-1 justify-center items-center bg-white`}>
         <ActivityIndicator size="large" color="#e01d47" />
-        <Text style={styles.loadingText}>Loading delivery history...</Text>
+        <Text style={tw`mt-3 text-base text-[#e01d47]`}>Loading delivery history...</Text>
       </View>
     );
   }
 
+  if (error) {
+    return (
+      <View style={tw`flex-1 justify-center items-center bg-white`}>
+        <Ionicons name="alert-circle-outline" size={60} color="#e0e0e0" />
+        <Text style={tw`mt-4 text-lg font-medium text-gray-500`}>Could not load history</Text>
+        <Text style={tw`mt-2 text-center text-gray-400 px-10`}>{error}</Text>
+      </View>
+    );
+  }
+
+  // Handle empty history case
+  const isHistoryEmpty = !historySessions || historySessions.length === 0;
+
   return (
-    <View style={styles.container}>
+    <View style={tw`flex-1 bg-gray-50`}>
       {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.title}>Delivery History</Text>
-        <Text style={styles.subtitle}>
-          {history?.length || 0} completed {history?.length === 1 ? 'session' : 'sessions'}
+      <View style={tw`bg-white pt-12 pb-4 px-5 shadow-sm`}>
+        <Text style={tw`text-2xl font-bold text-gray-800`}>Delivery History</Text>
+        <Text style={tw`text-gray-500`}>
+          {historySessions.length} completed {historySessions.length === 1 ? 'session' : 'sessions'}
         </Text>
       </View>
 
-      {history && history.length > 0 ? (
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-          {history.map((session) => (
-            <View key={session._id} style={styles.sessionCard}>
+      {isHistoryEmpty ? (
+        <View style={tw`flex-1 justify-center items-center p-5`}>
+          <Ionicons name="document-outline" size={60} color="#e0e0e0" />
+          <Text style={tw`mt-4 text-lg font-medium text-gray-400`}>No delivery history found</Text>
+          <Text style={tw`mt-2 text-center text-gray-400`}>
+            Completed deliveries will appear here
+          </Text>
+        </View>
+      ) : (
+        <ScrollView 
+          showsVerticalScrollIndicator={false} 
+          contentContainerStyle={tw`p-4 pb-20`}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={["#e01d47"]}
+            />
+          }
+        >
+          {historySessions.map((session) => (
+            <View key={session._id} style={tw`mb-5 bg-white rounded-xl shadow overflow-hidden`}>
               {/* Session Header */}
-              <View style={styles.sessionHeader}>
-                <View style={styles.sessionBadge}>
+              <View style={tw`p-4 flex-row justify-between items-center border-b border-gray-100`}>
+                <View style={tw`flex-row items-center bg-green-500 px-3 py-1 rounded-full`}>
                   <Ionicons name="checkmark-circle" size={16} color="#fff" />
-                  <Text style={styles.sessionBadgeText}>Completed</Text>
+                  <Text style={tw`text-white text-xs font-medium ml-1`}>
+                    {session.status || "Completed"}
+                  </Text>
                 </View>
-                <Text style={styles.sessionDate}>{formatDate(session.endTime)}</Text>
+                <Text style={tw`text-gray-500 text-xs`}>
+                 Delivered date: {formatDate(session.endTime || session.UpdatedAt)}
+                </Text>
               </View>
               
-              {/* Session Details */}
-              <View style={styles.sessionInfo}>
-                <View style={styles.infoRow}>
-                  <Ionicons name="compass-outline" size={18} color="#666" />
-                  <Text style={styles.infoLabel}>Session ID:</Text>
-                  <Text style={styles.infoValue}>{session._id.slice(0, 10)}...</Text>
+              {/* Session Info */}
+              <View style={tw`p-4 bg-gray-50`}>
+                <View style={tw`flex-row items-center mb-2`}>
+                  <Ionicons name="calendar-outline" size={18} color="#666" />
+                  <Text style={tw`text-gray-500 text-sm ml-2 w-24`}>Session ID:</Text>
+                  <Text style={tw`text-gray-700 text-sm font-medium`}>
+  KNM-SESSION-{session._id?.slice(0, 8)}
+</Text>
+
+
                 </View>
                 
-                <View style={styles.infoRow}>
-                  <Ionicons name="car-outline" size={18} color="#666" />
-                  <Text style={styles.infoLabel}>Vehicle:</Text>
-                  <Text style={styles.infoValue}>{session.truck?.plateNo || "N/A"}</Text>
-                </View>
+                {session.rider && (
+                  <View style={tw`flex-row items-center mb-2`}>
+                    <Ionicons name="person-outline" size={18} color="#666" />
+                    <Text style={tw`text-gray-500 text-sm ml-2 w-24`}>Rider:</Text>
+                    <Text style={tw`text-gray-700 text-sm font-medium`}>
+                      {session.rider.name || `${session.rider.fname || ''} ${session.rider.lname || ''}`}
+                    </Text>
+                  </View>
+                )}
                 
-                <View style={styles.infoRow}>
+                {session.truck && (
+                  <View style={tw`flex-row items-center mb-2`}>
+                    <Ionicons name="car-outline" size={18} color="#666" />
+                    <Text style={tw`text-gray-500 text-sm ml-2 w-24`}>Vehicle:</Text>
+                    <Text style={tw`text-gray-700 text-sm font-medium`}>
+                      {session.truck.plateNo ? 
+                        `${session.truck.model || ''} (${session.truck.plateNo})` : 
+                        session.truck.model || 'N/A'}
+                    </Text>
+                  </View>
+                )}
+                
+                <View style={tw`flex-row items-center`}>
                   <Ionicons name="cube-outline" size={18} color="#666" />
-                  <Text style={styles.infoLabel}>Orders:</Text>
-                  <Text style={styles.infoValue}>{session.orders?.length || 0}</Text>
+                  <Text style={tw`text-gray-500 text-sm ml-2 w-24`}>Orders:</Text>
+                  <Text style={tw`text-gray-700 text-sm font-medium`}>
+                    {session.orders?.length || 0}
+                  </Text>
                 </View>
               </View>
               
               {/* Orders List */}
-              <View style={styles.ordersContainer}>
-                <Text style={styles.sectionTitle}>Delivered Orders</Text>
+              <View style={tw`p-4`}>
+                <Text style={tw`text-base font-semibold text-gray-800 mb-3`}>
+                  Delivered Orders
+                </Text>
                 
-                {session.orders.map((order) => (
-                  <View key={order._id} style={styles.orderCard}>
+                {Array.isArray(session.orders) && session.orders.length > 0 ? session.orders.map((order) => (
+                  <View key={order._id} style={tw`mb-3 border border-gray-200 rounded-lg overflow-hidden`}>
                     {/* Order Header */}
                     <TouchableOpacity 
-                      style={styles.orderHeader} 
+                      style={tw`p-3 flex-row justify-between items-center bg-gray-50`} 
                       onPress={() => toggleExpandOrder(order._id)}
                       activeOpacity={0.7}
                     >
-                      <View style={styles.orderHeaderLeft}>
-                        <View style={styles.orderIcon}>
-                          <Ionicons name="document-text-outline" size={20} color="#e01d47" />
+                      <View style={tw`flex-row items-center`}>
+                        <View style={tw`w-9 h-9 rounded-full bg-[#e01d47]/10 items-center justify-center mr-3`}>
+                          <Ionicons name="document-text-outline" size={18} color="#e01d47" />
                         </View>
                         <View>
-                          <Text style={styles.orderNumber}>
-                            Order #{order.KNMOrderId || order._id.slice(0, 8)}
+                          <Text style={tw`text-sm font-semibold text-gray-800`}>
+                            {order.KNMOrderId || `Order #${order._id?.slice(0, 8)}`}
                           </Text>
-                          <Text style={styles.orderCustomer}>
-                            {order.user ? `${order.user.fname} ${order.user.lname}` : "Customer"}
+                          <Text style={tw`text-xs text-gray-500`}>
+                            {(order.customer && order.customer.name) || 
+                             (order.user && `${order.user.fname || ''} ${order.user.lname || ''}`) || 
+                             "Customer"}
                           </Text>
                         </View>
                       </View>
-                      <View style={styles.orderHeaderRight}>
-                        <Text style={styles.orderTotal}>{calculateTotal(order)}</Text>
+                      <View style={tw`items-end`}>
+                        <Text style={tw`text-[#e01d47] font-bold text-sm mb-1`}>
+                          ₱{(order.payment && parseFloat(order.payment.totalAmount || 0) || 
+                             parseFloat(order.totalPrice || 0)).toFixed(2)}
+                        </Text>
                         <Ionicons 
                           name={expandedOrder[order._id] ? "chevron-up" : "chevron-down"} 
                           size={18} 
@@ -171,310 +238,213 @@ const History = () => {
                     
                     {/* Order Details (expandable) */}
                     {expandedOrder[order._id] && (
-                      <View style={styles.orderDetails}>
+                      <View style={tw`p-4 border-t border-gray-200`}>
+                        {/* Customer Information */}
+                        <View style={tw`mb-4`}>
+                          <Text style={tw`text-sm font-semibold text-gray-700 mb-2`}>
+                            Customer Information
+                          </Text>
+                          <View style={tw`bg-gray-50 rounded-lg p-3`}>
+                            <View style={tw`flex-row mb-1`}>
+                              <Text style={tw`text-xs text-gray-500 w-16`}>Name:</Text>
+                              <Text style={tw`text-xs text-gray-700 font-medium flex-1`}>
+                                {(order.customer && order.customer.name) || 
+                                 (order.user && `${order.user.fname || ''} ${order.user.lname || ''}`) || 
+                                 "N/A"}
+                              </Text>
+                            </View>
+                            <View style={tw`flex-row mb-1`}>
+                              <Text style={tw`text-xs text-gray-500 w-16`}>Phone:</Text>
+                              <Text style={tw`text-xs text-gray-700 font-medium flex-1`}>
+                                {(order.customer && order.customer.phone) || 
+                                 (order.user && (order.user.contactNo || order.user.phone)) || 
+                                 "N/A"}
+                              </Text>
+                            </View>
+                            <View style={tw`flex-row`}>
+                              <Text style={tw`text-xs text-gray-500 w-16`}>Email:</Text>
+                              <Text style={tw`text-xs text-gray-700 font-medium flex-1`}>
+                                {(order.customer && order.customer.email) || 
+                                 (order.user && order.user.email) || 
+                                 "N/A"}
+                              </Text>
+                            </View>
+                          </View>
+                        </View>
+                        
+                        {/* Delivery Address */}
+                        {(order.address || (order.user && order.user.deliveryAddress && order.user.deliveryAddress[0])) && (
+                          <View style={tw`mb-4`}>
+                            <Text style={tw`text-sm font-semibold text-gray-700 mb-2`}>
+                              Delivery Address
+                            </Text>
+                            <View style={tw`bg-gray-50 rounded-lg p-3`}>
+                              <Text style={tw`text-xs text-gray-700`}>
+                                {order.address ? 
+                                  [
+                                    order.address.houseNo, 
+                                    order.address.streetName,
+                                    order.address.barangay,
+                                    order.address.city
+                                  ].filter(Boolean).join(', ') :
+                                  (order.user && order.user.deliveryAddress && order.user.deliveryAddress[0]) ?
+                                  [
+                                    order.user.deliveryAddress[0].houseNo,
+                                    order.user.deliveryAddress[0].streetName,
+                                    order.user.deliveryAddress[0].barangay,
+                                    order.user.deliveryAddress[0].city
+                                  ].filter(Boolean).join(', ') :
+                                  "No address information available"
+                                }
+                              </Text>
+                            </View>
+                          </View>
+                        )}
+
+                        {/* Proof of Delivery */}
                         {order.proofOfDelivery && (
-                          <View style={styles.proofContainer}>
-                            <Text style={styles.detailsLabel}>Proof of Delivery:</Text>
+                          <View style={tw`mb-4`}>
+                            <Text style={tw`text-sm font-semibold text-gray-700 mb-2`}>
+                              Proof of Delivery
+                            </Text>
                             <Image 
                               source={{ uri: order.proofOfDelivery }} 
-                              style={styles.proofImage} 
+                              style={tw`h-40 w-full rounded-lg bg-gray-100`}
                               resizeMode="cover"
                             />
                           </View>
                         )}
                         
-                        <View style={styles.paymentInfo}>
-                          <View style={styles.paymentMethod}>
+                        {/* Payment Information */}
+                        <View style={tw`flex-row justify-between items-center mb-4 bg-gray-50 p-3 rounded-lg`}>
+                          <View style={tw`flex-row items-center`}>
                             <Ionicons 
-                              name={order.paymentInfo === "COD" ? "cash-outline" : "card-outline"} 
+                              name={(order.payment && order.payment.method === "COD") || 
+                                   (order.paymentInfo === "COD") || 
+                                   (!order.payment && !order.paymentInfo) ? 
+                                   "cash-outline" : "card-outline"} 
                               size={16} 
                               color="#666" 
                             />
-                            <Text style={styles.paymentMethodText}>
-                              {order.paymentInfo === "COD" ? "Cash on Delivery" : order.paymentInfo}
+                            <Text style={tw`text-xs text-gray-700 ml-2`}>
+                              {(order.payment && order.payment.method === "COD") || (order.paymentInfo === "COD") ? 
+                                "Cash on Delivery" : 
+                                (order.payment && order.payment.method) || 
+                                order.paymentInfo || 
+                                "Payment method"}
                             </Text>
                           </View>
-                          <Text style={styles.paymentStatus}>
-                            {order.paymentStatus || "Paid"}
-                          </Text>
+                          <View style={tw`${order.status === "Delivered" ? "bg-green-100" : "bg-blue-100"} px-2 py-1 rounded`}>
+                            <Text style={tw`text-xs ${order.status === "Delivered" ? "text-green-700" : "text-blue-700"} font-medium`}>
+                              {order.status || "Delivered"}
+                            </Text>
+                          </View>
                         </View>
                         
-                        <Text style={styles.detailsLabel}>Order Items:</Text>
-                        <View style={styles.productsList}>
-                          {order.orderProducts?.map((product, idx) => (
-                            <View key={idx} style={styles.productItem}>
-                              <View style={styles.productDot} />
-                              <Text style={styles.productName} numberOfLines={1}>
-                                {product.product?.name || `Product ${idx + 1}`}
-                              </Text>
-                              <Text style={styles.productQty}>x{product.quantity || 1}</Text>
-                              <Text style={styles.productPrice}>₱{(product.price || 0).toFixed(2)}</Text>
-                            </View>
-                          ))}
+                        {/* Order Items */}
+                        <Text style={tw`text-sm font-semibold text-gray-700 mb-2`}>
+                          Order Items
+                        </Text>
+                        {Array.isArray(order.products || order.orderProducts) && 
+                         (order.products || order.orderProducts).length > 0 ? (
+                          <View style={tw`mb-4 bg-gray-50 rounded-lg overflow-hidden`}>
+                            {(order.products || order.orderProducts).map((product, idx) => (
+                              <View key={idx} style={tw`flex-row items-center p-3 ${idx > 0 ? 'border-t border-gray-100' : ''}`}>
+                                {product.image ? (
+                                  <Image 
+                                    source={{ uri: product.image }} 
+                                    style={tw`w-10 h-10 rounded bg-gray-200 mr-3`}
+                                    resizeMode="cover"
+                                  />
+                                ) : (
+                                  <View style={tw`w-10 h-10 rounded bg-gray-200 mr-3 items-center justify-center`}>
+                                    <Ionicons name="cube-outline" size={16} color="#999" />
+                                  </View>
+                                )}
+                                <Text style={tw`text-xs text-gray-800 flex-1`} numberOfLines={1}>
+                                  {product.name || 
+                                   (product.product && product.product.name) || 
+                                   `Product ${idx + 1}`}
+                                </Text>
+                                <Text style={tw`text-xs text-gray-500 mr-3`}>
+                                  x{product.quantity || 1}
+                                </Text>
+                                <Text style={tw`text-xs font-semibold text-gray-800`}>
+                                  ₱{parseFloat(product.price || 0).toFixed(2)}
+                                </Text>
+                              </View>
+                            ))}
+                          </View>
+                        ) : (
+                          <View style={tw`mb-4 bg-gray-50 rounded-lg p-4 items-center justify-center`}>
+                            <Text style={tw`text-xs text-gray-500`}>
+                              No product information available
+                            </Text>
+                          </View>
+                        )}
+
+                        {/* Order Summary */}
+                        <View style={tw`mb-4 border-t border-gray-200 pt-3`}>
+                          <View style={tw`flex-row justify-between mb-1`}>
+                            <Text style={tw`text-xs text-gray-500`}>
+                              Items Total:
+                            </Text>
+                            <Text style={tw`text-xs text-gray-700`}>
+                              ₱{((order.payment && parseFloat(order.payment.totalAmount || 0) - parseFloat(order.payment.shippingCharges || 0)) ||
+                                 (parseFloat(order.itemsPrice || 0))).toFixed(2)}
+                            </Text>
+                          </View>
+                          <View style={tw`flex-row justify-between mb-1`}>
+                            <Text style={tw`text-xs text-gray-500`}>
+                              Shipping:
+                            </Text>
+                            <Text style={tw`text-xs text-gray-700`}>
+                              ₱{(order.payment && parseFloat(order.payment.shippingCharges || 0) ||
+                                 parseFloat(order.shippingCharges || 0)).toFixed(2)}
+                            </Text>
+                          </View>
+                          <View style={tw`flex-row justify-between pt-2 border-t border-gray-200 mt-2`}>
+                            <Text style={tw`text-sm font-semibold text-gray-800`}>
+                              Total:
+                            </Text>
+                            <Text style={tw`text-sm font-bold text-[#e01d47]`}>
+                              ₱{(order.payment && parseFloat(order.payment.totalAmount || 0) ||
+                                 parseFloat(order.totalPrice || 0)).toFixed(2)}
+                            </Text>
+                          </View>
+                        </View>
+
+                        {/* Delivery Date */}
+                        <View style={tw`bg-gray-50 p-3 rounded-lg`}>
+                          <View style={tw`flex-row justify-between`}>
+                            <Text style={tw`text-xs text-gray-500`}>
+                              Order Date:
+                            </Text>
+                            <Text style={tw`text-xs text-gray-700 font-medium`}>
+                              {formatDate(order.createdAt)}
+                            </Text>
+                          </View>
                         </View>
                       </View>
                     )}
                   </View>
-                ))}
+                )) : (
+                  <View style={tw`items-center justify-center p-6 bg-gray-50 rounded-lg`}>
+                    <Ionicons name="information-circle-outline" size={24} color="#999" />
+                    <Text style={tw`mt-2 text-gray-500 text-center`}>
+                      No order details available
+                    </Text>
+                  </View>
+                )}
               </View>
             </View>
           ))}
         </ScrollView>
-      ) : (
-        <View style={styles.emptyContainer}>
-          <Ionicons name="document-outline" size={60} color="#e0e0e0" />
-          <Text style={styles.emptyText}>No delivery history found</Text>
-          <Text style={styles.emptySubtext}>Completed deliveries will appear here</Text>
-        </View>
       )}
       
       <NewFooter />
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f8f8f8',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f8f8f8',
-  },
-  loadingText: {
-    marginTop: 12,
-    color: '#e01d47',
-    fontSize: 14,
-  },
-  header: {
-    paddingHorizontal: 20,
-    paddingTop: 10,
-    paddingBottom: 16,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#222',
-  },
-  subtitle: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 4,
-  },
-  scrollContent: {
-    padding: 16,
-    paddingBottom: 100,
-  },
-  sessionCard: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 3,
-    overflow: 'hidden',
-  },
-  sessionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-  },
-  sessionBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#4CAF50',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 20,
-  },
-  sessionBadgeText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: '500',
-    marginLeft: 4,
-  },
-  sessionDate: {
-    fontSize: 13,
-    color: '#777',
-  },
-  sessionInfo: {
-    padding: 16,
-    backgroundColor: '#f9f9f9',
-  },
-  infoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  infoLabel: {
-    fontSize: 14,
-    color: '#666',
-    marginLeft: 8,
-    width: 80,
-  },
-  infoValue: {
-    fontSize: 14,
-    color: '#222',
-    fontWeight: '500',
-    flex: 1,
-  },
-  ordersContainer: {
-    padding: 16,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 12,
-  },
-  orderCard: {
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: '#eee',
-    overflow: 'hidden',
-  },
-  orderHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 12,
-  },
-  orderHeaderLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  orderIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(224, 29, 71, 0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  orderNumber: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-  },
-  orderCustomer: {
-    fontSize: 12,
-    color: '#777',
-  },
-  orderHeaderRight: {
-    alignItems: 'flex-end',
-  },
-  orderTotal: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#e01d47',
-    marginBottom: 4,
-  },
-  orderDetails: {
-    padding: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
-  },
-  detailsLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#555',
-    marginBottom: 8,
-  },
-  proofContainer: {
-    marginBottom: 12,
-  },
-  proofImage: {
-    height: 120,
-    borderRadius: 8,
-    marginTop: 4,
-  },
-  paymentInfo: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-    marginBottom: 12,
-  },
-  paymentMethod: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  paymentMethodText: {
-    fontSize: 13,
-    color: '#555',
-    marginLeft: 6,
-  },
-  paymentStatus: {
-    fontSize: 13,
-    color: '#4CAF50',
-    fontWeight: '500',
-  },
-  productsList: {
-    marginTop: 4,
-  },
-  productItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 6,
-  },
-  productDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#e01d47',
-    marginRight: 8,
-  },
-  productName: {
-    fontSize: 13,
-    color: '#333',
-    flex: 1,
-  },
-  productQty: {
-    fontSize: 13,
-    color: '#666',
-    width: 30,
-    textAlign: 'center',
-  },
-  productPrice: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#333',
-    width: 70,
-    textAlign: 'right',
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  emptyText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#555',
-    marginTop: 16,
-  },
-  emptySubtext: {
-    fontSize: 14,
-    color: '#888',
-    marginTop: 8,
-  },
-});
 
 export default History;

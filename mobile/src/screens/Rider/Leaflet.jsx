@@ -134,6 +134,36 @@ const Leaflet = () => {
     setSelectedOrder(null);
   }, []);
 
+  useEffect(() => {
+    if (ongoingSessions && ongoingSessions.length > 0) {
+      console.log("All Ongoing Sessions:", ongoingSessions.length);
+
+      // Log each session's orders with their delivery addresses
+      ongoingSessions.forEach((session, index) => {
+        console.log(`Session ${index + 1} ID: ${session._id}`);
+
+        if (session.orders && session.orders.length > 0) {
+          console.log(`Orders in Session ${index + 1}:`, session.orders.length);
+
+          session.orders.forEach((order, orderIndex) => {
+            console.log(`Order ${orderIndex + 1} Information:`, {
+              orderId: order._id,
+              KNMOrderId: order.KNMOrderId || "N/A",
+              status: order.status,
+              customer: order.customer,
+              address: order.address,
+              totalAmount: order.payment?.totalAmount || "N/A",
+            });
+          });
+        } else {
+          console.log(`No orders in Session ${index + 1}`);
+        }
+      });
+    } else {
+      console.log("No ongoing sessions found");
+    }
+  }, [ongoingSessions]);
+
   const handleNavigateToMaps = useCallback(
     (order) => {
       if (!location || !order?.address) {
@@ -222,6 +252,12 @@ const Leaflet = () => {
 
   const handleDelivered = useCallback(
     (sessionId, group, orderId) => {
+      // Check if we have an image URL
+      if (!imageUrls[orderId]) {
+        Alert.alert("Error", "Please capture a proof of delivery image first");
+        return;
+      }
+
       const orderIds = group.orders.map((order) => order._id);
       dispatch(submitProofDeliverySession(sessionId, orderIds, imageUrls[orderId]));
       setCapturedImages((prev) => ({ ...prev, [orderId]: null }));
@@ -305,37 +341,36 @@ const Leaflet = () => {
   const groupOrdersByUserAndLocation = useMemo(() => {
     return (orders) => {
       const groupedOrders = {};
-      
+
       orders.forEach((order) => {
         try {
           // Check if the order has customer or user data
           const hasCustomer = order.customer && (order.customer.name || order.customer.email);
           const hasUser = order.user && (order.user.fname || order.user.email);
-          
+
           // Handle different data structures
           let userKey, userData, addressData;
-          
+
           if (hasCustomer) {
             // New data structure with customer object
-            userKey = `${order.customer?.email || 'unknown'}-${JSON.stringify(order.address || {})}`;
-            
+            userKey = `${order.customer?.email || "unknown"}-${JSON.stringify(order.address || {})}`;
+
             // Split customer name into first and last name
             const nameParts = (order.customer?.name || "").split(" ");
             const firstName = nameParts[0] || "Unknown";
             const lastName = nameParts.slice(1).join(" ") || "Customer";
-            
+
             userData = {
               fname: firstName,
               lname: lastName,
               email: order.customer?.email || "",
               phone: order.customer?.phone || "",
             };
-            
+
             addressData = order.address ? [order.address] : [];
-            
           } else if (hasUser) {
             // Original data structure with user object
-            userKey = `${order.user?.email || 'unknown'}-${JSON.stringify(order.user?.deliveryAddress || {})}`;
+            userKey = `${order.user?.email || "unknown"}-${JSON.stringify(order.user?.deliveryAddress || {})}`;
             userData = order.user;
             addressData = order.user?.deliveryAddress || [];
           } else {
@@ -349,7 +384,7 @@ const Leaflet = () => {
             };
             addressData = [];
           }
-          
+
           if (!groupedOrders[userKey]) {
             groupedOrders[userKey] = {
               user: userData,
@@ -357,33 +392,37 @@ const Leaflet = () => {
               orders: [],
             };
           }
-          
+
           groupedOrders[userKey].orders.push(order);
-          
         } catch (error) {
           console.error("Error processing order for grouping:", error);
         }
       });
-      
+
       return Object.values(groupedOrders);
     };
   }, []);
 
   const htmlContent = useMemo(() => {
     if (!selectedOrder || !location) return "";
-    
+
     try {
       // Handle different data structures
-      const address = selectedOrder.address || 
-                      (selectedOrder.user?.deliveryAddress && selectedOrder.user.deliveryAddress[0]) || 
-                      { houseNo: "", streetName: "", barangay: "", city: "" };
-      
+      const address = selectedOrder.address ||
+        (selectedOrder.user?.deliveryAddress && selectedOrder.user.deliveryAddress[0]) || {
+          houseNo: "",
+          streetName: "",
+          barangay: "",
+          city: "",
+        };
+
       const latitude = parseFloat(address.latitude) || 0;
       const longitude = parseFloat(address.longitude) || 0;
-      
+
       // Get customer name from appropriate location
-      const customerName = selectedOrder.customer?.name || 
-                          (selectedOrder.user ? `${selectedOrder.user.fname} ${selectedOrder.user.lname}` : "Customer");
+      const customerName =
+        selectedOrder.customer?.name ||
+        (selectedOrder.user ? `${selectedOrder.user.fname} ${selectedOrder.user.lname}` : "Customer");
 
       return `
         <!DOCTYPE html>
@@ -573,7 +612,9 @@ const Leaflet = () => {
 
                   L.marker([destLat, destLng], { icon: endMarker })
                     .addTo(map)
-                    .bindPopup('<strong>Customer Location</strong><br>${address.houseNo || ""} ${address.streetName || ""}<br>${address.barangay || ""}, ${address.city || ""}');
+                    .bindPopup('<strong>Customer Location</strong><br>${address.houseNo || ""} ${
+        address.streetName || ""
+      }<br>${address.barangay || ""}, ${address.city || ""}');
 
                   // Generate waypoints based on distance
                   var waypoints = generateWaypoints(currentLat, currentLng, destLat, destLng);
@@ -790,24 +831,23 @@ const Leaflet = () => {
                     <Text className="text-base font-bold text-gray-800">
                       {group.user.fname} {group.user.lname}
                     </Text>
-
                     {/* Address */}
                     <View className="flex-row items-center mt-2">
                       <Ionicons name="location-outline" size={16} color="#e01d47" />
                       <Text className="text-sm text-gray-600 ml-2 flex-1">
                         {group.deliveryAddress
-                          .map(
-                            (address) =>
-                              `${address.houseNo !== "none" ? address.houseNo : ""} ${
-                                address.streetName !== "none" ? address.streetName : ""
-                              }, ${address.barangay !== "none" ? address.barangay : ""}, ${
-                                address.city !== "none" ? address.city : ""
-                              }`.trim().replace(/^,\s*|,\s*$|,\s*,/g, "")
+                          .map((address) =>
+                            `${address.houseNo !== "none" ? address.houseNo : ""} ${
+                              address.streetName !== "none" ? address.streetName : ""
+                            }, ${address.barangay !== "none" ? address.barangay : ""}, ${
+                              address.city !== "none" ? address.city : ""
+                            }`
+                              .trim()
+                              .replace(/^,\s*|,\s*$|,\s*,/g, "")
                           )
                           .join(", ")}
                       </Text>
                     </View>
-
                     {/* Item Count */}
                     <View className="flex-row items-center mt-2">
                       <Ionicons name="cart-outline" size={16} color="#6b7280" />
@@ -824,7 +864,6 @@ const Leaflet = () => {
                           : "items"}
                       </Text>
                     </View>
-
                     {/* Order Status */}
                     <View className="mt-4 flex-row items-center">
                       <View
@@ -852,7 +891,6 @@ const Leaflet = () => {
                           : "Pending delivery"}
                       </Text>
                     </View>
-
                     {/* Action Buttons */}
                     <View className="flex-row justify-between mt-4 space-x-2">
                       <TouchableOpacity
@@ -879,7 +917,6 @@ const Leaflet = () => {
                         <Text className="text-sm text-gray-800 ml-1 font-medium">Navigate</Text>
                       </TouchableOpacity>
                     </View>
-
                     {/* View Details Button */}
                     <TouchableOpacity
                       className="mt-3 px-4 py-3 border border-gray-200 rounded-lg bg-gray-50 flex-row items-center justify-center"
@@ -888,30 +925,23 @@ const Leaflet = () => {
                       <Ionicons name="list-outline" size={16} color="#4b5563" />
                       <Text className="text-sm text-gray-800 ml-2 font-medium">Order Details</Text>
                     </TouchableOpacity>
-
                     {/* Complete Delivery Button */}
+                    // Around line 914, modify the disabled property to also check if there's a captured image:
                     <TouchableOpacity
                       className={`mt-3 px-4 py-3 rounded-lg ${
-                        !session.startTime || group.orders[0].proofOfDelivery || group.orders[0].status === "Cancelled"
-                          ? "bg-gray-200"
-                          : "bg-[#e01d47]"
+                        group.orders[0].status === "Cancelled" ? "bg-gray-200" : "bg-[#e01d47]"
                       } flex-row items-center justify-center`}
-                      onPress={() =>
-                        session.startTime &&
-                        !group.orders[0].proofOfDelivery &&
-                        group.orders[0].status !== "Cancelled" &&
-                        handleDelivered(session._id, group, group.orders[0]._id)
-                      }
-                      disabled={
-                        !session.startTime ||
-                        !!group.orders[0].proofOfDelivery ||
-                        group.orders[0].status === "Cancelled"
-                      }
+                      onPress={() => handleDelivered(session._id, group, group.orders[0]._id)}
                     >
                       {group.orders[0].proofOfDelivery ? (
                         <>
                           <Ionicons name="checkmark-circle" size={18} color="#16a34a" />
                           <Text className="text-sm text-gray-700 font-medium ml-2">Delivered</Text>
+                        </>
+                      ) : capturedImages[group.orders[0]._id] || imageUrls[group.orders[0]._id] ? (
+                        <>
+                          <Ionicons name="checkmark-outline" size={18} color="white" />
+                          <Text className="text-sm text-white font-medium ml-2">Complete Delivery</Text>
                         </>
                       ) : group.orders[0].status === "Cancelled" ? (
                         <>
@@ -920,7 +950,7 @@ const Leaflet = () => {
                         </>
                       ) : (
                         <>
-                          <Ionicons name="checkmark-outline" size={18} color="white" />
+                          <Ionicons name="camera-outline" size={18} color="white" />
                           <Text className="text-sm text-white font-medium ml-2">Complete Delivery</Text>
                         </>
                       )}
@@ -970,8 +1000,8 @@ const Leaflet = () => {
                 <View className="flex-row items-center mb-2">
                   <Ionicons name="person-outline" size={18} color="#4b5563" />
                   <Text className="text-base font-medium text-gray-800 ml-2">
-                    {selectedOrder.customer?.name || 
-                     (selectedOrder.user ? `${selectedOrder.user.fname} ${selectedOrder.user.lname}` : "Customer")}
+                    {selectedOrder.customer?.name ||
+                      (selectedOrder.user ? `${selectedOrder.user.fname} ${selectedOrder.user.lname}` : "Customer")}
                   </Text>
                 </View>
                 <View className="flex-row items-center">
@@ -982,14 +1012,15 @@ const Leaflet = () => {
                           selectedOrder.address.streetName !== "none" ? selectedOrder.address.streetName : ""
                         }, ${selectedOrder.address.barangay !== "none" ? selectedOrder.address.barangay : ""}, ${
                           selectedOrder.address.city !== "none" ? selectedOrder.address.city : ""
-                        }`.trim().replace(/^,\s*|,\s*$|,\s*,/g, "")
+                        }`
+                          .trim()
+                          .replace(/^,\s*|,\s*$|,\s*,/g, "")
                       : selectedOrder.user?.deliveryAddress
                       ? selectedOrder.user.deliveryAddress
-                          .map(
-                            (address) =>
-                              `${address.houseNo} ${address.streetName}, ${address.barangay}, ${address.city}`
-                                .trim()
-                                .replace(/^,\s*|,\s*$|,\s*,/g, "")
+                          .map((address) =>
+                            `${address.houseNo} ${address.streetName}, ${address.barangay}, ${address.city}`
+                              .trim()
+                              .replace(/^,\s*|,\s*$|,\s*,/g, "")
                           )
                           .join(", ")
                       : "No address available"}
@@ -1087,13 +1118,14 @@ const Leaflet = () => {
                         <Ionicons name="location-outline" size={16} color="#e01d47" />
                         <Text className="text-sm text-gray-800 ml-2 flex-1">
                           {selectedGroup.deliveryAddress
-                            .map(
-                              (address) =>
-                                `${address.houseNo !== "none" ? address.houseNo : ""} ${
-                                  address.streetName !== "none" ? address.streetName : ""
-                                }, ${address.barangay !== "none" ? address.barangay : ""}, ${
-                                  address.city !== "none" ? address.city : ""
-                                }`.trim().replace(/^,\s*|,\s*$|,\s*,/g, "")
+                            .map((address) =>
+                              `${address.houseNo !== "none" ? address.houseNo : ""} ${
+                                address.streetName !== "none" ? address.streetName : ""
+                              }, ${address.barangay !== "none" ? address.barangay : ""}, ${
+                                address.city !== "none" ? address.city : ""
+                              }`
+                                .trim()
+                                .replace(/^,\s*|,\s*$|,\s*,/g, "")
                             )
                             .join(", ")}
                         </Text>
@@ -1128,9 +1160,7 @@ const Leaflet = () => {
                                 <View className="bg-white p-1 rounded-md border border-gray-200 mr-3">
                                   <Text className="text-xs font-bold text-gray-700">{quantity}x</Text>
                                 </View>
-                                <Text className="text-sm flex-1">
-                                  {productItem.product?.name || "Unknown Product"}
-                                </Text>
+                                <Text className="text-sm flex-1">{productItem.product?.name || "Unknown Product"}</Text>
                               </View>
                               <Text className="text-sm font-medium text-gray-800">
                                 ₱{parseFloat(productPrice).toFixed(2)}
@@ -1147,10 +1177,11 @@ const Leaflet = () => {
                       <View className="flex-row justify-between">
                         <Text className="text-sm text-gray-600">Delivery Fee</Text>
                         <Text className="text-sm text-gray-700">
-                          ₱{parseFloat(
+                          ₱
+                          {parseFloat(
                             selectedGroup.orders[0].payment?.shippingCharges ||
-                            selectedGroup.orders[0].shippingCharges || 
-                            0
+                              selectedGroup.orders[0].shippingCharges ||
+                              0
                           ).toFixed(2)}
                         </Text>
                       </View>
@@ -1158,9 +1189,9 @@ const Leaflet = () => {
                       <View className="flex-row justify-between mt-1">
                         <Text className="text-sm text-gray-600">Payment Method</Text>
                         <Text className="text-sm text-gray-700">
-                          {selectedGroup.orders[0].payment?.method || 
-                           selectedGroup.orders[0].paymentInfo || 
-                           "Cash on Delivery"}
+                          {selectedGroup.orders[0].payment?.method ||
+                            selectedGroup.orders[0].paymentInfo ||
+                            "Cash on Delivery"}
                         </Text>
                       </View>
 
@@ -1169,49 +1200,50 @@ const Leaflet = () => {
                       <View className="flex-row justify-between items-center">
                         <Text className="text-base font-bold">Total</Text>
                         <Text className="text-base font-bold text-[#e01d47]">
-                          ₱{(() => {
+                          ₱
+                          {(() => {
                             try {
                               // First try to get the total from the payment object (new structure)
                               if (selectedGroup.orders[0].payment?.totalAmount) {
                                 return parseFloat(selectedGroup.orders[0].payment.totalAmount).toFixed(2);
                               }
-                              
+
                               // Next try totalPrice (old structure)
                               if (selectedGroup.orders[0].totalPrice) {
                                 return parseFloat(selectedGroup.orders[0].totalPrice).toFixed(2);
                               }
-                              
+
                               // If no direct total, calculate from products
                               let total = 0;
-                              
+
                               if (selectedGroup.orders[0].products) {
                                 // Calculate from products array (new structure)
-                                selectedGroup.orders[0].products.forEach(product => {
+                                selectedGroup.orders[0].products.forEach((product) => {
                                   const price = parseFloat(product.price || 0);
                                   const quantity = parseInt(product.quantity || 1);
                                   total += price * quantity;
                                 });
-                                
+
                                 // Add shipping
                                 const shipping = parseFloat(selectedGroup.orders[0].payment?.shippingCharges || 0);
                                 total += shipping;
-                                
+
                                 return total.toFixed(2);
                               } else if (selectedGroup.orders[0].orderProducts) {
                                 // Calculate from orderProducts array (old structure)
-                                selectedGroup.orders[0].orderProducts.forEach(item => {
+                                selectedGroup.orders[0].orderProducts.forEach((item) => {
                                   const price = parseFloat(item.product?.price || item.price || 0);
                                   const quantity = parseInt(item.quantity || 1);
                                   total += price * quantity;
                                 });
-                                
+
                                 // Add shipping
                                 const shipping = parseFloat(selectedGroup.orders[0].shippingCharges || 0);
                                 total += shipping;
-                                
+
                                 return total.toFixed(2);
                               }
-                              
+
                               return "0.00";
                             } catch (err) {
                               console.error("Error calculating total:", err);

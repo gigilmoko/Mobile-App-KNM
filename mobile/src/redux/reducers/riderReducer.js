@@ -110,6 +110,16 @@ export const riderReducer = createReducer(initialState, (builder) => {
         .addCase("START_LOCATION_POLLING", (state, action) => {
             state.locationPolling = action.payload;
         })
+        .addCase("UPDATE_RIDER_LOCATION_SUCCESS_SILENT", (state, action) => {
+  // Only update location without changing loading state
+  if (state.rider) {
+    state.rider = {
+      ...state.rider,
+      location: action.payload,
+    };
+  }
+  // Don't update loading state or other UI-related states
+})
         .addCase("STOP_LOCATION_POLLING", (state) => {
             state.locationPolling = null;
         });
