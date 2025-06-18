@@ -157,16 +157,16 @@ const Main = () => {
 
                     // Start location polling every 30 seconds
                     dispatch(startLocationPolling(riderId, getCurrentLocation, 30000));
-                    console.log('Started rider location tracking');
+                    // console.log('Started rider location tracking');
                 }
             } catch (error) {
-                console.error('Error setting up rider location tracking:', error);
+                // console.error('Error setting up rider location tracking:', error);
             }
         };
 
         const cleanupRiderLocationTracking = () => {
             dispatch(stopLocationPolling());
-            console.log('Stopped rider location tracking');
+            // console.log('Stopped rider location tracking');
         };
 
         // Check if rider is logged in

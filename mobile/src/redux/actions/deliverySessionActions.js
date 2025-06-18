@@ -21,6 +21,7 @@ export const getPendingSessionsByRider = (riderId) => async (dispatch) => {
 };
 
 export const getSessionsByRider = (riderId) => async (dispatch) => {
+    console.log("getSessionsByRider called with riderId:", riderId);
     try {
         const token = await AsyncStorage.getItem('riderToken');
         const { data } = await axios.get(`${server}/delivery-session/on-going/${riderId}`, {
@@ -126,22 +127,34 @@ export const completeDeliverySession = (id) => async (dispatch) => {
 export const getHistoryByRider = (riderId) => async (dispatch) => {
     try {
         const token = await AsyncStorage.getItem('riderToken');
-        const { data } = await axios.get(`${server}/delivery-session/history/${riderId}`, {
+        // Fix the URL to ensure a single slash
+        const url = `${server}delivery-session/history/${riderId}`.replace(/\/+/g, '/');
+        
+        console.log("Requesting URL:", url); 
+
+        const { data } = await axios.get(url, {
             headers: {
                 "Authorization": `Bearer ${token}`,
             },
             withCredentials: true,
         });
 
+        console.log("History API Response:", JSON.stringify(data, null, 2));
+        
+        // If the backend returns ongoingSessions for the history endpoint
+        // we need to use that instead of looking for sessions or historySessions
+        // Since these are completed sessions even if named ongoingSessions
         dispatch({
             type: 'GET_HISTORY_BY_RIDER',
-            sessions: data.sessions,
+            sessions: data.sessions || data.historySessions || data.ongoingSessions || [],
         });
 
-        console.log('Fetched history sessions:', data);
     } catch (error) {
         console.error('Error fetching history sessions:', error);
-        dispatch({ type: 'DELIVERY_SESSION_ERROR', error: error.response?.data?.message || error.message });
+        dispatch({ 
+            type: 'DELIVERY_SESSION_ERROR', 
+            error: error.response?.data?.message || error.message 
+        });
     }
 };
 

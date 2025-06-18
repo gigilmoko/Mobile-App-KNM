@@ -312,6 +312,66 @@ export const updateAddress = (userData) => async (dispatch, getState) => {
     }
 };
 
+//create address
+// In userActions.js, update the createAddress action creator
+
+// In userActions.js
+export const createAddress = (data) => async (dispatch) => {
+  try {
+    dispatch({ type: 'CREATE_ADDRESS_REQUEST' });
+    
+    const token = await AsyncStorage.getItem('token');
+    
+    // Log what we're sending with explicit fields
+    console.log("Creating address with data:", JSON.stringify({
+      userId: data.userId,
+      address: data.address
+    }, null, 2));
+    
+    const config = {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    };
+
+    // Send the data exactly as expected by the backend
+    const response = await axios.post(
+      `${server}/me/create-address`, 
+      {
+        userId: data.userId,
+        address: data.address
+      },
+      config
+    );
+
+    console.log("Create address response:", response.data);
+    
+    dispatch({
+      type: 'CREATE_ADDRESS_SUCCESS',
+      payload: response.data.user,
+    });
+    
+    // Also update the user in auth state
+    dispatch({
+      type: 'LOAD_USER_SUCCESS',
+      payload: response.data.user,
+    });
+    
+    return "success";
+    
+  } catch (error) {
+    console.log("Error during createAddress:", error.response ? error.response.data : error.message);
+    
+    dispatch({
+      type: 'CREATE_ADDRESS_FAIL',
+      payload: error.response?.data?.message || "Failed to create address",
+    });
+    
+    throw error;
+  }
+};
+
 export const forgotPassword = (email) => async (dispatch) => {
     try {
         dispatch({ type: 'FORGOT_PASSWORD_REQUEST' });

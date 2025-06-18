@@ -147,7 +147,7 @@ const riderSubmitHandler = async () => {
   const isRiderLogin = email.startsWith("newrider");
 
    return (
-    <ScrollView contentContainerStyle={{ flexGrow: 1 }} className="flex-1 bg-white p-5">
+    <ScrollView contentContainerStyle={{ flexGrow: 1 }} className="flex-1 bg-white p-5"  keyboardShouldPersistTaps="handled" >
     <View className="flex-1">
       <View className="mt-20">
         <Image 

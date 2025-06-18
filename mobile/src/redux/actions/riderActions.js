@@ -371,36 +371,34 @@ export const updateRiderAvatar = (imageUrl) => async (dispatch, getState) => {
 
 export const updateRiderLocation = (riderId, latitude, longitude) => async (dispatch) => {
   try {
-      dispatch({ type: "UPDATE_RIDER_LOCATION_REQUEST" });
+    dispatch({ type: "UPDATE_RIDER_LOCATION_REQUEST" });
 
-      const token = await AsyncStorage.getItem('riderToken');
-      if (!token) {
-          throw new Error('No rider token found');
+    const token = await AsyncStorage.getItem('riderToken');
+    if (!token) {
+      throw new Error('No rider token found');
+    }
+
+    const { data } = await axios.put(
+      `${server}rider/update-location`, 
+      { riderId, latitude, longitude }, 
+      {
+        headers: {
+          "Authorization": `Bearer ${token}`,
+        },
+        withCredentials: true,
       }
+    );
 
-      const { data } = await axios.put(
-          `${server}rider/update-location`, 
-          { riderId, latitude, longitude }, 
-          {
-              headers: {
-                  "Authorization": `Bearer ${token}`,
-              },
-              withCredentials: true,
-          }
-      );
-
-      dispatch({
-          type: "UPDATE_RIDER_LOCATION_SUCCESS",
-          payload: data.location,
-      });
-
-      console.log('Rider location updated successfully:', { latitude, longitude });
+    // Use a more specific action type to prevent unnecessary re-renders in components with text inputs
+    dispatch({
+      type: "UPDATE_RIDER_LOCATION_SUCCESS_SILENT",
+      payload: data.location,
+    });
   } catch (error) {
-      console.error('Failed to update rider location:', error);
-      dispatch({
-          type: "UPDATE_RIDER_LOCATION_FAIL",
-          payload: error.response?.data?.message || 'Failed to update location',
-      });
+    dispatch({
+      type: "UPDATE_RIDER_LOCATION_FAIL",
+      payload: error.response?.data?.message || 'Failed to update location',
+    });
   }
 };
 
@@ -440,7 +438,7 @@ export const stopLocationPolling = () => (dispatch, getState) => {
   
   if (locationPolling && locationPolling.intervalId) {
     clearInterval(locationPolling.intervalId);
-    console.log('Location polling stopped');
+    // console.log('Location polling stopped');r location tracking
   }
   
   dispatch({ type: "STOP_LOCATION_POLLING" });

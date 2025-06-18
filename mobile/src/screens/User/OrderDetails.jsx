@@ -122,6 +122,27 @@ const OrderDetails = ({ route, navigation }) => {
     };
   }, [dispatch, id, order?.status]);
 
+  useEffect(() => {
+  if (sessionByOrderId) {
+    console.log("Rider Information:", sessionByOrderId.rider ? {
+      _id: sessionByOrderId.rider._id,
+      name: sessionByOrderId.rider.name,
+      email: sessionByOrderId.rider.email,
+      phone: sessionByOrderId.rider.phone,
+      location: sessionByOrderId.rider.location
+    } : "No rider assigned");
+    
+    // Log just the location for tracking debugging
+    if (sessionByOrderId.rider?.location) {
+      console.log("Current Rider Location:", {
+        latitude: sessionByOrderId.rider.location.latitude,
+        longitude: sessionByOrderId.rider.location.longitude,
+        timestamp: new Date().toISOString()
+      });
+    }
+  }
+}, [sessionByOrderId]);
+
   // Inject updated location into WebView when rider location changes
   useEffect(() => {
     if (sessionByOrderId?.rider?.location && webViewRef.current) {
@@ -177,7 +198,8 @@ const OrderDetails = ({ route, navigation }) => {
         setIsLoading(false);
       });
   };
-
+//CONSOLE LOG ORDER DETAILS
+console.log("Order Details:", order);
   const handleCallRider = (phone) => {
     if (!phone) {
       Toast.show({
