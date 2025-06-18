@@ -179,7 +179,7 @@ const ConfirmOrder = () => {
               )}
               
               <TouchableOpacity 
-                onPress={() => navigation.navigate("addressupdate")}
+                onPress={() => navigation.navigate("editaddress")}
                 className="bg-gray-100 p-1.5 rounded-full"
               >
                 <Ionicons name="pencil-outline" size={16} color="#e01d47" />
@@ -200,7 +200,7 @@ const ConfirmOrder = () => {
           ) : (
             <TouchableOpacity 
               className="bg-gray-50 p-4 rounded-lg flex-row items-center justify-center"
-              onPress={() => navigation.navigate("addressupdate")}
+              onPress={() => navigation.navigate("editaddress")}
             >
               <Ionicons name="add-circle-outline" size={20} color="#e01d47" />
               <Text className="text-[#e01d47] font-medium ml-2">Add Delivery Address</Text>

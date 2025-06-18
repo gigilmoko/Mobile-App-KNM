@@ -196,14 +196,14 @@ const Notification = () => {
       <View className="bg-white shadow-sm pt-2 pb-4 px-5">
         <View className="flex-row items-center justify-between">
           <Text className="text-xl font-bold text-gray-800">Notifications</Text>
-          {/* {hasUnreadNotifications && (
+          {hasUnreadNotifications && (
             <TouchableOpacity
               className="py-1 px-2.5 rounded-full border border-gray-200"
               onPress={handleMarkAllRead}
             >
               <Text className="text-xs text-[#e01d47] font-medium">Mark all as read</Text>
             </TouchableOpacity>
-          )} */}
+          )}
         </View>
       </View>
 

@@ -227,13 +227,13 @@ const AdminOrdersDetails = () => {
         </View>
 
         {/* Update Order Button */}
-        <TouchableOpacity
+        {/* <TouchableOpacity
           style={styles.updateButton}
           onPress={handleSubmit}
           disabled={selectedStatus === order.status}
         >
           <Text style={styles.updateButtonText}>Update Order</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
         
         <View style={styles.bottomSpacing} />
       </ScrollView>

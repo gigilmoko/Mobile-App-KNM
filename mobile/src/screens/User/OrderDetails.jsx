@@ -32,6 +32,7 @@ const OrderDetails = ({ route, navigation }) => {
   const [location, setLocation] = useState(null);
   const [userDeliveryLocation, setUserDeliveryLocation] = useState(null);
   const [isMapReady, setIsMapReady] = useState(false);
+  const [cancelLoading, setCancelLoading] = useState(false);
 
   useEffect(() => {
     setIsLoading(true);
@@ -132,6 +133,35 @@ const OrderDetails = ({ route, navigation }) => {
       `);
     }
   }, [sessionByOrderId?.rider?.location]);
+
+  const handleCancelOrder = async () => {
+  setCancelLoading(true);
+  try {
+    // Replace with your API base URL if needed
+    const response = await axios.post(
+      `${process.env.EXPO_PUBLIC_API_URL || "http://localhost:5000"}/api/order/cancel/${order._id}`,
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${currentUser?.token}`, // Adjust if you use a different auth method
+        },
+      }
+    );
+    Toast.show({
+      type: "success",
+      text1: "Order cancelled successfully",
+    });
+    handleRefresh(); // Refresh order details
+  } catch (error) {
+    Toast.show({
+      type: "error",
+      text1: "Failed to cancel order",
+      text2: error?.response?.data?.message || "Please try again.",
+    });
+  } finally {
+    setCancelLoading(false);
+  }
+};
 
   const handleRefresh = () => {
     setIsLoading(true);
@@ -958,22 +988,27 @@ const OrderDetails = ({ route, navigation }) => {
             <Text className="text-base text-gray-700">{order.orderNotes}</Text>
           </View>
         )}
-
-        {/* Help Section */}
-        <View className="bg-white p-4 mb-2">
-          <TouchableOpacity
-            className="flex-row items-center"
-            onPress={() => navigation.navigate("help", { orderId: order._id })}
-          >
-            <Ionicons name="help-circle-outline" size={24} color="#e01d47" />
-            <Text className="text-base font-medium text-[#e01d47] ml-2">
-              Need Help with this Order?
+        {order.status === "Preparing" && (
+          <View className="bg-white p-4 mb-2">
+            <TouchableOpacity
+              className="bg-red-600 py-3 rounded-lg flex-row justify-center items-center"
+              onPress={handleCancelOrder}
+              disabled={cancelLoading}
+            >
+              {cancelLoading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Ionicons name="close-circle" size={20} color="#fff" style={{ marginRight: 8 }} />
+              )}
+              <Text className="text-white font-semibold text-center ml-2">
+                Cancel Order
+              </Text>
+            </TouchableOpacity>
+            <Text className="text-xs text-gray-500 mt-2 text-center">
+              You can only cancel while the order is still being prepared.
             </Text>
-            <View className="flex-1" />
-            <Ionicons name="chevron-forward" size={20} color="#e01d47" />
-          </TouchableOpacity>
-        </View>
-        
+          </View>
+        )}
         {/* Proof of Delivery Section */}
         {(order?.status === "Delivered Pending" ||
           order?.status === "Delivered") && order.proofOfDelivery && (
