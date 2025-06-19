@@ -157,10 +157,10 @@ const EventsList = ({ navigation }) => {
                         <View className="p-4">
                             <View className="flex-row items-center mb-3">
                                 <View className="bg-[#e01d47] bg-opacity-10 p-2 rounded-lg mr-3">
-                                    <Text className="text-[#e01d47] text-xl font-bold">
+                                    <Text className="text-[#ffffff] text-xl font-bold">
                                         {moment(upcomingEvent.date).format("D")}
                                     </Text>
-                                    <Text className="text-[#e01d47] text-xs font-medium">
+                                    <Text className="text-[#ffffff] text-xs font-medium">
                                         {moment(upcomingEvent.date).format("MMM")}
                                     </Text>
                                 </View>

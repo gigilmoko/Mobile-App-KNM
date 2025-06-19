@@ -11,17 +11,17 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import { useIsFocused, useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
-import { getNotifications, markNotificationAsRead, markAllNotificationsAsRead } from "../../redux/actions/notificationActions";
+import { getNotifications, markNotificationAsRead, markAllNotificationsAsRead, toggleNotificationReadStatus } from "../../redux/actions/notificationActions";
 import Footer from "../../components/Layout/Footer";
+import { format } from 'date-fns';
 
 const Notification = () => {
   const dispatch = useDispatch();
   const navigation = useNavigation();
   const isFocused = useIsFocused();
   
-  // FIX: Incorrect state selection - you're trying to access state.notifications which doesn't exist
-  // The correct reducer is state.notification (singular)
-  const { notifications = [], loading = false } = useSelector((state) => state.notifications);
+  // Fix: Change state.notifications to state.notification
+  const { notifications = [], loading = false } = useSelector((state) => state.notifications || {});
   
   const [refreshing, setRefreshing] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
@@ -30,7 +30,6 @@ const Notification = () => {
     const loadNotifications = async () => {
       try {
         await dispatch(getNotifications());
-        console.log(notifications)
       } catch (error) {
         console.error("Error loading notifications:", error);
       } finally {
@@ -77,108 +76,117 @@ const Notification = () => {
       });
     }
   };
+  
+  const formatEventTime = (startDate, endDate) => {
+    if (!startDate || !endDate) return "";
+    
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    
+    return `${format(start, 'MMM dd, h:mm a')} - ${format(end, 'h:mm a')}`;
+  };
 
   const handleMarkAllRead = () => {
-    dispatch(markAllNotificationsAsRead());
+    dispatch(toggleNotificationReadStatus());
   };
 
   const handleNotificationPress = (notification) => {
-    if (!notification.read) {
-      dispatch(markNotificationAsRead(notification._id));
-    }
+  if (!notification.read) {
+    dispatch(toggleNotificationReadStatus(notification._id));
+  }
 
-    // Navigate based on notification type
-    if (notification.type === "order" && notification.orderId) {
-      navigation.navigate("orderdetails", { id: notification.orderId });
-    } else if (notification.type === "product" && notification.productId) {
-      navigation.navigate("productdetails", { id: notification.productId });
+  // Navigate based on notification type
+  if (notification.event) {
+    // Navigate to event details
+    navigation.navigate("eventinfo", { eventId: notification.event._id });
+  } else if (notification.description && notification.description.includes("order")) {
+    // Extract order ID from description if present
+    const match = notification.description.match(/KNM-\w+/);
+    const orderId = match ? match[0] : null;
+    if (orderId) {
+      navigation.navigate("orderdetails", { id: orderId });
     }
-  };
+  }
+};
 
   const hasUnreadNotifications = notifications.some(
     (notification) => !notification.read
   );
 
-  const getNotificationIcon = (type) => {
-    switch (type) {
-      case "order":
-        return "receipt-outline";
-      case "product":
-        return "cube-outline";
-      case "payment":
-        return "card-outline";
-      case "delivery":
-        return "bicycle-outline";
-      case "system":
-        return "notifications-outline";
-      default:
-        return "notifications-outline";
+  const getNotificationIcon = (notification) => {
+    if (notification.event) {
+      return "calendar-outline";
+    } else if (notification.description && notification.description.includes("order")) {
+      return "receipt-outline";
     }
+    return "notifications-outline";
   };
 
-  const getNotificationColor = (type) => {
-    switch (type) {
-      case "order":
-        return "#e01d47";
-      case "product":
-        return "#0088ff";
-      case "payment":
-        return "#ff9500";
-      case "delivery":
-        return "#34c759";
-      case "system":
-        return "#5856d6";
-      default:
-        return "#e01d47";
+  const getNotificationColor = (notification) => {
+    if (notification.event) {
+      return "#34c759"; // Green for events
+    } else if (notification.description && notification.description.includes("order")) {
+      return "#e01d47"; // Red for orders
     }
+    return "#5856d6"; // Default purple
   };
 
-  const renderNotificationItem = ({ item }) => (
-    <TouchableOpacity
-      className={`p-4 mb-3 rounded-xl ${
-        item.read ? "bg-white" : "bg-white"
-      } shadow-sm`}
-      onPress={() => handleNotificationPress(item)}
-      style={[
-        item.read ? styles.cardRead : styles.cardUnread
-      ]}
-    >
-      <View className="flex-row">
-        <View 
-          className="h-10 w-10 rounded-full justify-center items-center" 
-          style={{ backgroundColor: `${getNotificationColor(item.type)}15` }}
-        >
-          <Ionicons
-            name={getNotificationIcon(item.type)}
-            size={20}
-            color={getNotificationColor(item.type)}
-          />
-        </View>
-        <View className="flex-1 ml-3">
-          <View className="flex-row justify-between items-start">
-            <View className="flex-row items-center">
-              <Text 
-                className={`text-base ${item.read ? "text-gray-800" : "text-gray-900 font-bold"}`}
-                numberOfLines={1}
-              >
-                {item?. event?.title}
-              </Text>
-              {!item?.event?.read && (
-                <View className="bg-[#e01d47] h-2.5 w-2.5 rounded-full ml-2" />
-              )}
-            </View>
-            <Text className="text-xs text-gray-500">{formatDate(item.createdAt)}</Text>
-          </View>
-          <Text 
-            className={`text-sm mt-1 ${item.read ? "text-gray-500" : "text-gray-700"}`}
-            numberOfLines={2}
+  const renderNotificationItem = ({ item }) => {
+    const isEvent = !!item.event;
+    const title = isEvent ? item.event.title : "Order Confirmation";
+    const description = isEvent ? item.event.description : item.description || "No description available";
+    
+    return (
+      <TouchableOpacity
+        className={`p-4 mb-3 rounded-xl shadow-sm`}
+        onPress={() => handleNotificationPress(item)}
+        style={[
+          item.read ? styles.cardRead : styles.cardUnread
+        ]}
+      >
+        <View className="flex-row">
+          <View 
+            className="h-10 w-10 rounded-full justify-center items-center" 
+            style={{ backgroundColor: `${getNotificationColor(item)}15` }}
           >
-             {item?. event?.description}
-          </Text>
+            <Ionicons
+              name={getNotificationIcon(item)}
+              size={20}
+              color={getNotificationColor(item)}
+            />
+          </View>
+          <View className="flex-1 ml-3">
+            <View className="flex-row justify-between items-start">
+              <View className="flex-row items-center flex-1">
+                <Text 
+                  className={`text-base ${item.read ? "text-gray-800" : "text-gray-900 font-bold"}`}
+                  numberOfLines={1}
+                >
+                  {title}
+                </Text>
+                {!item.read && (
+                  <View className="bg-[#e01d47] h-2.5 w-2.5 rounded-full ml-2" />
+                )}
+              </View>
+              <Text className="text-xs text-gray-500 ml-2">{formatDate(item.createdAt)}</Text>
+            </View>
+            <Text 
+              className={`text-sm mt-1 ${item.read ? "text-gray-500" : "text-gray-700"}`}
+              numberOfLines={2}
+            >
+              {description}
+            </Text>
+            
+            {isEvent && item.event.startDate && item.event.endDate && (
+              <Text className="text-xs text-blue-600 mt-1.5">
+                {formatEventTime(item.event.startDate, item.event.endDate)}
+              </Text>
+            )}
+          </View>
         </View>
-      </View>
-    </TouchableOpacity>
-  );
+      </TouchableOpacity>
+    );
+  };
 
   const renderEmptyComponent = () => (
     <View className="flex-1 justify-center items-center mt-24">
@@ -243,6 +251,7 @@ const styles = StyleSheet.create({
   cardUnread: {
     borderLeftWidth: 3,
     borderLeftColor: "#e01d47",
+    backgroundColor: "#fff",
     elevation: 2,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
@@ -251,6 +260,7 @@ const styles = StyleSheet.create({
   },
   cardRead: {
     borderLeftWidth: 0,
+    backgroundColor: "#fff",
     elevation: 1,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },

@@ -1,14 +1,14 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   View, 
   Text, 
   Image, 
   ScrollView, 
-  StyleSheet, 
   FlatList, 
   Dimensions, 
   TouchableOpacity,
-  ActivityIndicator
+  ActivityIndicator,
+  Alert
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchEvent } from '../../redux/actions/calendarActions';
@@ -27,21 +27,28 @@ const EventInfo = ({ route }) => {
   const { eventId } = route.params;
   const dispatch = useDispatch();
   const navigation = useNavigation();
+  const [isRegistering, setIsRegistering] = useState(false);
 
   const { event, loading, error } = useSelector(state => state.calendar);
-  const { user } = useSelector(state => state.auth || {});
+  const { user, isAuthenticated } = useSelector(state => state.user);
   const { eventFeedback, loadingFeedback } = useSelector(state => state.eventFeedback || {});
   const { interestData, loadingInterest } = useSelector(state => state.userInterested || {});
 
-  const attendedUsers = interestData.attendedUsers || [];
-  const interestedUsers = interestData.interestedUsers || [];
+  const attendedUsers = interestData?.attendedUsers || [];
+  const interestedUsers = interestData?.interestedUsers || [];
+
+  // Check if current user is registered for this event
+  const userRegistered = interestedUsers.some(u => u.userId === user?._id && u.interested);
+  const userAttended = attendedUsers.some(u => u.userId === user?._id && u.isAttended);
 
   useEffect(() => {
     dispatch(fetchEvent(eventId));
     dispatch(fetchEventFeedbackMobile(eventId));
-    dispatch(loadUser());
-    dispatch(getUserInterest(eventId));
-  }, [eventId, dispatch]);
+    
+    if (isAuthenticated && user?._id) {
+      dispatch(getUserInterest(eventId));
+    }
+  }, [eventId, dispatch, isAuthenticated, user?._id]);
 
   useEffect(() => {
     if (error) {
@@ -69,14 +76,13 @@ const EventInfo = ({ route }) => {
     navigation.navigate('eventfeedback', { eventId });
   };
 
-  const userRegistered = interestedUsers.some(user => user.email === user?.email && user.interested);
-  const userAttended = attendedUsers.some(user => user.email === user?.email && user.isAttended);
-
   // Define the button text based on registration and attendance status
   const getButtonText = () => {
     if (isEventOngoing) return "Event In Progress";
     
-    if (!isEventPast) return "Register Now";
+    if (!isEventPast) {
+      return userRegistered ? "Already Registered" : "Register Now";
+    }
     
     if (!userRegistered) {
       return "Registration Closed";
@@ -91,14 +97,74 @@ const EventInfo = ({ route }) => {
 
   const getButtonClass = () => {
     if (!isEventPast && !userRegistered) return "bg-[#e01d47]";
+    if (!isEventPast && userRegistered) return "bg-green-500";
     if (userRegistered && userAttended && isEventPast) return "bg-[#e01d47]";
     if (isEventOngoing) return "bg-amber-500";
     return "bg-gray-400";
   };
 
-  const handleRegister = () => {
-    dispatch(expressInterest(eventId));
-  };
+  // Update the handleRegister function
+const handleRegister = async () => {
+  if (!isAuthenticated) {
+    Alert.alert(
+      "Login Required",
+      "Please login to register for this event",
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "Login", onPress: () => navigation.navigate("login") }
+      ]
+    );
+    return;
+  }
+
+  if (userRegistered) {
+    Toast.show({
+      type: 'info',
+      text1: 'Already Registered',
+      text2: 'You are already registered for this event',
+    });
+    return;
+  }
+
+  setIsRegistering(true);
+  try {
+    const result = await dispatch(expressInterest(eventId));
+    
+    if (result && !result.success && result.message?.includes("already interested")) {
+      Toast.show({
+        type: 'info',
+        text1: 'Already Registered',
+        text2: 'You are already registered for this event',
+      });
+      // Refresh the user interest data to update UI
+      dispatch(getUserInterest(eventId));
+    } else {
+      Toast.show({
+        type: 'success',
+        text1: 'Registration Successful',
+        text2: 'You have successfully registered for this event',
+      });
+    }
+  } catch (error) {
+    if (error.response?.data?.message?.includes("already interested")) {
+      Toast.show({
+        type: 'info',
+        text1: 'Already Registered',
+        text2: 'You are already registered for this event',
+      });
+      // Refresh the user interest data to update UI
+      dispatch(getUserInterest(eventId));
+    } else {
+      Toast.show({
+        type: 'error',
+        text1: 'Registration Failed',
+        text2: error.message || 'Please try again later',
+      });
+    }
+  } finally {
+    setIsRegistering(false);
+  }
+};
 
   const renderEventStatus = () => {
     if (isEventOngoing) {
@@ -146,7 +212,7 @@ const EventInfo = ({ route }) => {
               {`${item.userId?.fname || ""} ${item.userId?.lname || ""}`}
             </Text>
             <Text className="text-gray-500 text-xs">
-              {new Date(item.createdAt).toLocaleDateString()}
+              {moment(item.createdAt).format("MMM D, YYYY")}
             </Text>
           </View>
 
@@ -179,24 +245,9 @@ const EventInfo = ({ route }) => {
   return (
     <View className="flex-1 bg-white">
       {event ? (
-        <ScrollView contentContainerStyle={{ paddingBottom: 90 }}>
+        <ScrollView contentContainerStyle={{ paddingBottom: 90 }} showsVerticalScrollIndicator={false}>
           {/* Header with Back Button */}
-          <View className="absolute top-5 left-5 right-5 z-10 flex-row items-center py-3">
-            <TouchableOpacity 
-              onPress={() => navigation.goBack()} 
-              className="p-2 bg-white bg-opacity-80 rounded-full shadow items-center justify-center w-10 h-10"
-            >
-              <Ionicons name="arrow-back" size={22} color="#e01d47" />
-            </TouchableOpacity>
-            
-            <View className="flex-1" />
-            
-            {/* Event Status Indicator */}
-            {renderEventStatus()}
-          </View>
-          
-          {/* Event Image */}
-          <View className="w-full h-72 bg-gray-200">
+          <View className="w-full h-80 relative">
             {event.image ? (
               <Image
                 source={{ uri: event.image }}
@@ -204,81 +255,125 @@ const EventInfo = ({ route }) => {
                 style={{ resizeMode: 'cover' }}
               />
             ) : (
-              <View className="w-full h-full justify-center items-center">
+              <View className="w-full h-full justify-center items-center bg-gray-200">
                 <Ionicons name="calendar" size={80} color="#e0e0e0" />
                 <Text className="text-gray-500 mt-4">No image available</Text>
               </View>
             )}
+            
+            {/* Overlay for better text readability */}
+            <View className="absolute bottom-0 left-0 right-0 h-24 bg-black opacity-40" />
+            
+            {/* Back button and status */}
+            <View className="absolute top-10 left-5 right-5 z-10 flex-row justify-between items-center">
+              <TouchableOpacity 
+                onPress={() => navigation.goBack()} 
+                className="p-2.5 bg-black/30 rounded-full shadow items-center justify-center w-10 h-10"
+              >
+                <Ionicons name="arrow-back" size={22} color="white" />
+              </TouchableOpacity>
+              
+              {/* Event Status Indicator */}
+              {renderEventStatus()}
+            </View>
+            
+            {/* Event title on image */}
+            <View className="absolute bottom-0 left-0 right-0 p-5">
+              <Text className="text-3xl font-bold text-white">{event.title}</Text>
+            </View>
           </View>
           
           {/* Event Info Card */}
-          <View className="bg-white mx-4 -mt-10 rounded-xl shadow-lg p-5 border border-gray-100">
-            <Text className="text-2xl font-bold text-[#e01d47]">{event.title}</Text>
-            
-            <View className="flex-row items-center mt-3 justify-between">
-              <View className="flex-row items-center flex-1">
-                <Ionicons name="calendar-outline" size={18} color="#e01d47" />
-                <Text className="text-gray-700 ml-2 font-medium">
-                  {formatDateTime(event.startDate).split(' ')[0]}
-                </Text>
+          <View className="p-5">
+            <View className="flex-row items-center bg-white shadow-sm p-3 rounded-xl mb-4 border border-gray-100">
+              <View className="flex-1 flex-row items-center">
+                <View className="bg-red-50 rounded-full p-2 mr-3">
+                  <Ionicons name="calendar-outline" size={20} color="#e01d47" />
+                </View>
+                <View>
+                  <Text className="text-xs text-gray-500">Date</Text>
+                  <Text className="text-base font-medium text-gray-800">
+                    {moment(event.startDate).format("MMM D, YYYY")}
+                  </Text>
+                </View>
               </View>
               
-              <View className="bg-gray-100 px-3 py-1 rounded-full">
-                <Text className="text-gray-700 text-sm">
-                  {isEventPast ? 'Completed' : 
-                   isEventOngoing ? 'In Progress' : 
-                   `In ${moment(event.startDate).diff(moment(), 'days')} days`}
-                </Text>
+              <View className="w-[1px] h-10 bg-gray-200 mx-2" />
+              
+              <View className="flex-1 flex-row items-center">
+                <View className="bg-blue-50 rounded-full p-2 mr-3">
+                  <Ionicons name="time-outline" size={20} color="#3b82f6" />
+                </View>
+                <View>
+                  <Text className="text-xs text-gray-500">Time</Text>
+                  <Text className="text-base font-medium text-gray-800">
+                    {moment(event.startDate).format("h:mm A")}
+                  </Text>
+                </View>
               </View>
             </View>
             
-            <View className="flex-row items-center mt-2">
-              <Ionicons name="time-outline" size={18} color="#e01d47" />
-              <Text className="text-gray-700 ml-2">
-                {formatDateTime(event.startDate).split(' ')[1]} - {formatDateTime(event.endDate).split(' ')[1]}
-              </Text>
+            {event.location && (
+              <View className="flex-row items-center mb-6">
+                <View className="bg-green-50 rounded-full p-2 mr-3">
+                  <Ionicons name="location-outline" size={20} color="#10b981" />
+                </View>
+                <View className="flex-1">
+                  <Text className="text-xs text-gray-500">Location</Text>
+                  <Text className="text-base font-medium text-gray-800">{event.location}</Text>
+                </View>
+              </View>
+            )}
+            
+            <View className="mb-6">
+              <Text className="text-lg font-bold text-gray-800 mb-3">About this Event</Text>
+              <Text className="text-gray-700 leading-6">{event.description}</Text>
             </View>
             
-            <View className="flex-row items-center mt-2">
-              <Ionicons name="location-outline" size={18} color="#e01d47" />
-              <Text className="text-gray-700 ml-2">{event.location}</Text>
-            </View>
-            
-            <View className="border-t border-gray-200 my-4" />
-            
-            <Text className="text-lg font-bold text-gray-800">About this Event</Text>
-            <Text className="text-gray-700 mt-2 leading-6">{event.description}</Text>
+            {/* Registration Status */}
+            {userRegistered && !isEventPast && (
+              <View className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6 flex-row items-center">
+                <Ionicons name="checkmark-circle" size={24} color="#10b981" />
+                <Text className="text-green-700 font-medium ml-2">You're registered for this event</Text>
+              </View>
+            )}
             
             {/* Conditional Button */}
             <TouchableOpacity
               onPress={(!isEventPast && !userRegistered) ? handleRegister : 
                       (userRegistered && userAttended && isEventPast) ? handleRating : null}
-              disabled={isEventPast && (!userRegistered || !userAttended) || isEventOngoing}
-              className={`mt-5 py-3.5 rounded-lg items-center ${getButtonClass()}`}
+              disabled={(isEventPast && (!userRegistered || !userAttended)) || isEventOngoing || isRegistering}
+              className={`py-4 rounded-xl items-center mb-6 ${getButtonClass()}`}
             >
-              <Text className="font-bold text-white text-base">
-                {getButtonText()}
-              </Text>
+              {isRegistering ? (
+                <ActivityIndicator color="white" size="small" />
+              ) : (
+                <Text className="font-bold text-white text-base">
+                  {getButtonText()}
+                </Text>
+              )}
             </TouchableOpacity>
           </View>
           
           {/* Attendee Stats */}
           {interestedUsers.length > 0 && (
-            <View className="bg-white mx-4 mt-4 rounded-xl shadow-sm p-4 border border-gray-100">
-              <View className="flex-row justify-between items-center">
+            <View className="bg-white mx-5 rounded-xl shadow-sm p-5 border border-gray-100 mb-6">
+              <View className="flex-row justify-between items-center mb-4">
                 <Text className="text-lg font-bold text-gray-800">Attendees</Text>
-                <Text className="text-gray-600">{interestedUsers.length} registered</Text>
+                <View className="bg-blue-50 px-3 py-1 rounded-full">
+                  <Text className="text-blue-700 font-medium">{interestedUsers.length} registered</Text>
+                </View>
               </View>
               
-              <View className="flex-row mt-3">
-                <View className="bg-[#e01d47] bg-opacity-10 p-3 rounded-lg flex-1 mr-2">
+              <View className="flex-row">
+                <View className="bg-[#fce8ec] p-4 rounded-xl flex-1 mr-2">
                   <Text className="text-center text-[#e01d47] font-bold text-lg">
                     {attendedUsers.length}
                   </Text>
-                  <Text className="text-center text-gray-700 text-xs">Attended</Text>
+                  <Text className="text-center text-[#e01d47] text-xs">Attended</Text>
                 </View>
                 
-                <View className="bg-gray-100 p-3 rounded-lg flex-1 ml-2">
+                <View className="bg-gray-100 p-4 rounded-xl flex-1 ml-2">
                   <Text className="text-center text-gray-700 font-bold text-lg">
                     {interestedUsers.length - attendedUsers.length}
                   </Text>
@@ -290,10 +385,12 @@ const EventInfo = ({ route }) => {
           
           {/* Reviews Section */}
           {isEventPast && eventFeedback && eventFeedback.length > 0 && (
-            <View className="mx-4 mt-4 mb-6">
-              <View className="flex-row justify-between items-center mb-3">
+            <View className="mx-5 mb-6">
+              <View className="flex-row justify-between items-center mb-4">
                 <Text className="text-lg font-bold text-gray-800">Reviews</Text>
-                <Text className="text-gray-600">{eventFeedback.length} reviews</Text>
+                <View className="bg-yellow-50 px-3 py-1 rounded-full">
+                  <Text className="text-yellow-700 font-medium">{eventFeedback.length} reviews</Text>
+                </View>
               </View>
               
               <FlatList
@@ -306,14 +403,16 @@ const EventInfo = ({ route }) => {
           )}
         </ScrollView>
       ) : (
-        <View className="flex-1 justify-center items-center">
+        <View className="flex-1 justify-center items-center p-5">
           <Ionicons name="alert-circle-outline" size={70} color="#e0e0e0" />
-          <Text className="text-lg text-gray-500 mt-4">Event not found</Text>
+          <Text className="text-xl text-gray-500 mt-4 text-center font-medium">Event not found</Text>
+          <Text className="text-gray-400 text-center mt-2 mb-6">The event you're looking for may have been removed or is no longer available.</Text>
           <TouchableOpacity 
-            className="mt-6 bg-[#e01d47] py-3 px-6 rounded-full"
+            className="bg-[#e01d47] py-3 px-6 rounded-full flex-row items-center"
             onPress={() => navigation.navigate('eventlist')}
           >
-            <Text className="text-white font-medium">View All Events</Text>
+            <Ionicons name="calendar-outline" size={20} color="white" />
+            <Text className="text-white font-bold ml-2">View All Events</Text>
           </TouchableOpacity>
         </View>
       )}

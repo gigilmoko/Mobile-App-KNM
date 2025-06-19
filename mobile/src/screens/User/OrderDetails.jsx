@@ -743,10 +743,12 @@ console.log("Order Details:", order);
     : "Pending";
 
   // Calculate total
-  const subtotal = order.orderProducts.reduce(
-    (acc, item) => acc + (item.price || 0) * (item.quantity || 1),
-    0
-  );
+  const subtotal = order?.orderProducts 
+  ? order.orderProducts.reduce(
+      (acc, item) => acc + (item.price || 0) * (item.quantity || 1),
+      0
+    )
+  : 0;
   const deliveryFee = order.shippingCharges || 0;
   const total = subtotal + deliveryFee;
 
@@ -778,7 +780,7 @@ console.log("Order Details:", order);
           <View className="flex-row justify-between items-center mb-3">
             <View>
               <Text className="text-lg font-bold text-gray-800">
-                #{order.KNMOrderId || order._id.substring(0, 8)}
+                #{order.KNMOrderId }
               </Text>
               <Text className="text-sm text-gray-500">{formattedDate}</Text>
             </View>
