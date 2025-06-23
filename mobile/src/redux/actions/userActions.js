@@ -6,19 +6,38 @@ import Toast from 'react-native-toast-message'; // Make sure to import Toast
 
 // export const USER_AVATAR_SUCCESS = "USER_AVATAR_SUCCESS";
 // export const USER_AVATAR_FAIL = "USER_AVATAR_FAIL";
-
+// Update the existing register function
 export const register = (registrationData) => async (dispatch) => {
     try {
         dispatch({ type: "registerRequest" });
+
+        await AsyncStorage.removeItem('pendingEmailVerificationUserId');
+        await AsyncStorage.removeItem('pendingEmailVerificationEmail');
 
         const { data } = await axios.post(`${server}/register`, registrationData, {
             headers: { "Content-Type": "application/json" }, 
             withCredentials: true,
         });
 
+        console.log('Registration response:', JSON.stringify(data, null, 2));
+
+        if (data.requiresVerification) {
+            await AsyncStorage.setItem('pendingEmailVerificationUserId', data.userId.toString());
+            await AsyncStorage.setItem('pendingEmailVerificationEmail', registrationData.email);
+            
+            dispatch({ 
+                type: "registerVerificationRequired",
+                payload: data.message 
+            });
+            return 'verification_required';
+        }
+
         dispatch({ type: "registerSuccess", payload: data.message });
         return 'success';
     } catch (error) {
+        console.log('Registration error status:', error.response?.status);
+        console.log('Registration error data:', error.response?.data);
+        
         dispatch({
             type: "registerFail",
             payload: error.response ? error.response.data.message : 'Network error',
@@ -26,24 +45,146 @@ export const register = (registrationData) => async (dispatch) => {
         return 'fail';
     }
 };
-
+// Update the existing registerUserMember function
 export const registerUserMember = (userData) => async (dispatch) => {
     try {
         dispatch({ type: "registerUserMemberRequest" });
+
+        // Clear any existing verification data first
+        await AsyncStorage.removeItem('pendingEmailVerificationUserId');
+        await AsyncStorage.removeItem('pendingEmailVerificationEmail');
 
         const { data } = await axios.post(`${server}/register-member`, userData, {
             headers: { "Content-Type": "application/json" },
             withCredentials: true,
         });
 
+        console.log('Member registration response:', data); // Debug log
+
+        // FIX: Check for requiresVerification instead of requiresEmailVerification
+        if (data.requiresVerification) {
+            // Store user ID and email temporarily for verification
+            console.log('Storing member userId:', data.userId, 'email:', userData.email); // Debug log
+            await AsyncStorage.setItem('pendingEmailVerificationUserId', data.userId.toString());
+            await AsyncStorage.setItem('pendingEmailVerificationEmail', userData.email);
+            
+            // Verify the data was stored
+            const storedUserId = await AsyncStorage.getItem('pendingEmailVerificationUserId');
+            const storedEmail = await AsyncStorage.getItem('pendingEmailVerificationEmail');
+            console.log('Stored member data verification - userId:', storedUserId, 'email:', storedEmail);
+            
+            dispatch({ 
+                type: "registerMemberVerificationRequired",
+                payload: data.message 
+            });
+            return 'verification_required';
+        }
+
         dispatch({ type: "registerUserMemberSuccess", payload: data.message });
         return 'success';
     } catch (error) {
+        console.log('Member registration error:', error); // Debug log
         dispatch({
             type: "registerUserMemberFail",
             payload: error.response ? error.response.data.message : 'Network error',
         });
         return 'fail';
+    }
+};
+// Add new email verification action
+// Fix the verifyEmailCode function
+export const verifyEmailCode = (verificationCode) => async (dispatch) => {
+    try {
+        dispatch({ type: "verifyEmailRequest" });
+
+        // Get stored user ID and email
+        const userId = await AsyncStorage.getItem('pendingEmailVerificationUserId');
+        const email = await AsyncStorage.getItem('pendingEmailVerificationEmail');
+        
+        console.log('Retrieved from storage - userId:', userId, 'email:', email, 'code:', verificationCode);
+        
+        if (!userId || !email) {
+            console.log('Missing verification data - userId:', userId, 'email:', email);
+            throw new Error('No pending email verification found. Please register again.');
+        }
+
+        const { data } = await axios.post(
+            `${server}/verify-email`,
+            { 
+                userId,
+                verificationCode
+            },
+            {
+                headers: { "Content-Type": "application/json" },
+                withCredentials: true,
+            }
+        );
+
+        // Clear temporary data only after successful verification
+        await AsyncStorage.removeItem('pendingEmailVerificationUserId');
+        await AsyncStorage.removeItem('pendingEmailVerificationEmail');
+
+        dispatch({
+            type: "verifyEmailSuccess",
+            payload: data.message,
+        });
+
+        return 'success';
+    } catch (error) {
+        console.log('Verification error:', error);
+        
+        // If it's a verification data missing error, clear any stale data
+        if (error.message.includes('No pending email verification found')) {
+            await AsyncStorage.removeItem('pendingEmailVerificationUserId');
+            await AsyncStorage.removeItem('pendingEmailVerificationEmail');
+        }
+        
+        dispatch({
+            type: "verifyEmailFail",
+            payload: error.response?.data.message || error.message || 'Network error',
+        });
+        return 'fail';
+    }
+};
+
+// Add resend email verification code action
+export const resendEmailVerificationCode = () => async (dispatch) => {
+    try {
+        const userId = await AsyncStorage.getItem('pendingEmailVerificationUserId');
+        
+        if (!userId) {
+            throw new Error('No pending email verification found');
+        }
+
+        const { data } = await axios.post(
+            `${server}/resend-email-verification`,
+            { userId },
+            {
+                headers: { "Content-Type": "application/json" },
+                withCredentials: true,
+            }
+        );
+
+        return 'success';
+    } catch (error) {
+        throw error;
+    }
+};
+
+// Add check email verification status action
+export const checkEmailVerificationStatus = (userId) => async (dispatch) => {
+    try {
+        const { data } = await axios.get(
+            `${server}/check-email-verification/${userId}`,
+            {
+                headers: { "Content-Type": "application/json" },
+                withCredentials: true,
+            }
+        );
+
+        return data.isVerified;
+    } catch (error) {
+        throw error;
     }
 };
 

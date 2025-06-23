@@ -19,6 +19,7 @@ import Home from "./src/screens/Home";
 import Login from "./src/screens/User/Login";
 import Verification from "./src/screens/User/Verification";
 import SignUp from "./src/screens/User/SignUp";
+import EmailVerification from "./src/screens/User/EmailVerification";
 import MyAccount from "./src/screens/User/MyAccount";
 import ChangePassword from "./src/screens/User/ChangePassword";
 import UpdateProfile from "./src/screens/User/UpdateProfile";
@@ -83,6 +84,7 @@ const HomeStack = () => {
             <Stack.Screen name="orderdetails" component={OrderDetails} />
             <Stack.Screen name="productdetail" component={ProductDetails} />
             <Stack.Screen name="signup" component={SignUp} />
+            <Stack.Screen name="emailverification" component={EmailVerification} />
             <Stack.Screen name="login" component={Login} />
             <Stack.Screen name="verification" component={Verification} />
             <Stack.Screen name="myaccount" component={MyAccount} />

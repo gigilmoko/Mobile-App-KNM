@@ -117,6 +117,42 @@ export const userReducer = createReducer(initialState, (builder) => {
             state.loading = false;
             state.error = action.payload;
         })
+         .addCase("loginVerificationRequired", (state, action) => {
+            state.loading = false;
+            state.message = action.payload;
+        })
+        .addCase("verifyLoginRequest", (state) => {
+            state.loading = true;
+        })
+        .addCase("verifyLoginSuccess", (state, action) => {
+            state.loading = false;
+            state.isAuthenticated = true;
+            state.user = action.payload;
+            state.message = "Admin verification successful";
+        })
+        .addCase("verifyLoginFail", (state, action) => {
+            state.loading = false;
+            state.error = action.payload;
+        })
+        .addCase("registerVerificationRequired", (state, action) => {
+            state.loading = false;
+            state.message = action.payload;
+        })
+        .addCase("registerMemberVerificationRequired", (state, action) => {
+            state.loading = false;
+            state.message = action.payload;
+        })
+        .addCase("verifyEmailRequest", (state) => {
+            state.loading = true;
+        })
+        .addCase("verifyEmailSuccess", (state, action) => {
+            state.loading = false;
+            state.message = action.payload;
+        })
+        .addCase("verifyEmailFail", (state, action) => {
+            state.loading = false;
+            state.error = action.payload;
+        })
         .addCase("getUserDetailsFail", (state, action) => {
             state.loading = false;
             state.error = action.payload;

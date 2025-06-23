@@ -178,106 +178,120 @@ const SignUp = ({ navigation, route }) => {
         }
     };
 
-    const submitHandler = async (isMember) => {
-        if (!validateForm()) return;
-        
-        setIsLoading(true);
+const submitHandler = async (isMember) => {
+    if (!validateForm()) return;
+    
+    setIsLoading(true);
+    
+    // Prepare registration data
+    const registrationData = {
+        fname,
+        lname,
+        middlei,
+        email,
+        password,
+        dateOfBirth,
+        phone,
+        googleLogin,
+    };
 
-        const registrationData = {
-            fname,
-            lname,
-            middlei,
-            email,
-            password,
-            dateOfBirth,
-            phone,
-            googleLogin,
-        };
+    // Upload avatar if provided
+    if (avatar && isAvatarChanged) {
+        try {
+            const file = {
+                uri: avatar,
+                type: mime.getType(avatar) || 'image/jpeg',
+                name: avatar.split("/").pop() || "default.jpg",
+            };
 
-        // Upload avatar if provided
-        if (avatar && isAvatarChanged) {
-            try {
-                const file = {
-                    uri: avatar,
-                    type: mime.getType(avatar) || 'image/jpeg',
-                    name: avatar.split("/").pop() || "default.jpg",
-                };
+            const avatarFormData = new FormData();
+            avatarFormData.append('file', file);
+            avatarFormData.append('upload_preset', 'ml_default');
 
-                const avatarFormData = new FormData();
-                avatarFormData.append('file', file);
-                avatarFormData.append('upload_preset', 'ml_default');
+            const response = await axios.post(
+                'https://api.cloudinary.com/v1_1/dglawxazg/image/upload',
+                avatarFormData,
+                {
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                    },
+                }
+            );
 
-                const response = await axios.post(
-                    'https://api.cloudinary.com/v1_1/dglawxazg/image/upload',
-                    avatarFormData,
-                    {
-                        headers: {
-                            'Content-Type': 'multipart/form-data',
-                        },
-                    }
-                );
+            registrationData.avatar = response.data.secure_url;
+        } catch (error) {
+            console.error('Failed to upload avatar', error);
+            Toast.show({
+                type: 'error',
+                text1: 'Failed to upload avatar',
+                text2: 'Registration will continue without profile picture'
+            });
+        }
+    }
 
-                registrationData.avatar = response.data.secure_url;
-            } catch (error) {
-                console.error('Failed to upload avatar', error);
+    try {
+        // Handle member vs non-member registration
+        if (isMember) {
+            registrationData.memberId = memberId;
+            const result = await dispatch(registerUserMember(registrationData));
+            
+            if (result === 'verification_required') {
+                Toast.show({
+                    type: "info",
+                    text1: "Email Verification Required",
+                    text2: "Please check your email for verification code",
+                });
+                navigation.navigate("emailverification");
+            } else if (result === 'success') {
+                Toast.show({
+                    type: 'success',
+                    text1: 'Registration successful!',
+                    text2: 'Your account has been created with member privileges.'
+                });
+                navigation.navigate('login');
+            } else {
                 Toast.show({
                     type: 'error',
-                    text1: 'Failed to upload avatar',
-                    text2: 'Registration will continue without profile picture'
+                    text1: 'Registration failed',
+                    text2: 'Please check your member ID and try again.'
+                });
+            }
+        } else {
+            const result = await dispatch(register(registrationData));
+            
+            if (result === 'verification_required') {
+                Toast.show({
+                    type: "info",
+                    text1: "Email Verification Required",
+                    text2: "Please check your email for verification code",
+                });
+                navigation.navigate("emailverification");
+            } else if (result === 'success') {
+                Toast.show({
+                    type: 'success',
+                    text1: 'Registration successful!',
+                    text2: 'Your account has been created. Please login.'
+                });
+                navigation.navigate('emailverification');
+            } else {
+                Toast.show({
+                    type: 'error',
+                    text1: 'Registration failed',
+                    text2: 'Please try again with different credentials.'
                 });
             }
         }
-
-        try {
-            // Handle member vs non-member registration
-            if (isMember) {
-                registrationData.memberId = memberId;
-                const result = await dispatch(registerUserMember(registrationData));
-                
-                if (result === 'success') {
-                    Toast.show({
-                        type: 'success',
-                        text1: 'Registration successful!',
-                        text2: 'Your account has been created with member privileges.'
-                    });
-                    navigation.navigate('home');
-                } else {
-                    Toast.show({
-                        type: 'error',
-                        text1: 'Registration failed',
-                        text2: 'Please check your member ID and try again.'
-                    });
-                }
-            } else {
-                const result = await dispatch(register(registrationData));
-                
-                if (result === 'success') {
-                    Toast.show({
-                        type: 'success',
-                        text1: 'Registration successful!',
-                        text2: 'Your account has been created. Please login.'
-                    });
-                    navigation.navigate('home');
-                } else {
-                    Toast.show({
-                        type: 'error',
-                        text1: 'Registration failed',
-                        text2: 'Please try again with different credentials.'
-                    });
-                }
-            }
-        } catch (error) {
-            console.error('Error during registration:', error);
-            Toast.show({
-                type: 'error',
-                text1: 'Registration failed',
-                text2: error?.message || 'Please try again later.'
-            });
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
+    } catch (error) {
+        console.error('Error during registration:', error);
+        Toast.show({
+            type: 'error',
+            text1: 'Registration failed',
+            text2: error?.message || 'Please try again later.'
+        });
+    } finally {
+        setIsLoading(false);
+    }
+};
     const togglePasswordVisibility = () => {
         setShowPassword(!showPassword);
     };
@@ -288,7 +302,7 @@ const SignUp = ({ navigation, route }) => {
 
     return (
         <View className="flex-1 bg-white">
-         <View className="pt-10 px-5 flex-row items-center">
+         <View className="pt-5 px-5 flex-row items-center">
             <TouchableOpacity
                 onPress={() => navigation.goBack()}
                 className="p-2 rounded-full bg-gray-100"
@@ -494,7 +508,7 @@ const SignUp = ({ navigation, route }) => {
 
             {/* Member Modal */}
             <Modal visible={showMemberModal} transparent animationType="slide" onRequestClose={() => setShowMemberModal(false)}>
-                <View className="flex-1 justify-center items-center bg-black bg-opacity-50">
+                <View className="flex-1 justify-center items-center bg-white bg-opacity-50">
                     <View className="w-4/5 bg-white p-6 rounded-lg shadow">
                         <Text className="text-xl font-bold mb-4 text-center">Are you a member of KNM?</Text>
                         <View className="flex-row justify-between w-full mt-4">
