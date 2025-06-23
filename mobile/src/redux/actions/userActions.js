@@ -47,6 +47,50 @@ export const registerUserMember = (userData) => async (dispatch) => {
     }
 };
 
+// export const userLogin = (email, password, playerId) => async (dispatch) => {
+//     try {
+//         dispatch({ type: "loginRequest" });
+
+//         const { data } = await axios.post(
+//             `${server}/login`,
+//             { 
+//                 email, 
+//                 password, 
+//                 deviceToken: playerId 
+//             },
+//             {
+//                 headers: { "Content-Type": "application/json" },
+//                 withCredentials: true,
+//             }
+//         );
+
+//         // Store token and userId in AsyncStorage
+//         await AsyncStorage.setItem('token', data.token);
+//         await AsyncStorage.setItem('userId', data.user._id);
+//         await AsyncStorage.setItem('userData', JSON.stringify(data.user));
+        
+        
+//         // console.log('Token:', data.token);
+//         // console.log('User ID:', data.user._id);
+//         // console.log('Device Token:', playerId);
+
+//         dispatch({
+//             type: "loginSuccess",
+//             payload: data.user,
+//         });
+
+//         return 'success';
+//     } catch (error) {
+//         console.log(error)
+//         dispatch({
+//             type: "loginFail", 
+//             payload: error.response?.data.message || 'Network error',
+//         });
+
+//         return 'fail';
+//     }
+// };
+
 export const userLogin = (email, password, playerId) => async (dispatch) => {
     try {
         dispatch({ type: "loginRequest" });
@@ -64,16 +108,23 @@ export const userLogin = (email, password, playerId) => async (dispatch) => {
             }
         );
 
-        // Store token and userId in AsyncStorage
+        // Check if verification is required (admin users)
+        if (data.requiresVerification) {
+            // Store email temporarily for verification
+            await AsyncStorage.setItem('pendingVerificationEmail', email);
+            
+            dispatch({ 
+                type: "loginVerificationRequired",
+                payload: data.message 
+            });
+            return 'verification_required';
+        }
+
+        // Normal login flow for non-admin users
         await AsyncStorage.setItem('token', data.token);
         await AsyncStorage.setItem('userId', data.user._id);
         await AsyncStorage.setItem('userData', JSON.stringify(data.user));
         
-        
-        // console.log('Token:', data.token);
-        // console.log('User ID:', data.user._id);
-        // console.log('Device Token:', playerId);
-
         dispatch({
             type: "loginSuccess",
             payload: data.user,
@@ -88,6 +139,77 @@ export const userLogin = (email, password, playerId) => async (dispatch) => {
         });
 
         return 'fail';
+    }
+};
+
+// Add new verification action
+export const verifyAdminLogin = (verificationCode) => async (dispatch) => {
+    try {
+        dispatch({ type: "verifyLoginRequest" });
+
+        // Get stored email
+        const email = await AsyncStorage.getItem('pendingVerificationEmail');
+        
+        if (!email) {
+            throw new Error('No pending verification found');
+        }
+
+        const { data } = await axios.post(
+            `${server}/verify`,
+            { 
+                email,
+                verificationCode
+            },
+            {
+                headers: { "Content-Type": "application/json" },
+                withCredentials: true,
+            }
+        );
+
+        // Store token and user data
+        await AsyncStorage.setItem('token', data.token);
+        await AsyncStorage.setItem('userId', data.user._id);
+        await AsyncStorage.setItem('userData', JSON.stringify(data.user));
+        
+        // Clear temporary data
+        await AsyncStorage.removeItem('pendingVerificationEmail');
+
+        dispatch({
+            type: "verifyLoginSuccess",
+            payload: data.user,
+        });
+
+        return 'success';
+    } catch (error) {
+        dispatch({
+            type: "verifyLoginFail",
+            payload: error.response?.data.message || 'Network error',
+        });
+        return 'fail';
+    }
+};
+
+// Add resend code action
+export const resendVerificationCode = () => async (dispatch) => {
+    try {
+        const email = await AsyncStorage.getItem('pendingVerificationEmail');
+        
+        if (!email) {
+            throw new Error('No pending verification found');
+        }
+
+        const { data } = await axios.post(
+            `${server}/resend-verification`,
+            { email },
+            {
+                headers: { "Content-Type": "application/json" },
+                withCredentials: true,
+            }
+        );
+
+        return 'success';
+    } catch (error) {
+        throw error;
     }
 };
 

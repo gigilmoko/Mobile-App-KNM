@@ -17,6 +17,7 @@ import Constants from "expo-constants";
 // Import Screens
 import Home from "./src/screens/Home";
 import Login from "./src/screens/User/Login";
+import Verification from "./src/screens/User/Verification";
 import SignUp from "./src/screens/User/SignUp";
 import MyAccount from "./src/screens/User/MyAccount";
 import ChangePassword from "./src/screens/User/ChangePassword";
@@ -83,6 +84,7 @@ const HomeStack = () => {
             <Stack.Screen name="productdetail" component={ProductDetails} />
             <Stack.Screen name="signup" component={SignUp} />
             <Stack.Screen name="login" component={Login} />
+            <Stack.Screen name="verification" component={Verification} />
             <Stack.Screen name="myaccount" component={MyAccount} />
             <Stack.Screen name="changepassword" component={ChangePassword} />
             <Stack.Screen name="updateprofile" component={UpdateProfile} />

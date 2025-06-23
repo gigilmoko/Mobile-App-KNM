@@ -74,14 +74,23 @@ const userSubmitHandler = async () => {
   setIsLoading(true);
   try {
     const response = await dispatch(userLogin(email, password, playerId));
-    if (response === 'success') {
-      // Get user data from store or response
+    
+    if (response === 'verification_required') {
+      // Admin user needs verification
+      Toast.show({
+        type: "info",
+        text1: "Verification Required",
+        text2: "Please check your email for verification code",
+      });
+      navigation.navigate("verification");
+    } else if (response === 'success') {
+      // Regular user login successful
       const userData = await AsyncStorage.getItem('userData');
       let firstName = "User";
       
       if (userData) {
         const parsedData = JSON.parse(userData);
-        firstName = parsedData.fname || firstName; // Using fname directly from model
+        firstName = parsedData.fname || firstName;
       }
       
       Toast.show({
