@@ -53,6 +53,9 @@ import LoadingRider from "./src/screens/Rider/LoadingRider";
 import RiderStack from "./src/screens/Rider/RiderStack";
 import ForgetPassword from "./src/screens/User/ForgetPassword";
 import AdminEventAttendees from "./src/screens/Admin/Events/AdminEventAttendees";
+import ResetPassword from "./src/screens/User/ResetPassword";
+import PasswordResetVerification from "./src/screens/User/PasswordResetVerification";
+
 const Stack = createNativeStackNavigator();
 
 //uncomment this to enable OneSignal
@@ -93,7 +96,9 @@ const HomeStack = () => {
             <Stack.Screen name="addressupdate" component={AddressUpdate} />
             
             <Stack.Screen name="editaddress" component={EditAddress} />
-            <Stack.Screen name="forgetpassword" component={ForgetPassword} />
+                        <Stack.Screen name="forgetpassword" component={ForgetPassword} />
+            <Stack.Screen name="passwordresetverification" component={PasswordResetVerification} />
+            <Stack.Screen name="resetpassword" component={ResetPassword} />
             {/* Admin Screens */}
             <Stack.Screen name="dashboard" component={Dashboard} />
             <Stack.Screen name="adminproducts" component={AdminProducts} />

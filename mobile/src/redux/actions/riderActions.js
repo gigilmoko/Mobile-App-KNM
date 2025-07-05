@@ -95,21 +95,27 @@ export const riderLogin = (email, password, playerId) => async (dispatch) => {
           }
       );
 
-      const riderId = data.user._id;
-      console.log('Rider data:', data);
-      console.log('Rider ID:', riderId);
+      // Add null/undefined checks before storing
+      if (data.user && data.user._id && data.token) {
+          const riderId = data.user._id;
+          
+          console.log('Rider data:', data);
+          console.log('Rider ID:', riderId);
 
-      await AsyncStorage.setItem('riderId', riderId);
-      await AsyncStorage.setItem('riderToken', data.token);
+          await AsyncStorage.setItem('riderId', riderId);
+          await AsyncStorage.setItem('riderToken', data.token);
 
-      dispatch({
-          type: "riderLoginSuccess",
-          payload: data.user,
-      });
+          dispatch({
+              type: "riderLoginSuccess",
+              payload: data.user,
+          });
 
-      console.log('Rider login successful:', data.user);
+          console.log('Rider login successful:', data.user);
 
-      return 'success'; // Return 'success' after successful login
+          return 'success';
+      } else {
+          throw new Error('Invalid response from server');
+      }
   } catch (error) {
       dispatch({
           type: "riderLoginFail",
@@ -117,10 +123,9 @@ export const riderLogin = (email, password, playerId) => async (dispatch) => {
       });
       console.error('Login error:', error);
 
-      throw error; // Re-throw the error to handle it in the calling function
+      throw error;
   }
 };
-
 export const riderLogout = () => async (dispatch) => {
     // const riderId = await AsyncStorage.getItem('riderId');
     // console.log('Rider IDsss:', riderId);

@@ -6,6 +6,149 @@ import Toast from 'react-native-toast-message'; // Make sure to import Toast
 
 // export const USER_AVATAR_SUCCESS = "USER_AVATAR_SUCCESS";
 // export const USER_AVATAR_FAIL = "USER_AVATAR_FAIL";
+
+export const updatePasswordMobile = (userId, oldPassword, newPassword, confirmPassword) => async (dispatch) => {
+    try {
+        dispatch({ type: 'UPDATE_PASSWORD_MOBILE_REQUEST' });
+
+        const { data } = await axios.put(`${server}/password/update/mobile`, 
+            { userId, oldPassword, newPassword, confirmPassword }, 
+            {
+                headers: { "Content-Type": "application/json" },
+                withCredentials: true,
+            }
+        );
+
+        dispatch({
+            type: 'UPDATE_PASSWORD_MOBILE_SUCCESS',
+            payload: data.message,
+        });
+
+        return 'success';
+    } catch (error) {
+        dispatch({
+            type: 'UPDATE_PASSWORD_MOBILE_FAIL',
+            payload: error.response?.data?.message || error.message,
+        });
+        throw error;
+    }
+};
+
+
+// Mobile forgot password - sends verification code
+export const forgotPasswordMobile = (email) => async (dispatch) => {
+    try {
+        dispatch({ type: 'FORGOT_PASSWORD_MOBILE_REQUEST' });
+
+        const { data } = await axios.post(`${server}/password/forgot-mobile`, { email }, {
+            headers: { "Content-Type": "application/json" },
+            withCredentials: true,
+        });
+
+        // Store userId for verification process
+        await AsyncStorage.setItem('passwordResetUserId', data.userId.toString());
+
+        dispatch({
+            type: 'FORGOT_PASSWORD_MOBILE_SUCCESS',
+            payload: data.message,
+        });
+
+        return 'success';
+    } catch (error) {
+        dispatch({
+            type: 'FORGOT_PASSWORD_MOBILE_FAIL',
+            payload: error.response?.data?.error || error.message,
+        });
+        throw error;
+    }
+};
+
+// Verify password reset code
+export const verifyPasswordResetCode = (userId, verificationCode) => async (dispatch) => {
+    try {
+        dispatch({ type: 'VERIFY_PASSWORD_RESET_CODE_REQUEST' });
+
+        const { data } = await axios.post(`${server}/password/verify-reset-code`, 
+            { userId, verificationCode }, 
+            {
+                headers: { "Content-Type": "application/json" },
+                withCredentials: true,
+            }
+        );
+
+        dispatch({
+            type: 'VERIFY_PASSWORD_RESET_CODE_SUCCESS',
+            payload: data.message,
+        });
+
+        return 'success';
+    } catch (error) {
+        dispatch({
+            type: 'VERIFY_PASSWORD_RESET_CODE_FAIL',
+            payload: error.response?.data?.message || error.message,
+        });
+        throw error;
+    }
+};
+
+// Reset password with verified code
+export const resetPasswordMobile = (userId, verificationCode, newPassword, confirmPassword) => async (dispatch) => {
+    try {
+        dispatch({ type: 'RESET_PASSWORD_MOBILE_REQUEST' });
+
+        const { data } = await axios.post(`${server}/password/reset-mobile`, 
+            { userId, verificationCode, newPassword, confirmPassword }, 
+            {
+                headers: { "Content-Type": "application/json" },
+                withCredentials: true,
+            }
+        );
+
+        // Clear stored userId after successful reset
+        await AsyncStorage.removeItem('passwordResetUserId');
+
+        dispatch({
+            type: 'RESET_PASSWORD_MOBILE_SUCCESS',
+            payload: data.message,
+        });
+
+        return 'success';
+    } catch (error) {
+        dispatch({
+            type: 'RESET_PASSWORD_MOBILE_FAIL',
+            payload: error.response?.data?.message || error.message,
+        });
+        throw error;
+    }
+};
+
+// Resend password reset code
+export const resendPasswordResetCode = (userId) => async (dispatch) => {
+    try {
+        dispatch({ type: 'RESEND_PASSWORD_RESET_CODE_REQUEST' });
+
+        const { data } = await axios.post(`${server}/password/resend-reset-code`, 
+            { userId }, 
+            {
+                headers: { "Content-Type": "application/json" },
+                withCredentials: true,
+            }
+        );
+
+        dispatch({
+            type: 'RESEND_PASSWORD_RESET_CODE_SUCCESS',
+            payload: data.message,
+        });
+
+        return 'success';
+    } catch (error) {
+        dispatch({
+            type: 'RESEND_PASSWORD_RESET_CODE_FAIL',
+            payload: error.response?.data?.message || error.message,
+        });
+        throw error;
+    }
+};
 // Update the existing register function
 export const register = (registrationData) => async (dispatch) => {
     try {
@@ -251,8 +394,8 @@ export const userLogin = (email, password, playerId) => async (dispatch) => {
 
         // Check if verification is required
         if (data.requiresVerification) {
-            if (data.verificationType === 'email') {
-                // Email verification required
+            if (data.userId) {
+                // For email verification
                 await AsyncStorage.setItem('pendingEmailVerificationUserId', data.userId.toString());
                 await AsyncStorage.setItem('pendingEmailVerificationEmail', email);
                 
@@ -261,8 +404,8 @@ export const userLogin = (email, password, playerId) => async (dispatch) => {
                     payload: data.message 
                 });
                 return 'email_verification_required';
-            } else if (data.verificationType === 'admin') {
-                // Admin verification required
+            } else {
+                // For admin verification (no userId provided in response)
                 await AsyncStorage.setItem('pendingVerificationEmail', email);
                 
                 dispatch({ 
@@ -273,42 +416,46 @@ export const userLogin = (email, password, playerId) => async (dispatch) => {
             }
         }
 
-        // Normal login flow for verified users
-        await AsyncStorage.setItem('token', data.token);
-        await AsyncStorage.setItem('userId', data.user._id);
-        await AsyncStorage.setItem('userData', JSON.stringify(data.user));
-        
-        dispatch({
-            type: "loginSuccess",
-            payload: data.user,
-        });
+        // Normal login flow for verified users - only store if data exists
+        if (data.token && data.user && data.user._id) {
+            await AsyncStorage.setItem('token', data.token);
+            await AsyncStorage.setItem('userId', data.user._id);
+            await AsyncStorage.setItem('userData', JSON.stringify(data.user));
+            
+            dispatch({
+                type: "loginSuccess",
+                payload: data.user,
+            });
 
-        return 'success';
+            return 'success';
+        } else {
+            throw new Error('Invalid response from server');
+        }
     } catch (error) {
         console.log('Login error:', error);
         
         // Check if it's a 403 error (verification required)
         if (error.response && error.response.status === 403) {
-            const data = error.response.data;
+            const errorData = error.response.data;
             
-            if (data.requiresVerification) {
-                if (data.verificationType === 'email') {
+            if (errorData.requiresVerification) {
+                if (errorData.userId) {
                     // Email verification required
-                    await AsyncStorage.setItem('pendingEmailVerificationUserId', data.userId.toString());
+                    await AsyncStorage.setItem('pendingEmailVerificationUserId', errorData.userId.toString());
                     await AsyncStorage.setItem('pendingEmailVerificationEmail', email);
                     
                     dispatch({ 
                         type: "loginEmailVerificationRequired",
-                        payload: data.message 
+                        payload: errorData.message 
                     });
                     return 'email_verification_required';
-                } else if (data.verificationType === 'admin') {
-                    // Admin verification required
+                } else {
+                    // Admin verification required (no userId in response)
                     await AsyncStorage.setItem('pendingVerificationEmail', email);
                     
                     dispatch({ 
                         type: "loginVerificationRequired",
-                        payload: data.message 
+                        payload: errorData.message 
                     });
                     return 'admin_verification_required';
                 }

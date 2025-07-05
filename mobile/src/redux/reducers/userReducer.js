@@ -12,6 +12,40 @@ const initialState = {
 
 export const userReducer = createReducer(initialState, (builder) => {
   builder
+
+   .addCase("FORGOT_PASSWORD_MOBILE_REQUEST", (state) => {
+      state.loading = true;
+    })
+    .addCase("FORGOT_PASSWORD_MOBILE_SUCCESS", (state, action) => {
+      state.loading = false;
+      state.message = action.payload;
+    })
+    .addCase("FORGOT_PASSWORD_MOBILE_FAIL", (state, action) => {
+      state.loading = false;
+      state.error = action.payload;
+    })
+    .addCase("VERIFY_PASSWORD_RESET_CODE_REQUEST", (state) => {
+      state.loading = true;
+    })
+    .addCase("VERIFY_PASSWORD_RESET_CODE_SUCCESS", (state, action) => {
+      state.loading = false;
+      state.message = action.payload;
+    })
+    .addCase("VERIFY_PASSWORD_RESET_CODE_FAIL", (state, action) => {
+      state.loading = false;
+      state.error = action.payload;
+    })
+    .addCase("RESET_PASSWORD_MOBILE_REQUEST", (state) => {
+      state.loading = true;
+    })
+    .addCase("RESET_PASSWORD_MOBILE_SUCCESS", (state, action) => {
+      state.loading = false;
+      state.message = action.payload;
+    })
+    .addCase("RESET_PASSWORD_MOBILE_FAIL", (state, action) => {
+      state.loading = false;
+      state.error = action.payload;
+    })
     // Request cases
     .addCase("loginEmailVerificationRequired", (state, action) => {
       state.loading = false;
