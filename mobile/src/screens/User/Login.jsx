@@ -75,11 +75,19 @@ const userSubmitHandler = async () => {
   try {
     const response = await dispatch(userLogin(email, password, playerId));
     
-    if (response === 'verification_required') {
+    if (response === 'email_verification_required') {
+      // User needs email verification
+      Toast.show({
+        type: "info",
+        text1: "Email Verification Required",
+        text2: "Please check your email for verification code",
+      });
+      navigation.navigate("emailverification");
+    } else if (response === 'admin_verification_required') {
       // Admin user needs verification
       Toast.show({
         type: "info",
-        text1: "Verification Required",
+        text1: "Admin Verification Required",
         text2: "Please check your email for verification code",
       });
       navigation.navigate("verification");

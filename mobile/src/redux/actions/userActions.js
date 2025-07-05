@@ -249,19 +249,31 @@ export const userLogin = (email, password, playerId) => async (dispatch) => {
             }
         );
 
-        // Check if verification is required (admin users)
+        // Check if verification is required
         if (data.requiresVerification) {
-            // Store email temporarily for verification
-            await AsyncStorage.setItem('pendingVerificationEmail', email);
-            
-            dispatch({ 
-                type: "loginVerificationRequired",
-                payload: data.message 
-            });
-            return 'verification_required';
+            if (data.verificationType === 'email') {
+                // Email verification required
+                await AsyncStorage.setItem('pendingEmailVerificationUserId', data.userId.toString());
+                await AsyncStorage.setItem('pendingEmailVerificationEmail', email);
+                
+                dispatch({ 
+                    type: "loginEmailVerificationRequired",
+                    payload: data.message 
+                });
+                return 'email_verification_required';
+            } else if (data.verificationType === 'admin') {
+                // Admin verification required
+                await AsyncStorage.setItem('pendingVerificationEmail', email);
+                
+                dispatch({ 
+                    type: "loginVerificationRequired",
+                    payload: data.message 
+                });
+                return 'admin_verification_required';
+            }
         }
 
-        // Normal login flow for non-admin users
+        // Normal login flow for verified users
         await AsyncStorage.setItem('token', data.token);
         await AsyncStorage.setItem('userId', data.user._id);
         await AsyncStorage.setItem('userData', JSON.stringify(data.user));
@@ -273,7 +285,36 @@ export const userLogin = (email, password, playerId) => async (dispatch) => {
 
         return 'success';
     } catch (error) {
-        console.log(error)
+        console.log('Login error:', error);
+        
+        // Check if it's a 403 error (verification required)
+        if (error.response && error.response.status === 403) {
+            const data = error.response.data;
+            
+            if (data.requiresVerification) {
+                if (data.verificationType === 'email') {
+                    // Email verification required
+                    await AsyncStorage.setItem('pendingEmailVerificationUserId', data.userId.toString());
+                    await AsyncStorage.setItem('pendingEmailVerificationEmail', email);
+                    
+                    dispatch({ 
+                        type: "loginEmailVerificationRequired",
+                        payload: data.message 
+                    });
+                    return 'email_verification_required';
+                } else if (data.verificationType === 'admin') {
+                    // Admin verification required
+                    await AsyncStorage.setItem('pendingVerificationEmail', email);
+                    
+                    dispatch({ 
+                        type: "loginVerificationRequired",
+                        payload: data.message 
+                    });
+                    return 'admin_verification_required';
+                }
+            }
+        }
+        
         dispatch({
             type: "loginFail", 
             payload: error.response?.data.message || 'Network error',
@@ -282,7 +323,6 @@ export const userLogin = (email, password, playerId) => async (dispatch) => {
         return 'fail';
     }
 };
-
 // Add new verification action
 export const verifyAdminLogin = (verificationCode) => async (dispatch) => {
     try {
