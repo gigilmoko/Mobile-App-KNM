@@ -12,16 +12,18 @@ import { useDispatch, useSelector } from "react-redux";
 import { useIsFocused, useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { getNotifications, markNotificationAsRead, markAllNotificationsAsRead, toggleNotificationReadStatus } from "../../redux/actions/notificationActions";
+import { getAdminOrders } from "../../redux/actions/orderActions";
 import Footer from "../../components/Layout/Footer";
 import { format } from 'date-fns';
+import Toast from "react-native-toast-message";
 
 const Notification = () => {
   const dispatch = useDispatch();
   const navigation = useNavigation();
   const isFocused = useIsFocused();
   
-  // Fix: Change state.notifications to state.notification
   const { notifications = [], loading = false } = useSelector((state) => state.notifications || {});
+  const { adminOrders = [] } = useSelector((state) => state.order || {});
   
   const [refreshing, setRefreshing] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
@@ -30,6 +32,7 @@ const Notification = () => {
     const loadNotifications = async () => {
       try {
         await dispatch(getNotifications());
+        await dispatch(getAdminOrders()); // Load orders to map KNM IDs to MongoDB IDs
       } catch (error) {
         console.error("Error loading notifications:", error);
       } finally {
@@ -45,6 +48,7 @@ const Notification = () => {
   const onRefresh = async () => {
     setRefreshing(true);
     await dispatch(getNotifications());
+    await dispatch(getAdminOrders());
     setRefreshing(false);
   };
 
@@ -52,10 +56,7 @@ const Notification = () => {
     const now = new Date();
     const date = new Date(dateString);
     
-    // Calculate time difference in milliseconds
     const diff = now.getTime() - date.getTime();
-    
-    // Convert to minutes, hours, days
     const minutes = Math.floor(diff / 60000);
     const hours = Math.floor(minutes / 60);
     const days = Math.floor(hours / 24);
@@ -63,16 +64,18 @@ const Notification = () => {
     if (minutes < 1) {
       return "Just now";
     } else if (minutes < 60) {
-      return `${minutes} ${minutes === 1 ? "minute" : "minutes"} ago`;
+      return `${minutes} ${minutes === 1 ? "min" : "mins"} ago`;
     } else if (hours < 24) {
       return `${hours} ${hours === 1 ? "hour" : "hours"} ago`;
+    } else if (days === 1) {
+      return "Yesterday";
     } else if (days < 7) {
-      return `${days} ${days === 1 ? "day" : "days"} ago`;
+      return `${days} days ago`;
     } else {
       return date.toLocaleDateString("en-US", {
-        year: "numeric",
         month: "short",
         day: "numeric",
+        ...(date.getFullYear() !== now.getFullYear() && { year: "numeric" })
       });
     }
   };
@@ -90,51 +93,157 @@ const Notification = () => {
     dispatch(toggleNotificationReadStatus());
   };
 
-  const handleNotificationPress = (notification) => {
-  if (!notification.read) {
-    dispatch(toggleNotificationReadStatus(notification._id));
-  }
-
-  // Navigate based on notification type
-  if (notification.event) {
-    // Navigate to event details
-    navigation.navigate("eventinfo", { eventId: notification.event._id });
-  } else if (notification.description && notification.description.includes("order")) {
-    // Extract order ID from description if present
-    const match = notification.description.match(/KNM-\w+/);
-    const orderId = match ? match[0] : null;
-    if (orderId) {
-      navigation.navigate("orderdetails", { id: orderId });
+  const getNotificationTypeAndTitle = (notification) => {
+    if (notification.event) {
+      return {
+        type: 'event',
+        title: notification.event.title,
+        icon: 'calendar-outline',
+        color: '#34c759'
+      };
     }
-  }
-};
+    
+    const description = notification.description || '';
+    
+    if (description.toLowerCase().includes('task') || 
+        description.toLowerCase().includes('delivery') ||
+        description.toLowerCase().includes('rider') ||
+        description.toLowerCase().includes('session')) {
+      return {
+        type: 'task',
+        title: 'New Task Assignment',
+        icon: 'briefcase-outline',
+        color: '#ff9800'
+      };
+    }
+    
+    if (description.toLowerCase().includes('order')) {
+      return {
+        type: 'order',
+        title: 'Order Update',
+        icon: 'receipt-outline',
+        color: '#e01d47'
+      };
+    }
+    
+    return {
+      type: 'general',
+      title: 'New Notification',
+      icon: 'notifications-outline',
+      color: '#5856d6'
+    };
+  };
+
+  const getFriendlyDescription = (notification) => {
+    const description = notification.description || '';
+    const { type } = getNotificationTypeAndTitle(notification);
+    
+    if (type === 'task') {
+      if (description.toLowerCase().includes('delivery')) {
+        return `🚚 You've been assigned to a delivery task! Check the details and get ready to serve our customers.`;
+      } else if (description.toLowerCase().includes('session')) {
+        return `📋 You've been assigned to a new delivery session! Tap to view task details and get started.`;
+      } else if (description.toLowerCase().includes('task')) {
+        return `✨ You have a new task assignment! Tap here to view the details and begin your work.`;
+      } else {
+        return `🎯 You've been assigned to handle this task. Your contribution makes a difference!`;
+      }
+    }
+    
+    if (notification.event) {
+      return notification.event.description;
+    }
+    
+    return description || "Tap to view details";
+  };
+
+  const findOrderByKNMId = (knmOrderId) => {
+    return adminOrders.find(order => order.KNMOrderId === knmOrderId);
+  };
+
+  const extractOrderIdFromNotification = (notification) => {
+    // First check if there's a direct order reference
+    if (notification.order) {
+      return notification.order._id || notification.order.id || notification.order;
+    }
+    
+    // Check for orderId field
+    if (notification.orderId) {
+      return notification.orderId;
+    }
+    
+    // Extract from description - look for KNM-XXXXX pattern
+    const description = notification.description || '';
+    const knmOrderMatch = description.match(/KNM-[A-Z0-9]+/i);
+    
+    if (knmOrderMatch) {
+      const knmOrderId = knmOrderMatch[0];
+      // Find the actual MongoDB ObjectId for this KNM order ID
+      const order = findOrderByKNMId(knmOrderId);
+      if (order) {
+        console.log(`Found MongoDB ID ${order._id} for KNM ID ${knmOrderId}`);
+        return order._id;
+      } else {
+        console.log(`No order found for KNM ID: ${knmOrderId}`);
+        return null;
+      }
+    }
+    
+    // Try to extract MongoDB ObjectId pattern from description
+    const objectIdMatch = description.match(/[a-f\d]{24}/i);
+    if (objectIdMatch) {
+      return objectIdMatch[0];
+    }
+    
+    return null;
+  };
+
+  const handleNotificationPress = (notification) => {
+    if (!notification.read) {
+      dispatch(toggleNotificationReadStatus(notification._id));
+    }
+
+    const { type } = getNotificationTypeAndTitle(notification);
+    
+    if (notification.event) {
+      navigation.navigate("eventinfo", { eventId: notification.event._id });
+    } else if (type === 'task') {
+      navigation.navigate("tasklist");
+    } else if (type === 'order') {
+      const orderId = extractOrderIdFromNotification(notification);
+      
+      if (orderId) {
+        console.log("Navigating to order details with MongoDB ID:", orderId);
+        navigation.navigate("orderdetails", { id: orderId });
+      } else {
+        console.log("No order ID found in notification object:", notification);
+        Toast.show({
+          type: "error",
+          text1: "Could not find order details",
+          text2: "Order ID not available in notification",
+        });
+      }
+    }
+  };
 
   const hasUnreadNotifications = notifications.some(
     (notification) => !notification.read
   );
 
   const getNotificationIcon = (notification) => {
-    if (notification.event) {
-      return "calendar-outline";
-    } else if (notification.description && notification.description.includes("order")) {
-      return "receipt-outline";
-    }
-    return "notifications-outline";
+    const { icon } = getNotificationTypeAndTitle(notification);
+    return icon;
   };
 
   const getNotificationColor = (notification) => {
-    if (notification.event) {
-      return "#34c759"; // Green for events
-    } else if (notification.description && notification.description.includes("order")) {
-      return "#e01d47"; // Red for orders
-    }
-    return "#5856d6"; // Default purple
+    const { color } = getNotificationTypeAndTitle(notification);
+    return color;
   };
 
   const renderNotificationItem = ({ item }) => {
+    const { title, type } = getNotificationTypeAndTitle(item);
+    const description = getFriendlyDescription(item);
     const isEvent = !!item.event;
-    const title = isEvent ? item.event.title : "Order Confirmation";
-    const description = isEvent ? item.event.description : item.description || "No description available";
     
     return (
       <TouchableOpacity
@@ -146,12 +255,12 @@ const Notification = () => {
       >
         <View className="flex-row">
           <View 
-            className="h-10 w-10 rounded-full justify-center items-center" 
+            className="h-12 w-12 rounded-full justify-center items-center" 
             style={{ backgroundColor: `${getNotificationColor(item)}15` }}
           >
             <Ionicons
               name={getNotificationIcon(item)}
-              size={20}
+              size={22}
               color={getNotificationColor(item)}
             />
           </View>
@@ -168,19 +277,39 @@ const Notification = () => {
                   <View className="bg-[#e01d47] h-2.5 w-2.5 rounded-full ml-2" />
                 )}
               </View>
-              <Text className="text-xs text-gray-500 ml-2">{formatDate(item.createdAt)}</Text>
+              <Text className="text-xs text-gray-500 ml-2 flex-shrink-0">
+                {formatDate(item.createdAt)}
+              </Text>
             </View>
             <Text 
-              className={`text-sm mt-1 ${item.read ? "text-gray-500" : "text-gray-700"}`}
-              numberOfLines={2}
+              className={`text-sm mt-1 leading-5 ${item.read ? "text-gray-500" : "text-gray-700"}`}
+              numberOfLines={3}
             >
               {description}
             </Text>
             
             {isEvent && item.event.startDate && item.event.endDate && (
-              <Text className="text-xs text-blue-600 mt-1.5">
-                {formatEventTime(item.event.startDate, item.event.endDate)}
-              </Text>
+              <View className="bg-blue-50 rounded-lg p-2 mt-2">
+                <Text className="text-xs text-blue-600 font-medium">
+                  📅 {formatEventTime(item.event.startDate, item.event.endDate)}
+                </Text>
+              </View>
+            )}
+            
+            {type === 'task' && (
+              <View className="bg-orange-50 rounded-lg p-2 mt-2">
+                <Text className="text-xs text-orange-600 font-medium">
+                  💼 Tap to view task details
+                </Text>
+              </View>
+            )}
+
+            {type === 'order' && (
+              <View className="bg-red-50 rounded-lg p-2 mt-2">
+                <Text className="text-xs text-red-600 font-medium">
+                  📦 Tap to view order details
+                </Text>
+              </View>
             )}
           </View>
         </View>
@@ -200,7 +329,6 @@ const Notification = () => {
 
   return (
     <View className="flex-1 bg-gray-50">
-      {/* Header */}
       <View className="bg-white shadow-sm pt-2 pb-4 px-5">
         <View className="flex-row items-center justify-between">
           <Text className="text-xl font-bold text-gray-800">Notifications</Text>
@@ -239,7 +367,6 @@ const Notification = () => {
         />
       )}
       
-      {/* Footer */}
       <View className="absolute bottom-0 w-full">
         <Footer activeRoute="notification" />
       </View>

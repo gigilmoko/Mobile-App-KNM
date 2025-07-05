@@ -242,7 +242,7 @@ const EventsList = ({ navigation }) => {
                                                 
                                                 {moment(event.date).isAfter(moment()) && (
                                                     <View className="bg-[#e01d47] bg-opacity-10 rounded-full px-2 py-0.5 ml-2">
-                                                        <Text className="text-xs text-[#e01d47]">
+                                                        <Text className="text-xs text-[#ffffff]">
                                                             In {getDaysAway(event.date)} days
                                                         </Text>
                                                     </View>
@@ -291,7 +291,7 @@ const EventsList = ({ navigation }) => {
             
             {/* Footer */}
             <View className="absolute bottom-0 w-full">
-                <Footer activeRoute={"home"} />
+                <Footer activeRoute={"eventlist"} />
             </View>
         </View>
     );

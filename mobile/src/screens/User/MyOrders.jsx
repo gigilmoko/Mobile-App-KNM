@@ -184,7 +184,7 @@ const MyOrders = () => {
   return (
     <View className="flex-1 bg-gray-50">
       {/* Header */}
-      <View className="flex-row items-center justify-center p-5 pt-12 bg-white shadow-sm">
+      <View className="flex-row items-center justify-center p-5 pt-5 bg-white shadow-sm">
         <TouchableOpacity 
           onPress={() => navigation.goBack()} 
           className="absolute left-5 top-12 z-10"

@@ -335,7 +335,7 @@ const saveAddress = async () => {
     return (
         <SafeAreaView className="flex-1">
             <View className="flex-1 bg-gray-50">
-                <View className="bg-white pt-12 px-5 pb-4 shadow-sm">
+                <View className="bg-white pt-5 px-5 pb-4 shadow-sm">
                     <Header title="Manage Addresses" />
                     <Text className="text-gray-500">Add or edit your delivery addresses</Text>
                 </View>

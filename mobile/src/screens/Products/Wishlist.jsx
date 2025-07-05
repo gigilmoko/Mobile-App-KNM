@@ -81,7 +81,7 @@ const Wishlist = () => {
   return (
     <View className="flex-1 bg-gray-50">
       {/* Header */}
-      <View className="bg-white pt-12 pb-4 px-5 shadow-sm">
+      <View className="bg-white pt-5 pb-4 px-5 shadow-sm">
         <View className="flex-row items-center justify-between">
           <TouchableOpacity 
             onPress={() => navigation.goBack()} 
@@ -191,9 +191,9 @@ const Wishlist = () => {
       )}
       
       {/* Footer */}
-      <View className="absolute bottom-0 w-full">
+      {/* <View className="absolute bottom-0 w-full">
         <Footer activeRoute={"wishlist"} />
-      </View>
+      </View> */}
     </View>
   );
 };

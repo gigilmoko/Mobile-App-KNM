@@ -16,6 +16,7 @@ import { getUserDetails } from "../../redux/actions/userActions";
 import { Ionicons } from "@expo/vector-icons";
 import { WebView } from "react-native-webview";
 import Toast from "react-native-toast-message";
+import axios from "axios";
 
 const { width } = Dimensions.get('window');
 
@@ -58,16 +59,12 @@ const OrderDetails = ({ route, navigation }) => {
   }, [dispatch, id, currentUser?._id]);
 
   useEffect(() => {
-    // Set up map when order is shipped and we have the user's delivery address
     if (order?.status === "Shipped" && currentUser?.deliveryAddress && currentUser.deliveryAddress.length > 0) {
-      // For demo purposes, set a rider location near the delivery address
-      // In a real app, this would come from the rider's actual location
       const userLocation = {
         latitude: currentUser.deliveryAddress[0].latitude || 14.5471833,
         longitude: currentUser.deliveryAddress[0].longitude || 121.0355163,
       };
       
-      // For demo, set rider location slightly offset from user location
       const riderLocation = {
         latitude: (userLocation.latitude || 0) + 0.005, 
         longitude: (userLocation.longitude || 0) - 0.003
@@ -79,14 +76,12 @@ const OrderDetails = ({ route, navigation }) => {
     }
   }, [order, currentUser]);
 
-  // Fetch and update rider location
   useEffect(() => {
     if (order?.status === "Shipped" || order?.status === "Delivered") {
       dispatch(getSessionByOrderId(id));
     }
   }, [dispatch, id, order?.status]);
 
-  // Update rider location state when session data changes
   useEffect(() => {
     if (sessionByOrderId?.rider?.location) {
       setLocation({
@@ -96,15 +91,12 @@ const OrderDetails = ({ route, navigation }) => {
     }
   }, [sessionByOrderId]);
 
-  // Set up live polling for rider location
   useEffect(() => {
     let interval;
 
     if (order?.status === "Shipped" || order?.status === "Delivered") {
-      // Initial fetch
       dispatch(getSessionByOrderId(id));
 
-      // Set up polling every 5 seconds
       interval = setInterval(async () => {
         try {
           console.log("Polling for rider location update...");
@@ -123,27 +115,25 @@ const OrderDetails = ({ route, navigation }) => {
   }, [dispatch, id, order?.status]);
 
   useEffect(() => {
-  if (sessionByOrderId) {
-    console.log("Rider Information:", sessionByOrderId.rider ? {
-      _id: sessionByOrderId.rider._id,
-      name: sessionByOrderId.rider.name,
-      email: sessionByOrderId.rider.email,
-      phone: sessionByOrderId.rider.phone,
-      location: sessionByOrderId.rider.location
-    } : "No rider assigned");
-    
-    // Log just the location for tracking debugging
-    if (sessionByOrderId.rider?.location) {
-      console.log("Current Rider Location:", {
-        latitude: sessionByOrderId.rider.location.latitude,
-        longitude: sessionByOrderId.rider.location.longitude,
-        timestamp: new Date().toISOString()
-      });
+    if (sessionByOrderId) {
+      console.log("Rider Information:", sessionByOrderId.rider ? {
+        _id: sessionByOrderId.rider._id,
+        name: sessionByOrderId.rider.name,
+        email: sessionByOrderId.rider.email,
+        phone: sessionByOrderId.rider.phone,
+        location: sessionByOrderId.rider.location
+      } : "No rider assigned");
+      
+      if (sessionByOrderId.rider?.location) {
+        console.log("Current Rider Location:", {
+          latitude: sessionByOrderId.rider.location.latitude,
+          longitude: sessionByOrderId.rider.location.longitude,
+          timestamp: new Date().toISOString()
+        });
+      }
     }
-  }
-}, [sessionByOrderId]);
+  }, [sessionByOrderId]);
 
-  // Inject updated location into WebView when rider location changes
   useEffect(() => {
     if (sessionByOrderId?.rider?.location && webViewRef.current) {
       webViewRef.current.injectJavaScript(`
@@ -156,33 +146,32 @@ const OrderDetails = ({ route, navigation }) => {
   }, [sessionByOrderId?.rider?.location]);
 
   const handleCancelOrder = async () => {
-  setCancelLoading(true);
-  try {
-    // Replace with your API base URL if needed
-    const response = await axios.post(
-      `${process.env.EXPO_PUBLIC_API_URL || "http://localhost:5000"}/api/order/cancel/${order._id}`,
-      {},
-      {
-        headers: {
-          Authorization: `Bearer ${currentUser?.token}`, // Adjust if you use a different auth method
-        },
-      }
-    );
-    Toast.show({
-      type: "success",
-      text1: "Order cancelled successfully",
-    });
-    handleRefresh(); // Refresh order details
-  } catch (error) {
-    Toast.show({
-      type: "error",
-      text1: "Failed to cancel order",
-      text2: error?.response?.data?.message || "Please try again.",
-    });
-  } finally {
-    setCancelLoading(false);
-  }
-};
+    setCancelLoading(true);
+    try {
+      const response = await axios.post(
+        `${process.env.EXPO_PUBLIC_API_URL || "http://localhost:5000"}/api/order/cancel/${order._id}`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${currentUser?.token}`,
+          },
+        }
+      );
+      Toast.show({
+        type: "success",
+        text1: "Order cancelled successfully",
+      });
+      handleRefresh();
+    } catch (error) {
+      Toast.show({
+        type: "error",
+        text1: "Failed to cancel order",
+        text2: error?.response?.data?.message || "Please try again.",
+      });
+    } finally {
+      setCancelLoading(false);
+    }
+  };
 
   const handleRefresh = () => {
     setIsLoading(true);
@@ -198,8 +187,9 @@ const OrderDetails = ({ route, navigation }) => {
         setIsLoading(false);
       });
   };
-//CONSOLE LOG ORDER DETAILS
-console.log("Order Details:", order);
+
+  console.log("Order Details:", order);
+
   const handleCallRider = (phone) => {
     if (!phone) {
       Toast.show({
@@ -258,7 +248,6 @@ console.log("Order Details:", order);
     }
   };
 
-  // HTML content for the map view
   const htmlContent =
     location && userDeliveryLocation
       ? `
@@ -288,11 +277,9 @@ console.log("Order Details:", order);
                     transition: all 0.5s ease-in-out;
                     transform-origin: center;
                 }
-                /* Hide routing instructions panel */
                 .leaflet-routing-container {
                     display: none !important;
                 }
-                /* Enhanced route line styling */
                 .leaflet-routing-line {
                     stroke: #e01d47 !important;
                     stroke-width: 4px !important;
@@ -300,7 +287,6 @@ console.log("Order Details:", order);
                     stroke-linecap: round !important;
                     stroke-linejoin: round !important;
                 }
-                /* Force all polylines to be visible */
                 .leaflet-overlay-pane path {
                     stroke: #e01d47 !important;
                     stroke-width: 4px !important;
@@ -309,14 +295,12 @@ console.log("Order Details:", order);
                     stroke-linecap: round !important;
                     stroke-linejoin: round !important;
                 }
-                /* Ensure all interactive elements are styled */
                 .leaflet-interactive {
                     stroke: #e01d47 !important;
                     stroke-width: 4px !important;
                     stroke-opacity: 1 !important;
                     fill: none !important;
                 }
-                /* Fallback polyline styling */
                 .route-line {
                     stroke: #e01d47 !important;
                     stroke-width: 4px !important;
@@ -333,7 +317,6 @@ console.log("Order Details:", order);
             <script>
                 console.log('Map initializing...');
                 
-                // Set the initial view
                 var map = L.map('map', {
                     maxZoom: 20,
                     minZoom: 1,
@@ -352,19 +335,15 @@ console.log("Order Details:", order);
                 var currentCenter = [${location.latitude}, ${location.longitude}];
                 var fallbackLine = null;
 
-                // Add tile layer
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                     attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
                     maxZoom: 20
                 }).addTo(map);
 
-                // Car icon SVG
                 var carSvg = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 16h8"/><path d="M16 16v2a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1v-2"/><path d="M8 16v2a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-2"/><rect width="18" height="12" x="3" y="6" rx="2"/><path d="M10 16a2 2 0 1 1-4 0 2 2 0 0 1 4 0Z"/><path d="M18 16a2 2 0 1 1-4 0 2 2 0 0 1 4 0Z"/></svg>';
 
-                // Home icon SVG  
                 var homeSvg = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>';
 
-                // Custom car icon for rider
                 var carIcon = L.divIcon({
                     className: 'car-marker',
                     html: '<div style="background: #e01d47; width: 30px; height: 30px; border-radius: 6px; border: 2px solid white; box-shadow: 0 2px 8px rgba(224,29,71,0.6); display: flex; align-items: center; justify-content: center; color: white; transform: rotate(0deg);">' + carSvg + '</div>',
@@ -372,7 +351,6 @@ console.log("Order Details:", order);
                     iconAnchor: [17, 17]
                 });
 
-                // Custom home icon for destination
                 var homeIcon = L.divIcon({
                     className: 'home-marker',
                     html: '<div style="background: #28a745; width: 26px; height: 26px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 8px rgba(40,167,69,0.6); display: flex; align-items: center; justify-content: center; color: white;">' + homeSvg + '</div>',
@@ -380,7 +358,6 @@ console.log("Order Details:", order);
                     iconAnchor: [15, 15]
                 });
 
-                // Add markers
                 var riderLocationMarker = L.marker([${location.latitude}, ${location.longitude}], {
                     icon: carIcon,
                     zIndexOffset: 1000
@@ -391,29 +368,26 @@ console.log("Order Details:", order);
                     zIndexOffset: 999
                 }).addTo(map).bindPopup('<b>Delivery Address</b><br>Your destination');
 
-                // Calculate distance between two points (Haversine formula)
                 function calculateDistance(lat1, lng1, lat2, lng2) {
-                    var R = 6371; // Radius of the Earth in kilometers
+                    var R = 6371;
                     var dLat = (lat2 - lat1) * Math.PI / 180;
                     var dLng = (lng2 - lng1) * Math.PI / 180;
                     var a = Math.sin(dLat/2) * Math.sin(dLat/2) +
                             Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
                             Math.sin(dLng/2) * Math.sin(dLng/2);
                     var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-                    var distance = R * c; // Distance in kilometers
+                    var distance = R * c;
                     return distance;
                 }
 
-                // Generate intermediate waypoints for long distances
                 function generateWaypoints(startLat, startLng, endLat, endLng) {
                     var distance = calculateDistance(startLat, startLng, endLat, endLng);
                     var waypoints = [L.latLng(startLat, startLng)];
                     
                     console.log('Distance between points:', distance.toFixed(2), 'km');
                     
-                    // If distance > 50km, add intermediate waypoints
                     if (distance > 50) {
-                        var numSegments = Math.min(Math.ceil(distance / 50), 5); // Max 5 segments
+                        var numSegments = Math.min(Math.ceil(distance / 50), 5);
                         console.log('Adding', numSegments - 1, 'intermediate waypoints for long distance');
                         
                         for (var i = 1; i < numSegments; i++) {
@@ -428,7 +402,6 @@ console.log("Order Details:", order);
                     return waypoints;
                 }
 
-                // Create fallback polyline
                 function createFallbackLine(startLat, startLng) {
                     if (fallbackLine) {
                         map.removeLayer(fallbackLine);
@@ -443,27 +416,23 @@ console.log("Order Details:", order);
                         color: '#e01d47',
                         weight: 4,
                         opacity: 1,
-                        dashArray: '10, 10', // Dashed line for fallback
+                        dashArray: '10, 10',
                         className: 'route-line'
                     }).addTo(map);
                     
                     console.log('Fallback line created (dashed) - Distance:', distance.toFixed(2), 'km');
                 }
 
-                // Function to create routing with waypoints
                 function createRoute(startLat, startLng) {
                     console.log('Creating route from:', startLat, startLng, 'to:', ${userDeliveryLocation.latitude}, ${userDeliveryLocation.longitude});
                     
-                    // Store current map state
                     if (!userInteracting) {
                         currentZoom = map.getZoom();
                         currentCenter = map.getCenter();
                     }
                     
-                    // Always create fallback line first
                     createFallbackLine(startLat, startLng);
                     
-                    // Remove existing routing control
                     if (routingControl) {
                         try {
                             map.removeControl(routingControl);
@@ -474,10 +443,8 @@ console.log("Order Details:", order);
                     }
 
                     try {
-                        // Generate waypoints based on distance
                         var waypoints = generateWaypoints(startLat, startLng, ${userDeliveryLocation.latitude}, ${userDeliveryLocation.longitude});
                         
-                        // Create routing control with waypoints
                         routingControl = L.Routing.control({
                             waypoints: waypoints,
                             routeWhileDragging: false,
@@ -500,25 +467,23 @@ console.log("Order Details:", order);
                             router: L.Routing.osrmv1({
                                 serviceUrl: 'https://router.project-osrm.org/route/v1',
                                 profile: 'driving',
-                                timeout: 30000 // Increased timeout for long routes
+                                timeout: 30000
                             })
                         });
 
                         var routeTimeout = setTimeout(function() {
                             console.log('Routing timeout - keeping fallback line');
-                        }, 30000); // Increased timeout to 30 seconds
+                        }, 30000);
 
                         routingControl.on('routesfound', function(e) {
                             console.log('✅ Route found successfully!');
                             clearTimeout(routeTimeout);
                             
-                            // Remove fallback line since we have a proper route
                             if (fallbackLine) {
                                 map.removeLayer(fallbackLine);
                                 fallbackLine = null;
                             }
                             
-                            // Hide instruction panel
                             setTimeout(() => {
                                 const containers = document.querySelectorAll('.leaflet-routing-container');
                                 containers.forEach(container => {
@@ -526,7 +491,6 @@ console.log("Order Details:", order);
                                 });
                             }, 50);
                             
-                            // Restore view
                             setTimeout(() => {
                                 if (!userInteracting) {
                                     map.setView(currentCenter, currentZoom);
@@ -537,7 +501,6 @@ console.log("Order Details:", order);
                         routingControl.on('routeselected', function(e) {
                             console.log('✅ Route selected successfully!');
                             
-                            // Remove fallback line
                             if (fallbackLine) {
                                 map.removeLayer(fallbackLine);
                                 fallbackLine = null;
@@ -556,10 +519,8 @@ console.log("Order Details:", order);
                     }
                 }
 
-                // Initialize route
                 createRoute(${location.latitude}, ${location.longitude});
 
-                // Track user interactions
                 var interactionTimeout;
                 
                 function resetInteractionTimer() {
@@ -581,7 +542,6 @@ console.log("Order Details:", order);
                     interactionTimeout = setTimeout(resetInteractionTimer, 3000);
                 });
 
-                // Calculate bearing for car rotation
                 function calculateBearing(startLat, startLng, endLat, endLng) {
                     var dLng = (endLng - startLng) * Math.PI / 180;
                     var startLatRad = startLat * Math.PI / 180;
@@ -594,7 +554,6 @@ console.log("Order Details:", order);
                     return (bearing + 360) % 360;
                 }
 
-                // Smooth marker animation with rotation
                 function animateMarker(marker, newLatLng, duration = 1000) {
                     var startLatLng = marker.getLatLng();
                     var startTime = Date.now();
@@ -614,7 +573,6 @@ console.log("Order Details:", order);
 
                         marker.setLatLng([currentLat, currentLng]);
                         
-                        // Rotate car icon
                         var iconElement = marker.getElement();
                         if (iconElement) {
                             var carDiv = iconElement.querySelector('div');
@@ -631,7 +589,6 @@ console.log("Order Details:", order);
                     animate();
                 }
 
-                // Update current location function
                 function updateCurrentLocation(lat, lng) {
                     console.log('📍 Updating rider location:', lat, lng);
                     
@@ -661,12 +618,10 @@ console.log("Order Details:", order);
                     
                     previousLocation = { lat: lat, lng: lng };
                     
-                    // Update route with delay to allow marker animation
                     setTimeout(() => {
                         createRoute(lat, lng);
                     }, 500);
                     
-                    // Auto-center
                     var timeSinceLastInteraction = Date.now() - lastUserInteraction;
                     if (!userInteracting && timeSinceLastInteraction > AUTO_CENTER_DELAY && !isFirstUpdate) {
                         map.flyTo([lat, lng], map.getZoom(), {
@@ -676,7 +631,6 @@ console.log("Order Details:", order);
                     }
                 }
 
-                // Connection status checker
                 setInterval(function() {
                     var timeSinceLastUpdate = Date.now() - lastUpdateTime;
                     if (timeSinceLastUpdate > 15000) {
@@ -685,7 +639,6 @@ console.log("Order Details:", order);
                     }
                 }, 5000);
 
-                // Initial status
                 setTimeout(function() {
                     statusElement.textContent = 'Live Tracking';
                     statusElement.className = 'status-indicator online';
@@ -742,20 +695,18 @@ console.log("Order Details:", order);
       })
     : "Pending";
 
-  // Calculate total
-  const subtotal = order?.orderProducts 
-  ? order.orderProducts.reduce(
-      (acc, item) => acc + (item.price || 0) * (item.quantity || 1),
-      0
-    )
-  : 0;
+  const subtotal = order?.orderProducts && Array.isArray(order.orderProducts)
+    ? order.orderProducts.reduce(
+        (acc, item) => acc + (item.price || 0) * (item.quantity || 1),
+        0
+      )
+    : 0;
   const deliveryFee = order.shippingCharges || 0;
   const total = subtotal + deliveryFee;
 
   return (
     <View className="flex-1 bg-gray-50">
-      {/* Header */}
-      <View className="bg-white shadow-sm pt-12 pb-4 px-5">
+      <View className="bg-white shadow-sm pt-5 pb-4 px-5">
         <View className="flex-row items-center">
           <TouchableOpacity onPress={() => navigation.goBack()} className="p-1">
             <Ionicons name="arrow-back" size={24} color="#e01d47" />
@@ -775,7 +726,6 @@ console.log("Order Details:", order);
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 40 }}
       >
-        {/* Order Header Info */}
         <View className="bg-white p-4 mb-2">
           <View className="flex-row justify-between items-center mb-3">
             <View>
@@ -805,7 +755,6 @@ console.log("Order Details:", order);
             </View>
           </View>
 
-          {/* Estimated Delivery */}
           {order.status !== "Cancelled" && (
             <View className="bg-gray-50 rounded-lg p-3 mb-3">
               <Text className="text-sm text-gray-500">
@@ -820,7 +769,6 @@ console.log("Order Details:", order);
           )}
         </View>
 
-        {/* Live Tracking */}
         {order.status === "Shipped" && isMapReady && (
           <View className="bg-white p-4 mb-2">
             <Text className="text-base font-bold text-gray-800 mb-2">
@@ -854,7 +802,6 @@ console.log("Order Details:", order);
           </View>
         )}
 
-        {/* Rider Info */}
         {order.status === "Shipped" && sessionByOrderId?.rider && (
           <View className="bg-white p-4 mb-2">
             <Text className="text-base font-bold text-gray-800 mb-2">
@@ -882,7 +829,6 @@ console.log("Order Details:", order);
           </View>
         )}
 
-        {/* Delivery Address */}
         <View className="bg-white p-4 mb-2">
           <Text className="text-base font-bold text-gray-800 mb-2">
             Delivery Address
@@ -916,49 +862,54 @@ console.log("Order Details:", order);
           )}
         </View>
 
-        {/* Order Items */}
         <View className="bg-white p-4 mb-2">
           <Text className="text-base font-bold text-gray-800 mb-3">
             Order Items
           </Text>
-          {order.orderProducts.map((item, index) => (
-            <View
-              key={index}
-              className={`flex-row py-3 ${
-                index !== order.orderProducts.length - 1
-                  ? "border-b border-gray-100"
-                  : ""
-              }`}
-            >
-              <View className="w-16 h-16 bg-gray-100 rounded-md overflow-hidden">
-                <Image
-                  source={{
-                    uri:
-                      item.product?.images?.[0]?.url ||
-                      "https://via.placeholder.com/100",
-                  }}
-                  className="w-full h-full"
-                  style={{ resizeMode: "cover" }}
-                />
+          {order.orderProducts && Array.isArray(order.orderProducts) && order.orderProducts.length > 0 ? (
+            order.orderProducts.map((item, index) => (
+              <View
+                key={index}
+                className={`flex-row py-3 ${
+                  index !== order.orderProducts.length - 1
+                    ? "border-b border-gray-100"
+                    : ""
+                }`}
+              >
+                <View className="w-16 h-16 bg-gray-100 rounded-md overflow-hidden">
+                  <Image
+                    source={{
+                      uri:
+                        item.product?.images?.[0]?.url ||
+                        "https://via.placeholder.com/100",
+                    }}
+                    className="w-full h-full"
+                    style={{ resizeMode: "cover" }}
+                  />
+                </View>
+                <View className="ml-3 flex-1 justify-center">
+                  <Text className="text-base font-medium text-gray-800" numberOfLines={2}>
+                    {item.product?.name || "Product"}
+                  </Text>
+                  <Text className="text-sm text-gray-500">
+                    Quantity: {item.quantity || 0}
+                  </Text>
+                </View>
+                <View className="justify-center">
+                  <Text className="text-base font-bold text-[#e01d47]">
+                    ₱{((item.price || 0) * (item.quantity || 1)).toFixed(2)}
+                  </Text>
+                </View>
               </View>
-              <View className="ml-3 flex-1 justify-center">
-                <Text className="text-base font-medium text-gray-800" numberOfLines={2}>
-                  {item.product?.name || "Product"}
-                </Text>
-                <Text className="text-sm text-gray-500">
-                  Quantity: {item.quantity}
-                </Text>
-              </View>
-              <View className="justify-center">
-                <Text className="text-base font-bold text-[#e01d47]">
-                  ₱{((item.price || 0) * (item.quantity || 1)).toFixed(2)}
-                </Text>
-              </View>
+            ))
+          ) : (
+            <View className="py-8 items-center">
+              <Ionicons name="bag-outline" size={48} color="#e0e0e0" />
+              <Text className="text-gray-400 mt-2">No items found</Text>
             </View>
-          ))}
+          )}
         </View>
 
-        {/* Payment Information */}
         <View className="bg-white p-4 mb-2">
           <Text className="text-base font-bold text-gray-800 mb-2">
             Payment Information
@@ -985,7 +936,6 @@ console.log("Order Details:", order);
             </View>
           </View>
 
-          {/* Price Summary */}
           <View className="bg-gray-50 rounded-lg p-3">
             <View className="flex-row justify-between mb-1">
               <Text className="text-sm text-gray-600">Subtotal</Text>
@@ -1005,7 +955,6 @@ console.log("Order Details:", order);
           </View>
         </View>
 
-        {/* Order Notes */}
         {order.orderNotes && (
           <View className="bg-white p-4 mb-2">
             <Text className="text-base font-bold text-gray-800 mb-2">Order Notes</Text>
@@ -1033,7 +982,6 @@ console.log("Order Details:", order);
             </Text>
           </View>
         )}
-        {/* Proof of Delivery Section */}
         {(order?.status === "Delivered Pending" ||
           order?.status === "Delivered") && order.proofOfDelivery && (
           <View className="bg-white p-4 mb-2">

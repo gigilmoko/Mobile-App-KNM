@@ -17,8 +17,9 @@ const Footer = ({ activeRoute }) => {
     const cartItemCount = cartItems.reduce((total, item) => total + item.quantity, 0);
 
     useEffect(() => {
-        // console.log("isAuthenticated state:", isAuthenticated);
-    }, [isAuthenticated]);
+        console.log("Current route:", currentRoute);
+        console.log("Route name:", route.name);
+    }, [currentRoute, route.name]);
 
     const navigationHandler = (key) => {
         switch (key) {
@@ -55,6 +56,50 @@ const Footer = ({ activeRoute }) => {
         { key: 4, name: "account", label: "Profile", routeName: "profile" }
     ];
 
+    // Enhanced route matching function
+    const isRouteActive = (item) => {
+        // If activeRoute prop is passed, use it for exact matching
+        if (activeRoute) {
+            if (item.routeName === "profile") {
+                return activeRoute === "profile" || activeRoute === "myaccount";
+            }
+            if (item.routeName === "eventlist") {
+                return activeRoute === "eventlist" || activeRoute === "eventinfo" || activeRoute === "events";
+            }
+            return activeRoute === item.routeName;
+        }
+        
+        // Fallback to route.name matching with additional checks
+        const routeName = route.name;
+        
+        switch (item.routeName) {
+            case "home":
+                return routeName === "home";
+            case "cart":
+                return routeName === "cart";
+            case "eventlist":
+                // Add all event-related routes here
+                return routeName === "eventlist" || 
+                       routeName === "eventinfo" || 
+                       routeName === "eventfeedback" ||
+                       routeName === "adminevents" ||
+                       routeName === "admineventcreate" ||
+                       routeName === "admineventupdate" ||
+                       routeName === "admineventattendees";
+            case "notification":
+                return routeName === "notification";
+            case "profile":
+                return routeName === "myaccount" || 
+                       routeName === "changepassword" || 
+                       routeName === "updateprofile" || 
+                       routeName === "editaddress" || 
+                       routeName === "addressupdate" ||
+                       routeName === "profile";
+            default:
+                return false;
+        }
+    };
+
     return (
         <View
             className="bg-white w-full bottom-0 justify-center items-center h-[70px] shadow-md border-t border-gray-100"
@@ -68,9 +113,7 @@ const Footer = ({ activeRoute }) => {
         >
             <View className="flex-row justify-evenly items-center w-full">
                 {menuItems.map((item) => {
-                    const isActive = 
-                        currentRoute === item.routeName || 
-                        (item.routeName === "profile" && currentRoute === "myaccount");
+                    const isActive = isRouteActive(item);
                     
                     return (
                         <TouchableOpacity

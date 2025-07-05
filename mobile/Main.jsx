@@ -55,6 +55,8 @@ import ForgetPassword from "./src/screens/User/ForgetPassword";
 import AdminEventAttendees from "./src/screens/Admin/Events/AdminEventAttendees";
 import ResetPassword from "./src/screens/User/ResetPassword";
 import PasswordResetVerification from "./src/screens/User/PasswordResetVerification";
+import TaskList from "./src/screens/Notification/TaskList";
+import TaskDetails from  "./src/screens/Notification/TaskList";
 
 const Stack = createNativeStackNavigator();
 
@@ -94,6 +96,11 @@ const HomeStack = () => {
             <Stack.Screen name="changepassword" component={ChangePassword} />
             <Stack.Screen name="updateprofile" component={UpdateProfile} />
             <Stack.Screen name="addressupdate" component={AddressUpdate} />
+            <Stack.Screen name="tasklist" component={TaskList} />
+            <Stack.Screen name="taskdetails" component={TaskDetails} />
+
+
+
             
             <Stack.Screen name="editaddress" component={EditAddress} />
                         <Stack.Screen name="forgetpassword" component={ForgetPassword} />

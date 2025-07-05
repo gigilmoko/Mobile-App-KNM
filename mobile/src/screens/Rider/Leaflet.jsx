@@ -770,7 +770,7 @@ const Leaflet = () => {
   return (
     <View className="flex-1 bg-gray-50">
       {/* Header */}
-      <View className="bg-white pt-12 pb-4 px-5 shadow-sm">
+      <View className="bg-white pt-5 pb-4 px-5 shadow-sm">
         <Text className="text-2xl font-bold text-gray-800">My Tasks</Text>
         <Text className="text-gray-500">Active delivery assignments</Text>
       </View>

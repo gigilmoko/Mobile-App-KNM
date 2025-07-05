@@ -142,7 +142,7 @@ const ConfirmOrder = () => {
   return (
     <View className="flex-1 bg-gray-50">
       {/* Header */}
-      <View className="bg-white pt-12 pb-4 px-5 shadow-sm">
+      <View className="bg-white pt-5 pb-4 px-5 shadow-sm">
         <View className="flex-row items-center">
           <TouchableOpacity 
             onPress={() => navigation.goBack()} 
@@ -354,8 +354,8 @@ const ConfirmOrder = () => {
         animationType="slide"
         onRequestClose={() => setShowAddressModal(false)}
       >
-        <View className="flex-1 justify-end bg-black bg-opacity-50">
-          <View className="bg-white rounded-t-xl p-5">
+        <View className="flex-1 justify-end bg-transparent bg-opacity-20">
+          <View className="bg-white rounded-t-xl p-5 border border-red-500">
             <View className="flex-row justify-between items-center mb-4">
               <Text className="text-lg font-bold text-gray-800">Select Delivery Address</Text>
               <TouchableOpacity onPress={() => setShowAddressModal(false)}>

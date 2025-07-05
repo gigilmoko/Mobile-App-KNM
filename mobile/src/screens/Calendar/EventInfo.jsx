@@ -418,9 +418,9 @@ const handleRegister = async () => {
       )}
       
       {/* Footer */}
-      <View className="absolute bottom-0 w-full">
+      {/* <View className="absolute bottom-0 w-full">
         <Footer activeRoute={"eventInfo"} />
-      </View>
+      </View> */}
     </View>
   );
 };

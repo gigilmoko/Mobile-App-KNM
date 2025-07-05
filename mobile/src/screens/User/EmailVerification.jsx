@@ -116,7 +116,7 @@ const EmailVerification = ({ navigation }) => {
     <ScrollView contentContainerStyle={{ flexGrow: 1 }} className="flex-1 bg-white p-5">
       <View className="flex-1">
         {/* Header */}
-        <View className="pt-10 flex-row items-center mb-8">
+        <View className="pt-5 flex-row items-center mb-8">
           <TouchableOpacity
             onPress={() => navigation.goBack()}
             className="p-2 rounded-full bg-gray-100 mr-4"

@@ -73,7 +73,7 @@ const Feedback = () => {
 
   return (
     <View className="flex-1 bg-white">
-      <View className="pt-12 pb-4 px-5">
+      <View className="pt-5 pb-4 px-5">
         <View className="flex-row items-center">
           <TouchableOpacity onPress={() => navigation.goBack()} className="p-1">
             <Ionicons name="arrow-back" size={24} color="#e01d47" />

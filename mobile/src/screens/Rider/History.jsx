@@ -109,7 +109,7 @@ const History = () => {
   return (
     <View style={tw`flex-1 bg-gray-50`}>
       {/* Header */}
-      <View style={tw`bg-white pt-12 pb-4 px-5 shadow-sm`}>
+      <View style={tw`bg-white pt-5 pb-4 px-5 shadow-sm`}>
         <Text style={tw`text-2xl font-bold text-gray-800`}>Delivery History</Text>
         <Text style={tw`text-gray-500`}>
           {historySessions.length} completed {historySessions.length === 1 ? 'session' : 'sessions'}
