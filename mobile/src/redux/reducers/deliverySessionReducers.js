@@ -7,6 +7,7 @@ const initialState = {
     ongoingSessions: [],
     historySessions: [],  // New state property for session history
     sessionByOrderId: {}, // New state property for session by order ID with default value
+    loading: false, // Add loading state
     error: null,
 };
 
@@ -25,11 +26,31 @@ export const deliveryReducer = (state = initialState, action) => {
                 ...state,
                 pendingSessions: action.pendingSessions,
             };
-        case 'GET_HISTORY_BY_RIDER':  // New case to handle session history
+            
+        case 'GET_HISTORY_BY_RIDER_REQUEST':
             return {
                 ...state,
-                historySessions: action.sessions,
+                loading: true,
+                error: null,
             };
+            
+        case 'GET_HISTORY_BY_RIDER':  // Fixed to handle the correct action structure
+        case 'GET_HISTORY_BY_RIDER_SUCCESS':
+            return {
+                ...state,
+                historySessions: action.sessions || action.payload || [], // Handle both structures
+                loading: false,
+                error: null,
+            };
+            
+        case 'GET_HISTORY_BY_RIDER_FAILURE':
+            return {
+                ...state,
+                historySessions: [],
+                loading: false,
+                error: action.payload || action.error,
+            };
+            
         case 'GET_SESSION_BY_ORDER_ID': // New case to handle session by order ID
             return {
                 ...state,
@@ -58,6 +79,7 @@ export const deliveryReducer = (state = initialState, action) => {
         case 'DELIVERY_SESSION_ERROR':
             return {
                 ...state,
+                loading: false,
                 error: action.error,
             };
       
@@ -86,6 +108,6 @@ export const deliveryReducer = (state = initialState, action) => {
             };
 
         default:
-        return state;
+            return state;
     }
 };

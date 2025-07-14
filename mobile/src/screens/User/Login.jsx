@@ -59,11 +59,7 @@ const Login = ({ navigation }) => {
     if (!password.trim()) {
       newErrors.password = "Password is required";
       isValid = false;
-    } else if (password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters";
-      isValid = false;
-    }
-    
+    } 
     setErrors(newErrors);
     return isValid;
   };
@@ -122,6 +118,11 @@ const userSubmitHandler = async () => {
 };
 
 const riderSubmitHandler = async () => {
+   console.log('Form values before validation:');
+  console.log('Email:', email);
+  console.log('Password:', password);
+  console.log('Email length:', email.length);
+  console.log('Password length:', password.length);
   if (!validateForm()) return;
   
   setIsLoading(true);
@@ -144,7 +145,9 @@ const riderSubmitHandler = async () => {
       });
       navigation.navigate("loadingrider");
     } else {
-      throw new Error("Invalid credentials");
+      //error handling for rider login
+      console.log( "Rider login error:", response);
+      // throw new Error("Invalid credentials");
     }
   } catch (error) {
     Toast.show({

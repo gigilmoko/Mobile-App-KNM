@@ -95,8 +95,10 @@ export const riderLogin = (email, password, playerId) => async (dispatch) => {
           }
       );
 
+      console.log('Full server response:', JSON.stringify(data, null, 2));
+
       // Add null/undefined checks before storing
-      if (data.user && data.user._id && data.token) {
+      if (data && data.success && data.user && data.user._id && data.token) {
           const riderId = data.user._id;
           
           console.log('Rider data:', data);
@@ -104,6 +106,7 @@ export const riderLogin = (email, password, playerId) => async (dispatch) => {
 
           await AsyncStorage.setItem('riderId', riderId);
           await AsyncStorage.setItem('riderToken', data.token);
+          await AsyncStorage.setItem('riderData', JSON.stringify(data.user));
 
           dispatch({
               type: "riderLoginSuccess",
@@ -111,21 +114,47 @@ export const riderLogin = (email, password, playerId) => async (dispatch) => {
           });
 
           console.log('Rider login successful:', data.user);
+          return 'success';
+      } else if (data && data.user && data.user._id && data.token) {
+          // Fallback for different response structure
+          const riderId = data.user._id;
+          
+          await AsyncStorage.setItem('riderId', riderId);
+          await AsyncStorage.setItem('riderToken', data.token);
+          await AsyncStorage.setItem('riderData', JSON.stringify(data.user));
+
+          dispatch({
+              type: "riderLoginSuccess",
+              payload: data.user,
+          });
 
           return 'success';
       } else {
-          throw new Error('Invalid response from server');
+          console.log('Invalid response structure:', data);
+          // throw new Error('Invalid response from server');
       }
   } catch (error) {
+      console.error('Login error details:', {
+          message: error.message,
+          status: error.response?.status,
+          data: error.response?.data,
+          config: {
+              url: error.config?.url,
+              method: error.config?.method,
+              headers: error.config?.headers
+          }
+      });
+
       dispatch({
           type: "riderLoginFail",
-          payload: error.response?.data.message || 'Network error',
+          payload: error.response?.data?.message || error.message || 'Network error',
       });
-      console.error('Login error:', error);
 
       throw error;
   }
 };
+
+
 export const riderLogout = () => async (dispatch) => {
     // const riderId = await AsyncStorage.getItem('riderId');
     // console.log('Rider IDsss:', riderId);

@@ -141,69 +141,63 @@ const Main = () => {
     }, [dispatch]);
 
     // Set up rider location polling when rider is logged in
-    useEffect(() => {
-        const setupRiderLocationTracking = async () => {
-            try {
-                const riderToken = await AsyncStorage.getItem('riderToken');
-                const riderId = await AsyncStorage.getItem('riderId');
-                
-                if (riderToken && riderId) {
-                    // Request location permissions
-                    const { status } = await Location.requestForegroundPermissionsAsync();
-                    if (status !== 'granted') {
-                        console.log('Location permission denied');
-                        return;
+useEffect(() => {
+    const setupRiderLocationTracking = async () => {
+        try {
+            const riderToken = await AsyncStorage.getItem('riderToken');
+            const riderId = await AsyncStorage.getItem('riderId');
+            
+            if (riderToken && riderId) {
+                // Request location permissions
+                const { status } = await Location.requestForegroundPermissionsAsync();
+                if (status !== 'granted') {
+                    console.log('Location permission denied');
+                    return;
+                }
+
+                // Define location getter function
+                const getCurrentLocation = async () => {
+                    try {
+                        const location = await Location.getCurrentPositionAsync({
+                            accuracy: Location.Accuracy.High,
+                        });
+                        return {
+                            latitude: location.coords.latitude,
+                            longitude: location.coords.longitude,
+                        };
+                    } catch (error) {
+                        console.error('Error getting location:', error);
+                        return null;
                     }
+                };
 
-                    // Define location getter function
-                    const getCurrentLocation = async () => {
-                        try {
-                            const location = await Location.getCurrentPositionAsync({
-                                accuracy: Location.Accuracy.High,
-                            });
-                            return {
-                                latitude: location.coords.latitude,
-                                longitude: location.coords.longitude,
-                            };
-                        } catch (error) {
-                            console.error('Error getting location:', error);
-                            return null;
-                        }
-                    };
-
-                    // Start location polling every 30 seconds
-                    dispatch(startLocationPolling(riderId, getCurrentLocation, 30000));
-                    // console.log('Started rider location tracking');
-                }
-            } catch (error) {
-                // console.error('Error setting up rider location tracking:', error);
+                // Start location polling every 30 seconds
+                dispatch(startLocationPolling(riderId, getCurrentLocation, 30000));
+                console.log('Started rider location tracking');
             }
-        };
-
-        const cleanupRiderLocationTracking = () => {
-            dispatch(stopLocationPolling());
-            // console.log('Stopped rider location tracking');
-        };
-
-        // Check if rider is logged in
-        if (rider && rider._id) {
-            setupRiderLocationTracking();
-        } else {
-            // Check AsyncStorage for rider session
-            AsyncStorage.getItem('riderToken').then((token) => {
-                if (token) {
-                    setupRiderLocationTracking();
-                } else {
-                    cleanupRiderLocationTracking();
-                }
-            });
+        } catch (error) {
+            console.error('Error setting up rider location tracking:', error);
         }
+    };
 
-        // Cleanup on component unmount
-        return () => {
-            cleanupRiderLocationTracking();
-        };
-    }, [dispatch, rider]);
+    const cleanupRiderLocationTracking = () => {
+        dispatch(stopLocationPolling());
+        console.log('Stopped rider location tracking');
+    };
+
+    // Only set up tracking if rider exists and has an ID
+    if (rider && rider._id) {
+        setupRiderLocationTracking();
+    } else {
+        cleanupRiderLocationTracking();
+    }
+
+    // Cleanup on component unmount
+    return () => {
+        cleanupRiderLocationTracking();
+    };
+}, [dispatch, rider?._id]); // Changed dependency to only rider._id instead of the entire rider object
+
 
     return (
         <NavigationContainer>

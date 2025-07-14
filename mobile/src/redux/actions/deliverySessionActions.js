@@ -126,9 +126,10 @@ export const completeDeliverySession = (id) => async (dispatch) => {
 
 export const getHistoryByRider = (riderId) => async (dispatch) => {
     try {
+        dispatch({ type: 'GET_HISTORY_BY_RIDER_REQUEST' });
+        
         const token = await AsyncStorage.getItem('riderToken');
-        // Fix the URL to ensure a single slash
-        const url = `${server}delivery-session/history/${riderId}`.replace(/\/+/g, '/');
+        const url = `${server}/delivery-session/rider/${riderId}`;
         
         console.log("Requesting URL:", url); 
 
@@ -140,20 +141,18 @@ export const getHistoryByRider = (riderId) => async (dispatch) => {
         });
 
         console.log("History API Response:", JSON.stringify(data, null, 2));
-        
-        // If the backend returns ongoingSessions for the history endpoint
-        // we need to use that instead of looking for sessions or historySessions
-        // Since these are completed sessions even if named ongoingSessions
+
+        // Dispatch with the structure that your reducer expects
         dispatch({
             type: 'GET_HISTORY_BY_RIDER',
-            sessions: data.sessions || data.historySessions || data.ongoingSessions || [],
+            sessions: data.sessions || [], // Use 'sessions' to match your reducer
         });
 
     } catch (error) {
         console.error('Error fetching history sessions:', error);
         dispatch({ 
-            type: 'DELIVERY_SESSION_ERROR', 
-            error: error.response?.data?.message || error.message 
+            type: 'GET_HISTORY_BY_RIDER_FAILURE',
+            payload: error.response?.data?.message || error.message 
         });
     }
 };

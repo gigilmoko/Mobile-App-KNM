@@ -6,7 +6,6 @@ import {
   ToastAndroid,
   Text,
   ScrollView,
-  Button,
   Modal,
   TouchableOpacity,
   Image,
@@ -42,17 +41,15 @@ const Leaflet = () => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const webViewRef = useRef(null);
   const [showMapModal, setShowMapModal] = useState(false);
-  const [capturedImages, setCapturedImages] = useState({});
-  const [imageUrls, setImageUrls] = useState({});
   const [showStartModal, setShowStartModal] = useState(false);
   const [showCompleteModal, setShowCompleteModal] = useState(false);
+  const [showDetailsModal, setShowDetailsModal] = useState(false); // New state for details modal
+  const [selectedOrderForDetails, setSelectedOrderForDetails] = useState(null); // New state for order details
   const [currentSessionId, setCurrentSessionId] = useState(null);
   const [showFullOrderId, setShowFullOrderId] = useState({});
-  const [showDetailsModal, setShowDetailsModal] = useState(false);
-  const [selectedGroup, setSelectedGroup] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
-  const [uploading, setUploading] = useState(false);
   const [locationLoaded, setLocationLoaded] = useState(false);
+  const [completingDeliveries, setCompletingDeliveries] = useState({});
 
   // Initialize rider profile only once when component mounts
   useFocusEffect(
@@ -134,6 +131,34 @@ const Leaflet = () => {
     setSelectedOrder(null);
   }, []);
 
+  // New function to show order details
+  const handleShowOrderDetails = useCallback((order) => {
+    setSelectedOrderForDetails(order);
+    setShowDetailsModal(true);
+  }, []);
+
+  const handleCloseDetailsModal = useCallback(() => {
+    setShowDetailsModal(false);
+    setSelectedOrderForDetails(null);
+  }, []);
+
+  // Format date function
+  const formatDate = useCallback((dateString) => {
+    if (!dateString) return "N/A";
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (e) {
+      return "Invalid date";
+    }
+  }, []);
+
   useEffect(() => {
     if (ongoingSessions && ongoingSessions.length > 0) {
       console.log("All Ongoing Sessions:", ongoingSessions.length);
@@ -204,67 +229,93 @@ const Leaflet = () => {
     [location]
   );
 
-  const handleCaptureProof = useCallback(async (orderId) => {
-    const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
-    if (!permissionResult.granted) {
-      return Alert.alert("Permission required", "Camera permission is needed to capture an image.");
-    }
+  // Streamlined delivery completion function
+  const handleCompleteDelivery = useCallback(
+    async (sessionId, group, orderId) => {
+      try {
+        // Set loading state
+        setCompletingDeliveries((prev) => ({ ...prev, [orderId]: true }));
 
-    const result = await ImagePicker.launchCameraAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      quality: 1,
-    });
+        // Request camera permission
+        const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
+        if (!permissionResult.granted) {
+          Alert.alert("Permission required", "Camera permission is needed to capture proof of delivery.");
+          setCompletingDeliveries((prev) => ({ ...prev, [orderId]: false }));
+          return;
+        }
 
-    if (!result.canceled && result.assets) {
-      const imageUri = result.assets[0].uri;
-      setCapturedImages((prev) => ({ ...prev, [orderId]: imageUri }));
-      uploadToCloudinary(imageUri, orderId);
-    }
-  }, []);
+        // Launch camera
+        const result = await ImagePicker.launchCameraAsync({
+          mediaTypes: ImagePicker.MediaTypeOptions.Images,
+          allowsEditing: true,
+          aspect: [4, 3],
+          quality: 0.8,
+        });
 
-  const uploadToCloudinary = useCallback(async (imageUri, orderId) => {
-    const formData = new FormData();
-    formData.append("file", {
-      uri: imageUri,
-      type: mime.getType(imageUri),
-      name: imageUri.split("/").pop(),
-    });
-    formData.append("upload_preset", "ml_default");
+        if (result.canceled) {
+          setCompletingDeliveries((prev) => ({ ...prev, [orderId]: false }));
+          return;
+        }
 
-    setUploading(true);
-    try {
-      const response = await axios.post("https://api.cloudinary.com/v1_1/dglawxazg/image/upload", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
-      const url = response.data.secure_url;
-      setImageUrls((prev) => ({ ...prev, [orderId]: url }));
-      Alert.alert("Success", "Image uploaded successfully");
-    } catch (error) {
-      console.error("Failed to upload image", error);
-      Alert.alert("Error", "Failed to upload image. Please try again.");
-    } finally {
-      setUploading(false);
-    }
-  }, []);
+        const imageUri = result.assets[0].uri;
 
-  const handleDelivered = useCallback(
-    (sessionId, group, orderId) => {
-      // Check if we have an image URL
-      if (!imageUrls[orderId]) {
-        Alert.alert("Error", "Please capture a proof of delivery image first");
-        return;
+        ToastAndroid.show("Photo captured! Uploading...", ToastAndroid.SHORT);
+
+        // Upload to Cloudinary
+        const formData = new FormData();
+        formData.append("file", {
+          uri: imageUri,
+          type: mime.getType(imageUri),
+          name: imageUri.split("/").pop(),
+        });
+        formData.append("upload_preset", "ml_default");
+
+        const response = await axios.post("https://api.cloudinary.com/v1_1/dglawxazg/image/upload", formData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        });
+
+        const imageUrl = response.data.secure_url;
+
+        // Submit proof of delivery
+        const orderIds = group.orders.map((order) => order._id);
+        await dispatch(submitProofDeliverySession(sessionId, orderIds, imageUrl));
+
+        ToastAndroid.show("Delivery completed successfully!", ToastAndroid.LONG);
+
+        // Refresh data
+        if (rider?._id) {
+          dispatch(getSessionsByRider(rider._id));
+        }
+      } catch (error) {
+        console.error("Failed to complete delivery", error);
+        Alert.alert("Error", "Failed to complete delivery. Please try again.");
+      } finally {
+        setCompletingDeliveries((prev) => ({ ...prev, [orderId]: false }));
       }
-
-      const orderIds = group.orders.map((order) => order._id);
-      dispatch(submitProofDeliverySession(sessionId, orderIds, imageUrls[orderId]));
-      setCapturedImages((prev) => ({ ...prev, [orderId]: null }));
-      setImageUrls((prev) => ({ ...prev, [orderId]: null }));
-      Alert.alert("Success", "Proof of delivery submitted.");
     },
-    [dispatch, imageUrls]
+    [dispatch, rider?._id]
+  );
+
+  // Alternative: Show confirmation first, then capture photo
+  const handleCompleteDeliveryWithConfirmation = useCallback(
+    (sessionId, group, orderId) => {
+      const customerName = `${group.user.fname} ${group.user.lname}`;
+
+      Alert.alert(
+        "Complete Delivery",
+        `Ready to complete delivery for ${customerName}? You'll take a photo as proof of delivery.`,
+        [
+          { text: "Cancel", style: "cancel" },
+          {
+            text: "Take Photo & Complete",
+            onPress: () => handleCompleteDelivery(sessionId, group, orderId),
+          },
+        ]
+      );
+    },
+    [handleCompleteDelivery]
   );
 
   const handleCompleteSession = useCallback((sessionId) => {
@@ -280,28 +331,15 @@ const Leaflet = () => {
   const confirmStartSession = useCallback(() => {
     dispatch(startDeliverySession(currentSessionId));
     setShowStartModal(false);
+    ToastAndroid.show("Delivery session started!", ToastAndroid.SHORT);
   }, [dispatch, currentSessionId]);
 
   const confirmCompleteSession = useCallback(() => {
     dispatch(completeDeliverySession(currentSessionId));
     setShowCompleteModal(false);
+    ToastAndroid.show("All deliveries completed!", ToastAndroid.SHORT);
     navigation.navigate("task");
   }, [dispatch, currentSessionId, navigation]);
-
-  const removeCapturedImage = useCallback((orderId) => {
-    setCapturedImages((prev) => ({ ...prev, [orderId]: null }));
-    setImageUrls((prev) => ({ ...prev, [orderId]: null }));
-  }, []);
-
-  const handleViewDetails = useCallback((group) => {
-    setSelectedGroup(group);
-    setShowDetailsModal(true);
-  }, []);
-
-  const closeDetailsModal = useCallback(() => {
-    setShowDetailsModal(false);
-    setSelectedGroup(null);
-  }, []);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -798,7 +836,7 @@ const Leaflet = () => {
                     <View className="flex-row justify-between items-center">
                       <View className="flex-row items-center">
                         <View className="bg-[#e01d47] bg-opacity-10 rounded-full p-2 mr-2">
-                          <Ionicons name="cube-outline" size={16} color="#ffff" />
+                          <Ionicons name="cube-outline" size={16} color="#e01d47" />
                         </View>
                         <Text className="text-xs font-semibold text-gray-500">
                           Order ID:{" "}
@@ -831,6 +869,7 @@ const Leaflet = () => {
                     <Text className="text-base font-bold text-gray-800">
                       {group.user.fname} {group.user.lname}
                     </Text>
+
                     {/* Address */}
                     <View className="flex-row items-center mt-2">
                       <Ionicons name="location-outline" size={16} color="#e01d47" />
@@ -848,6 +887,7 @@ const Leaflet = () => {
                           .join(", ")}
                       </Text>
                     </View>
+
                     {/* Item Count */}
                     <View className="flex-row items-center mt-2">
                       <Ionicons name="cart-outline" size={16} color="#6b7280" />
@@ -864,11 +904,14 @@ const Leaflet = () => {
                           : "items"}
                       </Text>
                     </View>
+
                     {/* Order Status */}
-                    <View className="mt-4 flex-row items-center">
+                    <View className="mt-3 flex-row items-center">
                       <View
                         className={`rounded-full h-2 w-2 mr-2 ${
-                          group.orders[0].proofOfDelivery
+                          group.orders[0].proofOfDelivery ||
+                          group.orders[0].status === "Delivered Pending" ||
+                          group.orders[0].status === "Delivered"
                             ? "bg-green-500"
                             : group.orders[0].status === "Cancelled"
                             ? "bg-red-500"
@@ -876,23 +919,28 @@ const Leaflet = () => {
                         }`}
                       />
                       <Text
-                        className={`text-sm ${
-                          group.orders[0].proofOfDelivery
+                        className={`text-sm font-medium ${
+                          group.orders[0].proofOfDelivery ||
+                          group.orders[0].status === "Delivered Pending" ||
+                          group.orders[0].status === "Delivered"
                             ? "text-green-600"
                             : group.orders[0].status === "Cancelled"
                             ? "text-red-600"
                             : "text-amber-600"
                         }`}
                       >
-                        {group.orders[0].proofOfDelivery
+                        {group.orders[0].proofOfDelivery ||
+                        group.orders[0].status === "Delivered Pending" ||
+                        group.orders[0].status === "Delivered"
                           ? "Delivered"
                           : group.orders[0].status === "Cancelled"
                           ? "Cancelled"
-                          : "Pending delivery"}
+                          : "Ready for delivery"}
                       </Text>
                     </View>
-                    {/* Action Buttons */}
-                    <View className="flex-row justify-between mt-4 space-x-2">
+
+                    {/* Action Buttons Row 1 */}
+                    <View className="flex-row mt-4 space-x-2">
                       <TouchableOpacity
                         className="flex-1 px-3 py-2.5 bg-white border border-gray-200 rounded-lg flex-row items-center justify-center"
                         onPress={() => handleCall(group.user.phone)}
@@ -917,44 +965,60 @@ const Leaflet = () => {
                         <Text className="text-sm text-gray-800 ml-1 font-medium">Navigate</Text>
                       </TouchableOpacity>
                     </View>
-                    {/* View Details Button */}
-                    <TouchableOpacity
-                      className="mt-3 px-4 py-3 border border-gray-200 rounded-lg bg-gray-50 flex-row items-center justify-center"
-                      onPress={() => handleViewDetails(group)}
-                    >
-                      <Ionicons name="list-outline" size={16} color="#4b5563" />
-                      <Text className="text-sm text-gray-800 ml-2 font-medium">Order Details</Text>
-                    </TouchableOpacity>
-                    {/* Complete Delivery Button */}
-                    // Around line 914, modify the disabled property to also check if there's a captured image:
-                    <TouchableOpacity
-                      className={`mt-3 px-4 py-3 rounded-lg ${
-                        group.orders[0].status === "Cancelled" ? "bg-gray-200" : "bg-[#e01d47]"
-                      } flex-row items-center justify-center`}
-                      onPress={() => handleDelivered(session._id, group, group.orders[0]._id)}
-                    >
-                      {group.orders[0].proofOfDelivery ? (
-                        <>
-                          <Ionicons name="checkmark-circle" size={18} color="#16a34a" />
-                          <Text className="text-sm text-gray-700 font-medium ml-2">Delivered</Text>
-                        </>
-                      ) : capturedImages[group.orders[0]._id] || imageUrls[group.orders[0]._id] ? (
-                        <>
-                          <Ionicons name="checkmark-outline" size={18} color="white" />
-                          <Text className="text-sm text-white font-medium ml-2">Complete Delivery</Text>
-                        </>
-                      ) : group.orders[0].status === "Cancelled" ? (
-                        <>
-                          <Ionicons name="close-circle" size={18} color="#dc2626" />
-                          <Text className="text-sm text-gray-700 font-medium ml-2">Cancelled</Text>
-                        </>
-                      ) : (
-                        <>
-                          <Ionicons name="camera-outline" size={18} color="white" />
-                          <Text className="text-sm text-white font-medium ml-2">Complete Delivery</Text>
-                        </>
-                      )}
-                    </TouchableOpacity>
+
+                    {/* Action Buttons Row 2 - Details Button */}
+                    <View className="flex-row mt-2">
+                      <TouchableOpacity
+                        className="flex-1 px-3 py-2.5 bg-blue-50 border border-blue-200 rounded-lg flex-row items-center justify-center"
+                        onPress={() => handleShowOrderDetails(group.orders[0])}
+                      >
+                        <Ionicons name="information-circle-outline" size={16} color="#2563eb" />
+                        <Text className="text-sm text-blue-700 ml-1 font-medium">View Details</Text>
+                      </TouchableOpacity>
+                    </View>
+
+                    {/* Complete Delivery Button - Updated Logic */}
+                    {group.orders[0].proofOfDelivery ||
+                    group.orders[0].status === "Delivered Pending" ||
+                    group.orders[0].status === "Delivered" ? (
+                      <TouchableOpacity
+                        className="mt-3 px-4 py-3 rounded-lg bg-green-100 border border-green-200 flex-row items-center justify-center"
+                        disabled={true}
+                      >
+                        <Ionicons name="checkmark-circle" size={18} color="#16a34a" />
+                        <Text className="text-sm text-green-700 font-medium ml-2">
+                          {group.orders[0].status === "Delivered Pending" ? "Pending Confirmation" : "Delivered"}
+                        </Text>
+                      </TouchableOpacity>
+                    ) : group.orders[0].status === "Cancelled" ? (
+                      <TouchableOpacity
+                        className="mt-3 px-4 py-3 rounded-lg bg-red-100 border border-red-200 flex-row items-center justify-center"
+                        disabled={true}
+                      >
+                        <Ionicons name="close-circle" size={18} color="#dc2626" />
+                        <Text className="text-sm text-red-700 font-medium ml-2">Cancelled</Text>
+                      </TouchableOpacity>
+                    ) : (
+                      <TouchableOpacity
+                        className={`mt-3 px-4 py-3 rounded-lg flex-row items-center justify-center ${
+                          completingDeliveries[group.orders[0]._id] ? "bg-gray-300" : "bg-[#e01d47]"
+                        }`}
+                        onPress={() => handleCompleteDeliveryWithConfirmation(session._id, group, group.orders[0]._id)}
+                        disabled={completingDeliveries[group.orders[0]._id]}
+                      >
+                        {completingDeliveries[group.orders[0]._id] ? (
+                          <>
+                            <ActivityIndicator size="small" color="#666" />
+                            <Text className="text-sm text-gray-600 font-medium ml-2">Processing...</Text>
+                          </>
+                        ) : (
+                          <>
+                            <Ionicons name="camera" size={18} color="white" />
+                            <Text className="text-sm text-white font-medium ml-2">Complete Delivery</Text>
+                          </>
+                        )}
+                      </TouchableOpacity>
+                    )}
                   </View>
                 </View>
               ))}
@@ -962,6 +1026,193 @@ const Leaflet = () => {
           ))
         )}
       </ScrollView>
+
+      {/* Order Details Modal */}
+      <Modal visible={showDetailsModal} animationType="slide" transparent={false}>
+        <View className="flex-1 bg-gray-50">
+          {/* Header */}
+          <View className="bg-white pt-5 pb-4 px-5 shadow-sm flex-row items-center">
+            <TouchableOpacity onPress={handleCloseDetailsModal} className="p-1 mr-3">
+              <Ionicons name="arrow-back" size={24} color="#e01d47" />
+            </TouchableOpacity>
+            <Text className="text-xl font-bold text-gray-800 flex-1">Order Details</Text>
+          </View>
+
+          {selectedOrderForDetails && (
+            <ScrollView className="flex-1 p-4" showsVerticalScrollIndicator={false}>
+              {/* Order Header */}
+              <View className="bg-white rounded-xl p-4 mb-4 shadow-sm">
+                <View className="flex-row justify-between items-center mb-3">
+                  <Text className="text-lg font-bold text-gray-800">
+                    {selectedOrderForDetails.KNMOrderId || `Order #${selectedOrderForDetails._id?.slice(0, 8)}`}
+                  </Text>
+                  <View className={`px-3 py-1 rounded-full ${
+                    selectedOrderForDetails.status === "Delivered" ? "bg-green-100" :
+                    selectedOrderForDetails.status === "Delivered Pending" ? "bg-yellow-100" :
+                    selectedOrderForDetails.status === "Cancelled" ? "bg-red-100" : "bg-blue-100"
+                  }`}>
+                    <Text className={`text-xs font-medium ${
+                      selectedOrderForDetails.status === "Delivered" ? "text-green-700" :
+                      selectedOrderForDetails.status === "Delivered Pending" ? "text-yellow-700" :
+                      selectedOrderForDetails.status === "Cancelled" ? "text-red-700" : "text-blue-700"
+                    }`}>
+                      {selectedOrderForDetails.status === "Delivered Pending" ? "Pending Confirmation" : 
+                       selectedOrderForDetails.status || "Processing"}
+                    </Text>
+                  </View>
+                </View>
+                <Text className="text-sm text-gray-500">
+                  Order Date: {formatDate(selectedOrderForDetails.createdAt)}
+                </Text>
+              </View>
+
+              {/* Customer Information */}
+              <View className="bg-white rounded-xl p-4 mb-4 shadow-sm">
+                <Text className="text-base font-bold text-gray-800 mb-3">Customer Information</Text>
+                <View className="space-y-2">
+                  <View className="flex-row">
+                    <Text className="text-sm text-gray-500 w-20">Name:</Text>
+                    <Text className="text-sm text-gray-800 font-medium flex-1">
+                      {selectedOrderForDetails.customer?.name || 
+                       (selectedOrderForDetails.user ? `${selectedOrderForDetails.user.fname} ${selectedOrderForDetails.user.lname}` : "N/A")}
+                    </Text>
+                  </View>
+                  <View className="flex-row">
+                    <Text className="text-sm text-gray-500 w-20">Email:</Text>
+                    <Text className="text-sm text-gray-800 flex-1">
+                      {selectedOrderForDetails.customer?.email || selectedOrderForDetails.user?.email || "N/A"}
+                    </Text>
+                  </View>
+                  <View className="flex-row">
+                    <Text className="text-sm text-gray-500 w-20">Phone:</Text>
+                    <Text className="text-sm text-gray-800 flex-1">
+                      {selectedOrderForDetails.customer?.phone || selectedOrderForDetails.user?.phone || "N/A"}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+
+              {/* Delivery Address */}
+              <View className="bg-white rounded-xl p-4 mb-4 shadow-sm">
+                <Text className="text-base font-bold text-gray-800 mb-3">Delivery Address</Text>
+                <View className="flex-row">
+                  <Ionicons name="location-outline" size={18} color="#e01d47" />
+                  <Text className="text-sm text-gray-700 ml-2 flex-1">
+                    {selectedOrderForDetails.address ? 
+                      [
+                        selectedOrderForDetails.address.houseNo,
+                        selectedOrderForDetails.address.streetName,
+                        selectedOrderForDetails.address.barangay,
+                        selectedOrderForDetails.address.city
+                      ].filter(Boolean).join(', ') :
+                      (selectedOrderForDetails.user?.deliveryAddress && selectedOrderForDetails.user.deliveryAddress[0]) ?
+                      [
+                        selectedOrderForDetails.user.deliveryAddress[0].houseNo,
+                        selectedOrderForDetails.user.deliveryAddress[0].streetName,
+                        selectedOrderForDetails.user.deliveryAddress[0].barangay,
+                        selectedOrderForDetails.user.deliveryAddress[0].city
+                      ].filter(Boolean).join(', ') :
+                      "No address information available"
+                    }
+                  </Text>
+                </View>
+              </View>
+
+              {/* Order Items */}
+              <View className="bg-white rounded-xl p-4 mb-4 shadow-sm">
+                <Text className="text-base font-bold text-gray-800 mb-3">Order Items</Text>
+                {Array.isArray(selectedOrderForDetails.products || selectedOrderForDetails.orderProducts) && 
+                 (selectedOrderForDetails.products || selectedOrderForDetails.orderProducts).length > 0 ? (
+                  <View className="space-y-3">
+                    {(selectedOrderForDetails.products || selectedOrderForDetails.orderProducts).map((product, idx) => (
+                      <View key={idx} className="flex-row items-center p-3 bg-gray-50 rounded-lg">
+                        {product.image ? (
+                          <Image 
+                            source={{ uri: product.image }} 
+                            className="w-12 h-12 rounded bg-gray-200 mr-3"
+                            resizeMode="cover"
+                          />
+                        ) : (
+                          <View className="w-12 h-12 rounded bg-gray-200 mr-3 items-center justify-center">
+                            <Ionicons name="cube-outline" size={20} color="#999" />
+                          </View>
+                        )}
+                        <View className="flex-1">
+                          <Text className="text-sm font-medium text-gray-800" numberOfLines={2}>
+                            {product.name || 
+                             (product.product && product.product.name) || 
+                             `Product ${idx + 1}`}
+                          </Text>
+                          <Text className="text-xs text-gray-500 mt-1">
+                            Quantity: {product.quantity || 1}
+                          </Text>
+                        </View>
+                        <Text className="text-sm font-bold text-gray-800">
+                          ₱{parseFloat(product.price || 0).toFixed(2)}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+                ) : (
+                  <View className="bg-gray-50 rounded-lg p-4 items-center justify-center">
+                    <Text className="text-sm text-gray-500">No product information available</Text>
+                  </View>
+                )}
+              </View>
+
+              {/* Payment Information */}
+              <View className="bg-white rounded-xl p-4 mb-4 shadow-sm">
+                <Text className="text-base font-bold text-gray-800 mb-3">Payment Information</Text>
+                <View className="flex-row items-center mb-3">
+                  <Ionicons 
+                    name={selectedOrderForDetails.paymentInfo === "COD" ? "cash-outline" : "card-outline"} 
+                    size={18} 
+                    color="#e01d47" 
+                  />
+                  <Text className="text-sm text-gray-700 ml-2">
+                    {selectedOrderForDetails.paymentInfo === "COD" ? "Cash on Delivery" : 
+                     selectedOrderForDetails.paymentInfo || "Payment method"}
+                  </Text>
+                </View>
+                
+                {/* Order Summary */}
+                <View className="border-t border-gray-200 pt-3 space-y-2">
+                  <View className="flex-row justify-between">
+                    <Text className="text-sm text-gray-600">Items Total:</Text>
+                    <Text className="text-sm text-gray-800">
+                      ₱{(parseFloat(selectedOrderForDetails.totalPrice || 0) - parseFloat(selectedOrderForDetails.shippingCharges || 0)).toFixed(2)}
+                    </Text>
+                  </View>
+                  <View className="flex-row justify-between">
+                    <Text className="text-sm text-gray-600">Shipping:</Text>
+                    <Text className="text-sm text-gray-800">
+                      ₱{parseFloat(selectedOrderForDetails.shippingCharges || 0).toFixed(2)}
+                    </Text>
+                  </View>
+                  <View className="flex-row justify-between pt-2 border-t border-gray-200">
+                    <Text className="text-base font-bold text-gray-800">Total:</Text>
+                    <Text className="text-base font-bold text-[#e01d47]">
+                      ₱{parseFloat(selectedOrderForDetails.totalPrice || 0).toFixed(2)}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+
+              {/* Proof of Delivery */}
+              {selectedOrderForDetails.proofOfDelivery && (
+                <View className="bg-white rounded-xl p-4 mb-4 shadow-sm">
+                  <Text className="text-base font-bold text-gray-800 mb-3">Proof of Delivery</Text>
+                  <Image 
+                    source={{ uri: selectedOrderForDetails.proofOfDelivery }} 
+                    className="w-full h-48 rounded-lg bg-gray-100"
+                    resizeMode="cover"
+                  />
+                </View>
+              )}
+            </ScrollView>
+          )}
+        </View>
+      </Modal>
 
       {/* Map Modal */}
       <Modal visible={showMapModal} animationType="slide" transparent={true}>
@@ -1081,225 +1332,6 @@ const Leaflet = () => {
               >
                 <Text className="font-medium text-white">Complete</Text>
               </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
-
-      {/* Details Modal */}
-      <Modal visible={showDetailsModal} animationType="slide" transparent={true}>
-        <View className="flex-1 justify-end bg-black bg-opacity-50">
-          <View className="bg-white rounded-t-3xl max-h-[80%]">
-            <View className="items-center pt-2 pb-4">
-              <View className="w-10 h-1 bg-gray-300 rounded-full mb-4" />
-              {selectedGroup && (
-                <ScrollView className="w-full px-6" showsVerticalScrollIndicator={false}>
-                  <View className="pb-6">
-                    <Text className="text-xl font-bold mb-4 text-gray-800">Order Details</Text>
-                    <View className="bg-gray-50 p-4 rounded-xl mb-4">
-                      <Text className="text-gray-500 text-xs mb-1">Customer</Text>
-                      <Text className="text-lg font-bold mb-1 text-gray-800">
-                        {selectedGroup.user.fname} {selectedGroup.user.lname}
-                      </Text>
-
-                      <View className="flex-row items-center mt-2">
-                        <TouchableOpacity
-                          onPress={() => handleCall(selectedGroup.user.phone)}
-                          className="bg-gray-100 px-3 py-1.5 rounded-full flex-row items-center"
-                        >
-                          <Ionicons name="call-outline" size={14} color="#4b5563" />
-                          <Text className="text-sm text-gray-700 ml-1">{selectedGroup.user.phone}</Text>
-                        </TouchableOpacity>
-                      </View>
-                    </View>
-                    <View className="bg-gray-50 p-4 rounded-xl mb-4">
-                      <Text className="text-gray-500 text-xs mb-1">Delivery Location</Text>
-                      <View className="flex-row items-center">
-                        <Ionicons name="location-outline" size={16} color="#e01d47" />
-                        <Text className="text-sm text-gray-800 ml-2 flex-1">
-                          {selectedGroup.deliveryAddress
-                            .map((address) =>
-                              `${address.houseNo !== "none" ? address.houseNo : ""} ${
-                                address.streetName !== "none" ? address.streetName : ""
-                              }, ${address.barangay !== "none" ? address.barangay : ""}, ${
-                                address.city !== "none" ? address.city : ""
-                              }`
-                                .trim()
-                                .replace(/^,\s*|,\s*$|,\s*,/g, "")
-                            )
-                            .join(", ")}
-                        </Text>
-                      </View>
-                    </View>
-                    <Text className="text-base font-bold mb-2 text-gray-800">Order Items</Text>
-                    <View className="bg-gray-50 rounded-xl p-4 mb-4">
-                      {selectedGroup.orders[0].products ? (
-                        // Handle new structure with products array
-                        selectedGroup.orders[0].products.map((product, pIdx) => (
-                          <View key={`product-${pIdx}`} className="flex-row justify-between mb-3">
-                            <View className="flex-row items-center flex-1">
-                              <View className="bg-white p-1 rounded-md border border-gray-200 mr-3">
-                                <Text className="text-xs font-bold text-gray-700">{product.quantity || 1}x</Text>
-                              </View>
-                              <Text className="text-sm flex-1">{product.name || "Unknown Product"}</Text>
-                            </View>
-                            <Text className="text-sm font-medium text-gray-800">
-                              ₱{parseFloat(product.price || 0).toFixed(2)}
-                            </Text>
-                          </View>
-                        ))
-                      ) : selectedGroup.orders[0].orderProducts ? (
-                        // Handle original structure with orderProducts array
-                        selectedGroup.orders[0].orderProducts.map((productItem, pIdx) => {
-                          const productPrice = productItem.product?.price || productItem.price || 0;
-                          const quantity = productItem.quantity || 1;
-
-                          return (
-                            <View key={`orderProduct-${pIdx}`} className="flex-row justify-between mb-3">
-                              <View className="flex-row items-center flex-1">
-                                <View className="bg-white p-1 rounded-md border border-gray-200 mr-3">
-                                  <Text className="text-xs font-bold text-gray-700">{quantity}x</Text>
-                                </View>
-                                <Text className="text-sm flex-1">{productItem.product?.name || "Unknown Product"}</Text>
-                              </View>
-                              <Text className="text-sm font-medium text-gray-800">
-                                ₱{parseFloat(productPrice).toFixed(2)}
-                              </Text>
-                            </View>
-                          );
-                        })
-                      ) : (
-                        <Text className="text-sm text-gray-500">No items found</Text>
-                      )}
-
-                      <View className="border-t border-gray-200 my-3" />
-
-                      <View className="flex-row justify-between">
-                        <Text className="text-sm text-gray-600">Delivery Fee</Text>
-                        <Text className="text-sm text-gray-700">
-                          ₱
-                          {parseFloat(
-                            selectedGroup.orders[0].payment?.shippingCharges ||
-                              selectedGroup.orders[0].shippingCharges ||
-                              0
-                          ).toFixed(2)}
-                        </Text>
-                      </View>
-
-                      <View className="flex-row justify-between mt-1">
-                        <Text className="text-sm text-gray-600">Payment Method</Text>
-                        <Text className="text-sm text-gray-700">
-                          {selectedGroup.orders[0].payment?.method ||
-                            selectedGroup.orders[0].paymentInfo ||
-                            "Cash on Delivery"}
-                        </Text>
-                      </View>
-
-                      <View className="border-t border-gray-200 my-3" />
-
-                      <View className="flex-row justify-between items-center">
-                        <Text className="text-base font-bold">Total</Text>
-                        <Text className="text-base font-bold text-[#e01d47]">
-                          ₱
-                          {(() => {
-                            try {
-                              // First try to get the total from the payment object (new structure)
-                              if (selectedGroup.orders[0].payment?.totalAmount) {
-                                return parseFloat(selectedGroup.orders[0].payment.totalAmount).toFixed(2);
-                              }
-
-                              // Next try totalPrice (old structure)
-                              if (selectedGroup.orders[0].totalPrice) {
-                                return parseFloat(selectedGroup.orders[0].totalPrice).toFixed(2);
-                              }
-
-                              // If no direct total, calculate from products
-                              let total = 0;
-
-                              if (selectedGroup.orders[0].products) {
-                                // Calculate from products array (new structure)
-                                selectedGroup.orders[0].products.forEach((product) => {
-                                  const price = parseFloat(product.price || 0);
-                                  const quantity = parseInt(product.quantity || 1);
-                                  total += price * quantity;
-                                });
-
-                                // Add shipping
-                                const shipping = parseFloat(selectedGroup.orders[0].payment?.shippingCharges || 0);
-                                total += shipping;
-
-                                return total.toFixed(2);
-                              } else if (selectedGroup.orders[0].orderProducts) {
-                                // Calculate from orderProducts array (old structure)
-                                selectedGroup.orders[0].orderProducts.forEach((item) => {
-                                  const price = parseFloat(item.product?.price || item.price || 0);
-                                  const quantity = parseInt(item.quantity || 1);
-                                  total += price * quantity;
-                                });
-
-                                // Add shipping
-                                const shipping = parseFloat(selectedGroup.orders[0].shippingCharges || 0);
-                                total += shipping;
-
-                                return total.toFixed(2);
-                              }
-
-                              return "0.00";
-                            } catch (err) {
-                              console.error("Error calculating total:", err);
-                              return "0.00";
-                            }
-                          })()}
-                        </Text>
-                      </View>
-                    </View>
-
-                    <Text className="text-base font-bold mb-2 text-gray-800">Proof of Delivery</Text>
-                    {uploading ? (
-                      <View className="items-center justify-center bg-gray-50 rounded-xl p-8">
-                        <ActivityIndicator size="large" color="#e01d47" />
-                        <Text className="mt-4 text-gray-600">Uploading image...</Text>
-                      </View>
-                    ) : selectedGroup.orders[0].proofOfDelivery ? (
-                      <View className="relative">
-                        <Image
-                          source={{ uri: selectedGroup.orders[0].proofOfDelivery }}
-                          className="w-full h-56 rounded-xl"
-                          resizeMode="cover"
-                        />
-                        <View className="absolute top-2 right-2 bg-green-500 px-3 py-1 rounded-full">
-                          <Text className="text-white text-xs font-medium">Delivered</Text>
-                        </View>
-                      </View>
-                    ) : capturedImages[selectedGroup.orders[0]._id] ? (
-                      <View className="relative">
-                        <Image
-                          source={{ uri: capturedImages[selectedGroup.orders[0]._id] }}
-                          className="w-full h-56 rounded-xl"
-                          resizeMode="cover"
-                        />
-                        <TouchableOpacity
-                          className="absolute top-2 right-2 bg-black bg-opacity-50 rounded-full p-1"
-                          onPress={() => removeCapturedImage(selectedGroup.orders[0]._id)}
-                        >
-                          <Ionicons name="close" size={20} color="white" />
-                        </TouchableOpacity>
-                      </View>
-                    ) : (
-                      <TouchableOpacity
-                        className="flex-row items-center justify-center bg-gray-50 p-6 rounded-xl border-2 border-dashed border-gray-300"
-                        onPress={() => handleCaptureProof(selectedGroup.orders[0]._id)}
-                      >
-                        <Ionicons name="camera-outline" size={24} color="#6b7280" />
-                        <Text className="ml-2 text-gray-600 font-medium">Capture Proof of Delivery</Text>
-                      </TouchableOpacity>
-                    )}
-                    <TouchableOpacity className="mt-6 px-4 py-3 rounded-lg bg-[#e01d47]" onPress={closeDetailsModal}>
-                      <Text className="text-white text-center font-medium">Close</Text>
-                    </TouchableOpacity>
-                  </View>
-                </ScrollView>
-              )}
             </View>
           </View>
         </View>

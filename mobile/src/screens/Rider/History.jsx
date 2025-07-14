@@ -84,6 +84,30 @@ const History = () => {
     }
   };
 
+  // Updated filtering logic to show sessions with delivered orders
+  const completedSessions = React.useMemo(() => {
+    if (!historySessions || !Array.isArray(historySessions)) {
+      console.log("historySessions is not an array:", historySessions);
+      return [];
+    }
+    
+    return historySessions.map(session => ({
+      ...session,
+      // Filter orders within each session to only show delivered ones
+      orders: session.orders?.filter(order => 
+        order.status === "Delivered" || 
+        order.status === "Delivered Pending" || 
+        order.proofOfDelivery
+      ) || []
+    })).filter(session => 
+      // Only keep sessions that have at least one delivered order
+      session.orders.length > 0
+    );
+  }, [historySessions]);
+
+  console.log("All history sessions:", historySessions);
+  console.log("Filtered completed sessions:", completedSessions);
+
   if (loading) {
     return (
       <View style={tw`flex-1 justify-center items-center bg-white`}>
@@ -104,7 +128,7 @@ const History = () => {
   }
 
   // Handle empty history case
-  const isHistoryEmpty = !historySessions || historySessions.length === 0;
+  const isHistoryEmpty = !completedSessions || completedSessions.length === 0;
 
   return (
     <View style={tw`flex-1 bg-gray-50`}>
@@ -112,7 +136,7 @@ const History = () => {
       <View style={tw`bg-white pt-5 pb-4 px-5 shadow-sm`}>
         <Text style={tw`text-2xl font-bold text-gray-800`}>Delivery History</Text>
         <Text style={tw`text-gray-500`}>
-          {historySessions.length} completed {historySessions.length === 1 ? 'session' : 'sessions'}
+          {completedSessions.length} completed {completedSessions.length === 1 ? 'session' : 'sessions'}
         </Text>
       </View>
 
@@ -136,7 +160,7 @@ const History = () => {
             />
           }
         >
-          {historySessions.map((session) => (
+          {completedSessions.map((session) => (
             <View key={session._id} style={tw`mb-5 bg-white rounded-xl shadow overflow-hidden`}>
               {/* Session Header */}
               <View style={tw`p-4 flex-row justify-between items-center border-b border-gray-100`}>
@@ -147,7 +171,7 @@ const History = () => {
                   </Text>
                 </View>
                 <Text style={tw`text-gray-500 text-xs`}>
-                 Delivered date: {formatDate(session.endTime || session.UpdatedAt)}
+                  Delivered: {formatDate(session.endTime || session.updatedAt || session.createdAt)}
                 </Text>
               </View>
               
@@ -157,10 +181,8 @@ const History = () => {
                   <Ionicons name="calendar-outline" size={18} color="#666" />
                   <Text style={tw`text-gray-500 text-sm ml-2 w-24`}>Session ID:</Text>
                   <Text style={tw`text-gray-700 text-sm font-medium`}>
-  KNM-SESSION-{session._id?.slice(0, 8)}
-</Text>
-
-
+                    KNM-SESSION-{session._id?.slice(-8).toUpperCase()}
+                  </Text>
                 </View>
                 
                 {session.rider && (
@@ -334,9 +356,18 @@ const History = () => {
                                 "Payment method"}
                             </Text>
                           </View>
-                          <View style={tw`${order.status === "Delivered" ? "bg-green-100" : "bg-blue-100"} px-2 py-1 rounded`}>
-                            <Text style={tw`text-xs ${order.status === "Delivered" ? "text-green-700" : "text-blue-700"} font-medium`}>
-                              {order.status || "Delivered"}
+                          <View style={tw`${
+                            order.status === "Delivered" ? "bg-green-100" : 
+                            order.status === "Delivered Pending" ? "bg-yellow-100" : 
+                            "bg-blue-100"
+                          } px-2 py-1 rounded`}>
+                            <Text style={tw`text-xs ${
+                              order.status === "Delivered" ? "text-green-700" : 
+                              order.status === "Delivered Pending" ? "text-yellow-700" : 
+                              "text-blue-700"
+                            } font-medium`}>
+                              {order.status === "Delivered Pending" ? "Pending Confirmation" : 
+                               order.status || "Delivered"}
                             </Text>
                           </View>
                         </View>
@@ -416,7 +447,7 @@ const History = () => {
 
                         {/* Delivery Date */}
                         <View style={tw`bg-gray-50 p-3 rounded-lg`}>
-                          <View style={tw`flex-row justify-between`}>
+                          <View style={tw`flex-row justify-between mb-1`}>
                             <Text style={tw`text-xs text-gray-500`}>
                               Order Date:
                             </Text>
@@ -424,6 +455,16 @@ const History = () => {
                               {formatDate(order.createdAt)}
                             </Text>
                           </View>
+                          {order.deliveredAt && (
+                            <View style={tw`flex-row justify-between`}>
+                              <Text style={tw`text-xs text-gray-500`}>
+                                Delivered At:
+                              </Text>
+                              <Text style={tw`text-xs text-gray-700 font-medium`}>
+                                {formatDate(order.deliveredAt)}
+                              </Text>
+                            </View>
+                          )}
                         </View>
                       </View>
                     )}
